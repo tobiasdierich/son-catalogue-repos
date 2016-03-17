@@ -2,9 +2,12 @@
 
 ## Service Platform (SP) NS - VNF - Package Descriptors Catalogues
 
-The following repository contains the SONATA CATALOGUE (son-catalogue component) distributed in the next structure:
+The following repository contains the SONATA CATALOGUE (son-catalogue component) code which implements:
 
-* SON-SP-CATALOGUE folder contains the SP-NS-CATALOGUE and SP-VNF-CATALOGUE directories for the Service Platform files.
+* SON-SP-CATALOGUE API for various elements' Descriptors (meta-data) such NSDs and VNFDs for the Service Platform.
+
+*Support for Package Descriptors (PDs) will be added soon.
+
 
 ### Requirements
 
@@ -15,6 +18,7 @@ This code has been run on Ruby 2.1.
 MongoDB is required, this code has been run using MongoDB version 3.2.1.
 
 Root folder provides a script "installation_mongodb.sh" to install and set up MongoDB.
+
 
 ### Gems used
 
@@ -27,6 +31,8 @@ Root folder provides a script "installation_mongodb.sh" to install and set up Mo
 * [Rest-client](https://github.com/rest-client/rest-client) - HTTP and REST client
 * [Yard](https://github.com/lsegal/yard) - Documentation generator tool
 * [rerun](https://github.com/alexch/rerun) - Restarts the app when a file changes (used in development environment)
+* [SecureRandom] (https://rubygems.org/gems/rubysl-securerandom) - Ruby standard lib for UUID generation
+
 
 ### Installation
 
@@ -43,6 +49,11 @@ It will install all the gems needed to run the SON-CATALOGUE API.
 ### Tests
 
 TODO: Unit-tests, integration-tests
+
+For manual testings, please visit the wikipage link below which contains some information to interact and test the Catalogues API.
+
+* [Testing the code](http://wiki.sonata-nfv.eu/index.php/SONATA_Catalogues) - Inside SDK Catalogue API Documentation (It currently works for SP Catalogues)
+
 
 ### API Documentation
 
@@ -75,16 +86,20 @@ The following shows how to start the API server:
 rake start
 ```
 
+
 ### Data model
 
 Last version of the API supports the Network Service Descriptors (NSD) and Virtual Network Functions Descriptors (VNFD) following the data model specified in the 'son-schema' repository in YAML format.
-Next work is to feature support of Package Descriptors for each catalogue type.
+Next work is to feature support of Package Descriptors.
+
 
 ### Useful tools
 
 To support working and testing with the son-catalogue database it is optional to use next tools:
 
 * [Robomongo](https://robomongo.org/download) - Robomongo 0.9.0-RC4
+
+* [POSTMAN](https://www.getpostman.com/) - Chrome Plugin for HTTP communication
 
 
 
