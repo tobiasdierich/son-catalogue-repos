@@ -3,13 +3,13 @@ sp-catalogue:
   links:
    - mongo
   ports:
-    - "4013:4011"
+    - "4014:4011"
   restart: always
 
 sp-catalogue_doc:
   image: registry.sonata-nfv.eu:5000/sp-catalogue
   ports:
-    - "8811:8808"
+    - "8812:8808"
   command: [rake,yard]
   command: [yard, server, -B, 0.0.0.0]
   restart: always
@@ -25,7 +25,7 @@ mongo:
   volumes_from:
     - mongodata
   ports:
-    - "27019:27017"
+    - "27017"
   command: --smallfiles --rest
   restart: always
 
@@ -34,6 +34,6 @@ mongoexpress:
   links:
     - mongo:mongo
   ports:
-    - "8084:8081"
+    - "8085:8081"
   restart: always
 
