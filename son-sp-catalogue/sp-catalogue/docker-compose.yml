@@ -1,4 +1,4 @@
-ns-catalogue:
+sp-catalogue:
   image: registry.sonata-nfv.eu:5000/sp-catalogue
   links:
    - mongo
@@ -6,7 +6,7 @@ ns-catalogue:
     - "4013:4011"
   restart: always
 
-ns-catalogue_doc:
+sp-catalogue_doc:
   image: registry.sonata-nfv.eu:5000/sp-catalogue
   ports:
     - "8811:8808"
