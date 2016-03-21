@@ -1,4 +1,4 @@
-[![Build Status](http://jenkins.sonata-nfv.eu/buildStatus/icon?job=son-sp-catalogue)](http://jenkins.sonata-nfv.eu/job/son-sp-catalogue)
+[![Build Status](http://jenkins.sonata-nfv.eu/buildStatus/icon?job=son-sp-catalogue)](http://jenkins.sonata-nfv.eu/job/son-sp-catalogue/)
 
 # SONATA WP4
 
