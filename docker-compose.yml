@@ -3,13 +3,13 @@ son-catalogue-repos:
   links:
    - mongo
   ports:
-    - "4000:4013"
+    - "4000:4011"
   restart: always
 
 son-catalogue-repos-doc:
   image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   ports:
-    - "8810:8808"
+    - "8800:8808"
   command: [rake,yard]
   command: [yard, server, -B, 0.0.0.0]
   restart: always
@@ -34,5 +34,5 @@ mongoexpress:
   links:
     - mongo:mongo
   ports:
-    - "8080:8081"
+    - "8090:8081"
   restart: always
