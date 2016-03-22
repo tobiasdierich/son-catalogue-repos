@@ -1,4 +1,4 @@
-vnf-instances:
+son-catalogue-repos:
   image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   links:
    - mongo
@@ -6,10 +6,10 @@ vnf-instances:
     - "4000:4013"
   restart: always
 
-vnf-instances_doc:
+son-catalogue-repos-doc:
   image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   ports:
-    - "8800:8808"
+    - "8810:8808"
   command: [rake,yard]
   command: [yard, server, -B, 0.0.0.0]
   restart: always
