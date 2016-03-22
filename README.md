@@ -74,7 +74,6 @@ and they can be viewed from http://localhost:8808/
 
 or you can use docker-compose and view from http://localhost:8808/
 
-
 ### Run Server
 
 The following shows how to start the API server:
