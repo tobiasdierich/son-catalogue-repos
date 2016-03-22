@@ -1,5 +1,5 @@
 vnf-instances:
-  image: registry.sonata-nfv.eu:5000son-catalogue-repos
+  image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   links:
    - mongo
   ports:
