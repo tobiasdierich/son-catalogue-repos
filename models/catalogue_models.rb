@@ -16,7 +16,7 @@ class Ns
 	include Mongoid::Timestamps
 	include Mongoid::Pagination
 	include Mongoid::Attributes::Dynamic
-	store_in session: "ns_db"
+	store_in collection: "ns_db"
 
 	#field :nsd, type: Hash
 	field :ns_group, type: String
@@ -34,7 +34,7 @@ class Vnf
 	include Mongoid::Pagination
 	#include Mongoid::Versioning
 	include Mongoid::Attributes::Dynamic
-	store_in session: "vnf_db"
+	store_in collection: "vnf_db"
 
 	field :vnf_group, type: String
 	field :vnf_name, type: String

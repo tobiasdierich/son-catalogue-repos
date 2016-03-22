@@ -1,31 +1,31 @@
-sp-catalogue:
-  image: registry.sonata-nfv.eu:5000/sp-catalogue
+vnf-instances:
+  image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   links:
    - mongo
   ports:
-    - "4014:4011"
+    - "4013:4013"
   restart: always
 
-sp-catalogue_doc:
-  image: registry.sonata-nfv.eu:5000/sp-catalogue
+vnf-instances_doc:
+  image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   ports:
-    - "8812:8808"
+    - "8808:8808"
   command: [rake,yard]
   command: [yard, server, -B, 0.0.0.0]
   restart: always
 
-mongodata:
+mongodata:  
   image: mongo:3.0.4
   volumes:
     - /data/db
   command: --break-mongo
 
-mongo:
+mongo:  
   image: mongo:3.0.4
   volumes_from:
     - mongodata
   ports:
-    - "27017"
+    - "27017:27017"
   command: --smallfiles --rest
   restart: always
 
@@ -34,6 +34,5 @@ mongoexpress:
   links:
     - mongo:mongo
   ports:
-    - "8085:8081"
+    - "8081:8081"
   restart: always
-
