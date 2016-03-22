@@ -1,15 +1,15 @@
 vnf-instances:
-  image: registry.sonata-nfv.eu:5000/son-catalogue-repos
+  image: registry.sonata-nfv.eu:5000son-catalogue-repos
   links:
    - mongo
   ports:
-    - "4013:4013"
+    - "4000:4013"
   restart: always
 
 vnf-instances_doc:
   image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   ports:
-    - "8808:8808"
+    - "8800:8808"
   command: [rake,yard]
   command: [yard, server, -B, 0.0.0.0]
   restart: always
@@ -25,7 +25,7 @@ mongo:
   volumes_from:
     - mongodata
   ports:
-    - "27017:27017"
+    - "27017"
   command: --smallfiles --rest
   restart: always
 
@@ -34,5 +34,5 @@ mongoexpress:
   links:
     - mongo:mongo
   ports:
-    - "8081:8081"
+    - "8080:8081"
   restart: always
