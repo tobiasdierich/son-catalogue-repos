@@ -67,7 +67,7 @@ class SonataCatalogue < Sinatra::Application
 
 		# Get paginated list
 		nss = Ns.paginate(:page => params[:offset], :limit => params[:limit])
-
+		logger.debug(nss)
 		# Build HTTP Link Header
 		headers['Link'] = build_http_link_ns(params[:offset].to_i, params[:limit])
 

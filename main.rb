@@ -1,11 +1,11 @@
 # Set environment
-ENV['RACK_ENV'] ||= 'development'
+ENV['RACK_ENV'] ||= 'production'
 
 require 'sinatra'
 require 'sinatra/config_file'
 require 'yaml'
-#require 'logstash-logger'
-#require 'sinatra/gk_auth' # <- Disabled
+require 'logstash-logger'
+require 'json-schema'
 
 # Require the bundler gem and then call Bundler.require to load in all gems
 # listed in Gemfile.
@@ -27,6 +27,21 @@ end
 
 before do
 	logger.level = Logger::DEBUG
+end
+
+class SonataNsRepository < Sinatra::Application
+	register Sinatra::ConfigFile
+	# Load configurations
+	config_file 'config/config.yml'
+	Mongoid.load!('config/mongoid.yml')
+end
+
+
+class SonataVnfRepository < Sinatra::Application
+	register Sinatra::ConfigFile
+	# Load configurations
+	config_file 'config/config.yml'
+	Mongoid.load!('config/mongoid.yml')
 end
 
 class SonataCatalogue < Sinatra::Application
