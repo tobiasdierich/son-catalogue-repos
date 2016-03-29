@@ -32,7 +32,7 @@ class SonataVnfRepository < Sinatra::Application
 
 	def validate_json(json_message,schema)
 		begin
-			JSON::Validator.validate!(schema,json_message)
+		       JSON::Validator.validate!(schema,json_message)
 		rescue JSON::Schema::ValidationError => e
 			logger.error "JSON validating: #{e.to_s}"
 			return e.to_s + "\n"
