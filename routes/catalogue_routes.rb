@@ -28,6 +28,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Returns contents of log file
 	# Management method to get log file of catalogue remotely
 	get '/log' do
+    	headers "Content-Type" => "text/plain; charset=utf8"
 		filename = 'log/development.log'
 
 		# For testing purposes only
@@ -49,6 +50,7 @@ class SonataCatalogue < Sinatra::Application
 	# Get all available interfaces
 	# -> Get all interfaces
 	get '/' do
+    	headers "Content-Type" => "text/plain; charset=utf8"
 		halt 200, interfaces_list.to_yaml
 	end
 
