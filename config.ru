@@ -5,3 +5,4 @@ require ::File.join(root, 'main')
 map('/records/nsr') {run SonataNsRepository.new}
 map('/records/vnfr') {run SonataVnfRepository.new}
 map('/catalogues') {run SonataCatalogue.new}
+map('/') {run Sonata.new}

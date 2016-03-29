@@ -1,5 +1,8 @@
 class SonataNsRepository < Sinatra::Application
 
+  require 'json'
+  require 'yaml'
+  
 	# Checks if a JSON message is valid
 	#
 	# @param [JSON] message some JSON message
@@ -16,6 +19,31 @@ class SonataNsRepository < Sinatra::Application
 		end
 
 		return parsed_message, nil
+	end
+
+	def interfaces_list
+		[
+				{
+						'uri' => '/records/nsr/',
+						'method' => 'GET',
+						'purpose' => 'REST API Structure and Capability Discovery for /records/nsr/'
+				},
+				{
+						'uri' => '/records/nsr/ns-instances',
+						'method' => 'GET',
+						'purpose' => 'List all NSR'
+				},
+				{
+						'uri' => '/records/nsr/ns-instances/:id',
+						'method' => 'GET',
+						'purpose' => 'List specific NSR'
+				},
+				{
+						'uri' => '/records/nsr/ns-instances',
+						'method' => 'POST',
+						'purpose' => 'Store a new NSR'
+				}
+		]
 	end
 
 end

@@ -190,92 +190,92 @@ class SonataCatalogue < Sinatra::Application
 	def interfaces_list
 		[
 				{
-						'uri' => '/',
+						'uri' => '/catalogues/',
 						'method' => 'GET',
 						'purpose' => 'REST API Structure and Capability Discovery'
 				},
 				{
-						'uri' => '/network-services',
+						'uri' => '/catalogues/catalogues/network-services',
 						'method' => 'GET',
 						'purpose' => 'List all NSs'
 				},
 				{
-						'uri' => '/network-services/log',
+						'uri' => '/catalogues/network-services/log',
 						'method' => 'GET',
 						'purpose' => 'List stored log entries'
 				},
 				{
-						'uri' => '/network-services/id/{sp_ns_id}',
+						'uri' => '/catalogues/network-services/id/{sp_ns_id}',
 						'method' => 'GET',
 						'purpose' => 'List a specific NS'
 				},
 				{
-						'uri' => '/network-services/name/{ns_name}',
+						'uri' => '/catalogues/network-services/name/{ns_name}',
 						'method' => 'GET',
 						'purpose' => 'List a specific NS or specifics NS with common name'
 				},
 				{
-						'uri' => '/network-services/name/{ns_name}/version/{ns_version}',
+						'uri' => '/catalogues/network-services/name/{ns_name}/version/{ns_version}',
 						'method' => 'GET',
 						'purpose' => 'List a specific NS by name and version'
 				},
 				{
-						'uri' => '/network-services/name/{ns_name}/last',
+						'uri' => '/catalogues/network-services/name/{ns_name}/last',
 						'method' => 'GET',
 						'purpose' => 'List last version of specific NS by name'
 				},
 				{
-						'uri' => '/network-services',
+						'uri' => '/catalogues/network-services',
 						'method' => 'POST',
 						'purpose' => 'Store a new NS'
 				},
 				{
-						'uri' => '/network-services/{sp_ns_id}',
+						'uri' => '/catalogues/network-services/{sp_ns_id}',
 						'method' => 'PUT',
 						'purpose' => 'Update a stored NS'
 				},
 				{
-						'uri' => '/network-services/{sp_ns_id}',
+						'uri' => '/catalogues/network-services/{sp_ns_id}',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific NS'
 				},
 				{
-						'uri' => '/vnfs',
+						'uri' => '/catalogues/vnfs',
 						'method' => 'GET',
 						'purpose' => 'List all VNFs'
 				},
 				{
-						'uri' => '/vnfs/name/{vnf_name}',
+						'uri' => '/catalogues/vnfs/name/{vnf_name}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF or specifics VNF with common name'
 				},
 				{
-						'uri' => '/vnfs/name/{vnf_name}/last',
+						'uri' => '/catalogues/vnfs/name/{vnf_name}/last',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
 				},
 				{
-						'uri' => '/vnfs/name/{vnf_name}/version/{vnf_version}',
+						'uri' => '/catalogues/vnfs/name/{vnf_name}/version/{vnf_version}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
 				},
 				{
-						'uri' => '/vnfs/id/{sp_vnf_id}',
+						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
 				},
 				{
-						'uri' => '/vnfs',
+						'uri' => '/catalogues/vnfs',
 						'method' => 'POST',
 						'purpose' => 'Store a new VNF'
 				},
 				{
-						'uri' => '/vnfs/id/{sp_vnf_id}',
+						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
 						'method' => 'PUT',
 						'purpose' => 'Update a stored VNF'
 				},
 				{
-						'uri' => '/vnfs/id/{sp_vnf_id}',
+						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific VNF'
 				}
