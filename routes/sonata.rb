@@ -1,7 +1,3 @@
-=begin
-APIDOC comment
-=end
-
 class Sonata < Sinatra::Application
 
 	# @method get_log
