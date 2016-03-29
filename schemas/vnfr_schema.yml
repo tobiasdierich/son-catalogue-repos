@@ -1,0 +1,772 @@
+---
+  $schema: "http://json-schema.org/draft-04/schema#"
+  id: "http://www.sonata-nfv.eu/schema/vnfr-schema"
+  type: "object"
+  properties: 
+    vnfr: 
+      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr"
+      type: "object"
+      properties: 
+        id: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/id"
+          type: "string"
+        vendor: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vendor"
+          type: "string"
+        descriptor_version: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/descriptor_version"
+          type: "string"
+        version: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/version"
+          type: "string"
+        related_nsr:
+          description: "new SONATA field showing relationships between nsr and vnfr"
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/related_nsr"
+          type: "array"
+          items: 
+            id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/related_nsr/0"
+            type: "object"
+            properties: 
+              id: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/related_nsr/0/id"
+                type: "string"
+        vdu: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu"
+          type: "array"
+          items: 
+            id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0"
+            type: "object"
+            properties: 
+              id: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/id"
+                type: "string"
+              vm_image: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vm_image"
+                type: "string"
+              computation_requirement: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/computation_requirement"
+                type: "object"
+                properties: 
+                  vcpus: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/computation_requirement/vcpus"
+                    type: "string"
+              virtual_memory_resource_element: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/virtual_memory_resource_element"
+                type: "string"
+              virtual_network_bandwidth_resources: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/virtual_network_bandwidth_resources"
+                type: "string"
+              lifecycle_event: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/lifecycle_event"
+                type: "object"
+                properties: 
+                  start: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/lifecycle_event/start"
+                    type: "string"
+                  stop: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/lifecycle_event/stop"
+                    type: "string"
+                  restart: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/lifecycle_event/restart"
+                    type: "string"
+              constraint: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/constraint"
+                type: "string"
+              high_availability: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/high_availability"
+                type: "string"
+              scale_in_out: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/scale_in_out"
+                type: "object"
+                properties: 
+                  minimum: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/scale_in_out/minimum"
+                    type: "string"
+                  maximum: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/scale_in_out/maximum"
+                    type: "string"
+              vnfc_instance: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance"
+                type: "array"
+                items: 
+                  - 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0"
+                    type: "object"
+                    properties: 
+                      id: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/id"
+                        type: "string"
+                      vim_id: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/vim_id"
+                        type: "string"
+                      vc_id: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/vc_id"
+                        type: "string"
+                      connection_points: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points"
+                        type: "array"
+                        items: 
+                          - 
+                            id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/0"
+                            type: "object"
+                            properties: 
+                              id: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/0/id"
+                                type: "string"
+                              vitual_link_reference: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/0/vitual_link_reference"
+                                type: "string"
+                              type: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/0/type"
+                                type: "string"
+                          - 
+                            id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/1"
+                            type: "object"
+                            properties: 
+                              id: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/1/id"
+                                type: "string"
+                              vitual_link_reference: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/1/vitual_link_reference"
+                                type: "string"
+                              type: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/0/connection_points/1/type"
+                                type: "string"
+                  - 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1"
+                    type: "object"
+                    properties: 
+                      id: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/id"
+                        type: "string"
+                      vim_id: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/vim_id"
+                        type: "string"
+                      vc_id: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/vc_id"
+                        type: "string"
+                      connection_points: 
+                        id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points"
+                        type: "array"
+                        items: 
+                          - 
+                            id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/0"
+                            type: "object"
+                            properties: 
+                              id: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/0/id"
+                                type: "string"
+                              vitual_link_reference: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/0/vitual_link_reference"
+                                type: "string"
+                              type: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/0/type"
+                                type: "string"
+                          - 
+                            id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/1"
+                            type: "object"
+                            properties: 
+                              id: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/1/id"
+                                type: "string"
+                              vitual_link_reference: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/1/vitual_link_reference"
+                                type: "string"
+                              type: 
+                                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vnfc_instance/1/connection_points/1/type"
+                                type: "string"
+              parent_vdu: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/parent_vdu"
+                type: "string"
+              cpu_instruction_set_extension: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_instruction_set_extension"
+                type: "string"
+              cpu_model: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_model"
+                type: "string"
+              cpu_model_specification_binding: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_model_specification_binding"
+                type: "string"
+              cpu_min_clock_speed: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_min_clock_speed"
+                type: "string"
+              cpu_core_reservation: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_core_reservation"
+                type: "string"
+              cpu_simultaneous_multi_threading_hw_thread_specification: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_simultaneous_multi_threading_hw_thread_specification"
+                type: "string"
+              cpu_core_oversubscription_policy: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_core_oversubscription_policy"
+                type: "string"
+              cpu_core_and_hw_thread_allocation_topology_policy: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_core_and_hw_thread_allocation_topology_policy"
+                type: "string"
+              cpu_last_level_cache_size: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_last_level_cache_size"
+                type: "string"
+              cpu_direct_io_access_to_cache: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_direct_io_access_to_cache"
+                type: "string"
+              cpu_translation_look_aside_buffer_parameters: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_translation_look_aside_buffer_parameters"
+                type: "object"
+                properties: 
+                  TLB_size: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_translation_look_aside_buffer_parameters/TLB_size"
+                    type: "string"
+                  TLB_large_page_support: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_translation_look_aside_buffer_parameters/TLB_large_page_support"
+                    type: "string"
+                  IOTLB_size: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_translation_look_aside_buffer_parameters/IOTLB_size"
+                    type: "string"
+                  IOTLB_large_page_support: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_translation_look_aside_buffer_parameters/IOTLB_large_page_support"
+                    type: "string"
+              cpu_hot_add: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/cpu_hot_add"
+                type: "string"
+              memory_parameters: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters"
+                type: "object"
+                properties: 
+                  type: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/type"
+                    type: "string"
+                  speed: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/speed"
+                    type: "string"
+                  channels: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/channels"
+                    type: "string"
+                  size: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/size"
+                    type: "string"
+                  error_correction_codes: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/error_correction_codes"
+                    type: "string"
+                  oversubscription_policy: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/oversubscription_policy"
+                    type: "string"
+                  bandwidth_required: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/bandwidth_required"
+                    type: "string"
+                  large_pages_required: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/large_pages_required"
+                    type: "string"
+                  NUMA_allocation_policy: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_parameters/NUMA_allocation_policy"
+                    type: "string"
+              memory_hot_add: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/memory_hot_add"
+                type: "string"
+              platform_security_parameters: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_security_parameters"
+                type: "object"
+                properties: 
+                  random_number_generation: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_security_parameters/random_number_generation"
+                    type: "string"
+                  measure_launch_environment: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_security_parameters/measure_launch_environment"
+                    type: "string"
+              hypervisor_parameters: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters"
+                type: "object"
+                properties: 
+                  type: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/type"
+                    type: "string"
+                  version: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/version"
+                    type: "string"
+                  second_level_address_translation: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/second_level_address_translation"
+                    type: "string"
+                  second_level_address_translation_with_large_page_support: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/second_level_address_translation_with_large_page_support"
+                    type: "string"
+                  second_level_address_translation_for_io: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/second_level_address_translation_for_io"
+                    type: "string"
+                  second_level_address_translation_for_io_with_large_page: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/second_level_address_translation_for_io_with_large_page"
+                    type: "string"
+                  support_for_interrupt_remapping: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/support_for_interrupt_remapping"
+                    type: "string"
+                  support_for_data_processing_acceleration_libraries: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/hypervisor_parameters/support_for_data_processing_acceleration_libraries"
+                    type: "string"
+              platform_pcie_parameters: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_pcie_parameters"
+                type: "object"
+                properties: 
+                  generational_capabilities: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_pcie_parameters/generational_capabilities"
+                    type: "string"
+                  bandwidth: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_pcie_parameters/bandwidth"
+                    type: "string"
+                  device_pass_through: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_pcie_parameters/device_pass_through"
+                    type: "string"
+                  SR-IOV: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_pcie_parameters/SR-IOV"
+                    type: "string"
+                  device_assignement_affinity: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_pcie_parameters/device_assignement_affinity"
+                    type: "string"
+              pcie_advanced_error_reporting: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/pcie_advanced_error_reporting"
+                type: "string"
+              platform_acceleration_device: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/platform_acceleration_device"
+                type: "string"
+              network_interface_card_capabilities: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities"
+                type: "object"
+                properties: 
+                  LSO: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/LSO"
+                    type: "string"
+                  LRO: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/LRO"
+                    type: "string"
+                  checksum: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/checksum"
+                    type: "string"
+                  RSS: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/RSS"
+                    type: "string"
+                  flow_director: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/flow_director"
+                    type: "string"
+                  mirroring: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/mirroring"
+                    type: "string"
+                  availability: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/availability"
+                    type: "string"
+                  jumbo_support: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/jumbo_support"
+                    type: "string"
+                  VLAN_tag: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/VLAN_tag"
+                    type: "string"
+                  RDMA: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/RDMA"
+                    type: "string"
+                  SR-IOV: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_card_capabilities/SR-IOV"
+                    type: "string"
+              network_interface_bandwidth: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/network_interface_bandwidth"
+                type: "string"
+              data_processing_acceleration_library: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/data_processing_acceleration_library"
+                type: "string"
+              vswitch_capabilities: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vswitch_capabilities"
+                type: "object"
+                properties: 
+                  type: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vswitch_capabilities/type"
+                    type: "string"
+                  version: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vswitch_capabilities/version"
+                    type: "string"
+                  overlay_tunnel: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/vswitch_capabilities/overlay_tunnel"
+                    type: "string"
+              corrected_error_notification: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/corrected_error_notification"
+                type: "string"
+              uncorrected_error_notification: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/uncorrected_error_notification"
+                type: "string"
+              storage_requirements: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/storage_requirements"
+                type: "object"
+                properties: 
+                  size: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/storage_requirements/size"
+                    type: "string"
+                  KQI1: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/storage_requirements/KQI1"
+                    type: "string"
+                  KQI2: 
+                    id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vdu/0/storage_requirements/KQI2"
+                    type: "string"
+        virtual_link: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/id"
+                  type: "string"
+                connectivity_type: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/connectivity_type"
+                  type: "string"
+                connection_points_references: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/connection_points_references"
+                  type: "array"
+                  items: 
+                    - 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/connection_points_references/0"
+                      type: "object"
+                      properties: 
+                        id: 
+                          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/connection_points_references/0/id"
+                          type: "string"
+                    - 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/connection_points_references/1"
+                      type: "object"
+                      properties: 
+                        id: 
+                          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/connection_points_references/1/id"
+                          type: "string"
+                root_requirement: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/root_requirement"
+                  type: "string"
+                leaf_requirement: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/leaf_requirement"
+                  type: "string"
+                qos: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/qos"
+                  type: "object"
+                  properties: 
+                    latency: 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/qos/latency"
+                      type: "string"
+                    jitter: 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/qos/jitter"
+                      type: "string"
+                test_access: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/0/test_access"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/id"
+                  type: "string"
+                connectivity_type: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/connectivity_type"
+                  type: "string"
+                connection_points_references: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/connection_points_references"
+                  type: "array"
+                  items: 
+                    - 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/connection_points_references/0"
+                      type: "object"
+                      properties: 
+                        id: 
+                          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/connection_points_references/0/id"
+                          type: "string"
+                    - 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/connection_points_references/1"
+                      type: "object"
+                      properties: 
+                        id: 
+                          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/connection_points_references/1/id"
+                          type: "string"
+                root_requirement: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/root_requirement"
+                  type: "string"
+                leaf_requirement: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/leaf_requirement"
+                  type: "string"
+                qos: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/qos"
+                  type: "object"
+                  properties: 
+                    latency: 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/qos/latency"
+                      type: "string"
+                    jitter: 
+                      id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/qos/jitter"
+                      type: "string"
+                test_access: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/virtual_link/1/test_access"
+                  type: "string"
+        connection_points: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/0"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/0/id"
+                  type: "string"
+                vitual_link_reference: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/0/vitual_link_reference"
+                  type: "string"
+                type: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/0/type"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/1"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/1/id"
+                  type: "string"
+                vitual_link_reference: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/1/vitual_link_reference"
+                  type: "string"
+                type: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connection_points/1/type"
+                  type: "string"
+        lifecycle_event: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event"
+          type: "object"
+          properties: 
+            start: 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event/start"
+              type: "string"
+            stop: 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event/stop"
+              type: "string"
+            restart: 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event/restart"
+              type: "string"
+        dependency: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/dependency"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/dependency/0"
+              type: "object"
+              properties: 
+                source_vdu: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/dependency/0/source_vdu"
+                  type: "string"
+                target_vdu: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/dependency/0/target_vdu"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/dependency/1"
+              type: "object"
+              properties: 
+                source_vdu: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/dependency/1/source_vdu"
+                  type: "string"
+                target_vdu: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/dependency/1/target_vdu"
+                  type: "string"
+        __comment: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/__comment"
+          type: "string"
+        monitoring_parameters: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/0"
+              type: "object"
+              properties: 
+                monitoring_parameter: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/0/monitoring_parameter"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/1"
+              type: "object"
+              properties: 
+                monitoring_parameter: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/1/monitoring_parameter"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/2"
+              type: "object"
+              properties: 
+                monitoring_parameter: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/2/monitoring_parameter"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/3"
+              type: "object"
+              properties: 
+                monitoring_parameter: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/monitoring_parameters/3/monitoring_parameter"
+                  type: "string"
+        deployment_flavour: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/deployment_flavour"
+          type: "string"
+        localization: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/localization"
+          type: "string"
+        parent_ns: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/parent_ns"
+          type: "string"
+        descriptor_reference: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/descriptor_reference"
+          type: "string"
+        vnfm_id: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vnfm_id"
+          type: "string"
+        connected_external_virtual_link: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connected_external_virtual_link"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connected_external_virtual_link/0"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connected_external_virtual_link/0/id"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connected_external_virtual_link/1"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/connected_external_virtual_link/1/id"
+                  type: "string"
+        vnf_address: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vnf_address"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vnf_address/0"
+              type: "object"
+              properties: 
+                address: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vnf_address/0/address"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vnf_address/1"
+              type: "object"
+              properties: 
+                address: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/vnf_address/1/address"
+                  type: "string"
+        status: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/status"
+          type: "string"
+        notification: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/0"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/0/id"
+                  type: "string"
+                ip: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/0/ip"
+                  type: "string"
+                port: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/0/port"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/1"
+              type: "object"
+              properties: 
+                id: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/1/id"
+                  type: "string"
+                ip: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/1/ip"
+                  type: "string"
+                port: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/notification/1/port"
+                  type: "string"
+        lifecycle_event_history: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/0"
+              type: "object"
+              properties: 
+                event: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/0/event"
+                  type: "string"
+                timestamp: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/0/timestamp"
+                  type: "string"
+                success: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/0/success"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/1"
+              type: "object"
+              properties: 
+                event: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/1/event"
+                  type: "string"
+                timestamp: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/1/timestamp"
+                  type: "string"
+                success: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/lifecycle_event_history/1/success"
+                  type: "string"
+        audit_log: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/audit_log"
+          type: "array"
+          items: 
+            id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/audit_log/0"
+            type: "object"
+            properties: 
+              event: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/audit_log/0/event"
+                type: "string"
+              timestamp: 
+                id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/audit_log/0/timestamp"
+                type: "string"
+        runtime_policy_info: 
+          id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/runtime_policy_info"
+          type: "array"
+          items: 
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/runtime_policy_info/0"
+              type: "object"
+              properties: 
+                policy: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/runtime_policy_info/0/policy"
+                  type: "string"
+            - 
+              id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/runtime_policy_info/1"
+              type: "object"
+              properties: 
+                policy: 
+                  id: "http://www.sonata-nfv.eu/schema/vnfr-schema/vnfr/runtime_policy_info/1/policy"
+                  type: "string"
+      required: 
+        - "id"
+        - "vendor"
+        - "descriptor_version"
+        - "version"
+        - "vdu"
+        - "virtual_link"
+        - "connection_points"
+        - "lifecycle_event"
+        - "dependency"
+        - "__comment"
+        - "monitoring_parameters"
+        - "deployment_flavour"
+        - "localization"
+        - "parent_ns"
+        - "descriptor_reference"
+        - "vnfm_id"
+        - "connected_external_virtual_link"
+        - "vnf_address"
+        - "status"
+        - "notification"
+        - "lifecycle_event_history"
+        - "audit_log"
+        - "runtime_policy_info"
+  required: 
+    - "vnfr"
