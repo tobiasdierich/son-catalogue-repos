@@ -90,3 +90,10 @@ or you can use docker-compose
 docker-compose up
 ```
 
+---
+#### Lead Developers
+
+The following lead developers are responsible for this repository and have admin rights. They can, for example, merge pull requests.
+
+- Felipe Vicens (felipevicens)
+- Daniel Guija (dang03)
