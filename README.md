@@ -1,3 +1,5 @@
+[![Build Status](http://jenkins.sonata-nfv.eu/buildStatus/icon?job=son-catalogue-repos)](http://jenkins.sonata-nfv.eu/job/son-catalogue-repos)
+
 ## Sonata SP Catalogue and Repository
 
 ### Requirements
