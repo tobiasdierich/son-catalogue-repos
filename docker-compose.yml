@@ -3,7 +3,7 @@ son-catalogue-repos:
   links:
    - mongo
   ports:
-    - "4001:4011"
+    - "4002:4011"
   restart: always
 
 son-catalogue-repos-doc:
