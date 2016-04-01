@@ -1,4 +1,7 @@
-## Sonata SP Catalogue and Repository
+### WORK IN PROGRESS - NS/VNF APIs ARE BEING MERGED ###
+
+# SP Catalogues and Repositories [![Build Status](http://jenkins.sonata-nfv.eu/buildStatus/icon?job=son-catalogue-repos)](http://jenkins.sonata-nfv.eu/job/son-catalogue-repos)
+This repository contains the development for the Service Platform catalogues and repositories. It holds the API implementation of SP catalogue and repos. Moreover, is is closely related to the [son-catalogue](https://github.com/sonata-nfv/son-catalogue) repository that holds the catalogs of the SDK as well at the [son-schema](https://github.com/sonata-nfv/son-schema) repository that holds the schema for the various descriptors, such as the VNFD and the NSD.
 
 ### Requirements
 
@@ -89,3 +92,10 @@ or you can use docker-compose
 docker-compose up
 ```
 
+---
+#### Lead Developers
+
+The following lead developers are responsible for this repository and have admin rights. They can, for example, merge pull requests.
+
+- Felipe Vicens (felipevicens)
+- Daniel Guija (dang03)
