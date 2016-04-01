@@ -112,7 +112,7 @@ class SonataCatalogue < Sinatra::Application
 		address, port = read_config
 
 		begin
-			link << '<' + address.to_s + ':' + port.to_s + '/network-services?offset=' + next_offset.to_s + '&limit=' + limit.to_s + '>; rel="next"' unless next_nss.empty?
+			link << '<' + address.to_s + ':' + port.to_s + '/catalogues/network-services?offset=' + next_offset.to_s + '&limit=' + limit.to_s + '>; rel="next"' unless next_nss.empty?
 		rescue
 			logger.error "Error Establishing a Database Connection"
 		end
@@ -123,7 +123,7 @@ class SonataCatalogue < Sinatra::Application
 			previous_nss = Ns.paginate(:page => previous_offset, :limit => limit)
 			unless previous_nss.empty?
 				link << ', ' unless next_nss.empty?
-				link << '<' + address.to_s + ':' + port.to_s + '/network-services?offset=' + previous_offset.to_s + '&limit=' + limit.to_s + '>; rel="last"'
+				link << '<' + address.to_s + ':' + port.to_s + '/catalogues/network-services?offset=' + previous_offset.to_s + '&limit=' + limit.to_s + '>; rel="last"'
 			end
 		end
 		link
@@ -143,7 +143,7 @@ class SonataCatalogue < Sinatra::Application
 		# TODO: link host and port should be configurable (load form config file)
 		address, port = read_config
 
-		link << '<' + address.to_s + ':' + port.to_s + '/vnfs?offset=' + next_offset.to_s + '&limit=' + limit.to_s + '>; rel="next"' unless next_vnfs.empty?
+		link << '<' + address.to_s + ':' + port.to_s + '/catalogues/vnfs?offset=' + next_offset.to_s + '&limit=' + limit.to_s + '>; rel="next"' unless next_vnfs.empty?
 
 		unless offset == 1
 			# Previous link
@@ -152,7 +152,7 @@ class SonataCatalogue < Sinatra::Application
 			unless previous_vnfs.empty?
 				link << ', ' unless next_vnfs.empty?
 				# TODO: link host and port should be configurable (load form config file)
-				link << '<' + address.to_s + ':' + port.to_s + '/vnfs?offset=' + previous_offset.to_s + '&limit=' + limit.to_s + '>; rel="last"'
+				link << '<' + address.to_s + ':' + port.to_s + '/catalogues/vnfs?offset=' + previous_offset.to_s + '&limit=' + limit.to_s + '>; rel="last"'
 			end
 		end
 		link
@@ -167,7 +167,7 @@ class SonataCatalogue < Sinatra::Application
 		address, port = read_config
 
 		begin
-			link << '<' + address.to_s + ':' + port.to_s + '/network-services/name/' + name.to_s + '?offset=' + next_offset.to_s + '&limit=' + limit.to_s + '>; rel="next"' unless next_nss.empty?
+			link << '<' + address.to_s + ':' + port.to_s + '/catalogues/network-services/name/' + name.to_s + '?offset=' + next_offset.to_s + '&limit=' + limit.to_s + '>; rel="next"' unless next_nss.empty?
 		rescue
 			logger.error "Error Establishing a Database Connection"
 		end
@@ -178,7 +178,7 @@ class SonataCatalogue < Sinatra::Application
 			previous_nss = Ns.paginate(:page => previous_offset, :limit => limit)
 			unless previous_nss.empty?
 				link << ', ' unless next_nss.empty?
-				link << '<' + address.to_s + ':' + port.to_s + '/network-services/name/' + name.to_s + '?offset=' + previous_offset.to_s + '&limit=' + limit.to_s + '>; rel="last"'
+				link << '<' + address.to_s + ':' + port.to_s + '/catalogues/network-services/name/' + name.to_s + '?offset=' + previous_offset.to_s + '&limit=' + limit.to_s + '>; rel="last"'
 			end
 		end
 		link
@@ -195,14 +195,9 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'REST API Structure and Capability Discovery'
 				},
 				{
-						'uri' => '/catalogues/catalogues/network-services',
+						'uri' => '/catalogues/network-services',
 						'method' => 'GET',
 						'purpose' => 'List all NSs'
-				},
-				{
-						'uri' => '/catalogues/network-services/log',
-						'method' => 'GET',
-						'purpose' => 'List stored log entries'
 				},
 				{
 						'uri' => '/catalogues/network-services/id/{sp_ns_id}',
