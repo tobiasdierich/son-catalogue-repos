@@ -215,6 +215,11 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'List a specific NS by name and version'
 				},
 				{
+						'uri' => '/network-services/group/{ns_group}/name/{ns_name}/version/{ns_version}',
+						'method' => 'GET',
+						'purpose' => 'List a specific NS'
+				},
+				{
 						'uri' => '/catalogues/network-services/name/{ns_name}/last',
 						'method' => 'GET',
 						'purpose' => 'List last version of specific NS by name'
@@ -255,6 +260,11 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'List a specific VNF'
 				},
 				{
+						'uri' => '/vnfs/group/{vnf_group}/name/{vnf_name}/version/{vnf_version}',
+						'method' => 'GET',
+						'purpose' => 'List a specific VNF'
+				},
+				{
 						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
@@ -273,7 +283,46 @@ class SonataCatalogue < Sinatra::Application
 						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific VNF'
-				}
+				},
+				{		'uri' => '/catalogues/packages',
+						'method' => 'GET',
+						'purpose' => 'Returns an array of all packages'
+				},
+				{
+						'uri' => '/catalogues/packages/group/{package_group}',
+						'method' => 'GET',
+						'purpose' => 'Returns an array of all packages of group'
+				},
+				{
+						'uri' => '/catalogues/packages/group/{package_group}/name/{package_name}',
+						'method' => 'GET',
+						'purpose' => 'Returns an array of all packages of group and name'
+				},
+				{
+						'uri' => '/catalogues/packages/group/{package_group}/name/{package_name}/version/{package_version}',
+						'method' => 'GET',
+						'purpose' => 'Return one (or zero) package'
+				},
+				{
+						'uri' => '/catalogues/packages',
+						'method' => 'POST',
+						'purpose' => 'Store a new Package'
+				},
+				{
+						'uri' => '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version',
+						'method' => 'PUT',
+						'purpose' => 'Update a stored Package'
+				},
+				{
+						'uri' => '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version',
+						'method' => 'DELETE',
+						'purpose' => 'Delete a specific Package'
+				},
+				{
+						'uri' => '',
+						'method' => '',
+						'purpose' => ''
+				},
 		]
 	end
 
