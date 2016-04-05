@@ -44,3 +44,18 @@ class Vnf
 
 	validates :vnf_name, :vnf_version, :presence => true
 end
+
+class Package
+	include Mongoid::Document
+	include Mongoid::Timestamps
+	include Mongoid::Pagination
+	#include Mongoid::Versioning
+	include Mongoid::Attributes::Dynamic
+	store_in collection: "pd"
+
+	field :package_group, type: String
+	field :package_name, type: String
+	field :package_version, type: String
+
+	validates :package_group, :package_name, :package_version, :presence => true
+end
