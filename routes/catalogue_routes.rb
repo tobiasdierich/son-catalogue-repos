@@ -47,7 +47,7 @@ class SonataCatalogue < Sinatra::Application
 	# @overload get '/catalogues/'
 	# Get all available interfaces
 	# -> Get all interfaces
-	get '/catalogues/' do
+	get '/' do
     	headers "Content-Type" => "text/plain; charset=utf8"
 		halt 200, interfaces_list.to_yaml
 	end
@@ -59,7 +59,7 @@ class SonataCatalogue < Sinatra::Application
 	# @overload get '/catalogues/network-services'
 	#	Returns a list of NSs
 	# -> List all NSs in JSON or YAML format
-	get '/catalogues/network-services' do
+	get '/network-services' do
 		params[:offset] ||= 1
 		params[:limit] ||= 10
 
@@ -95,7 +95,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a NS in JSON or YAML format
 	#	@param [Integer] sp_ns_id NS sp ID
 	# Show a NS by internal ID (uuid)
-	get '/catalogues/network-services/id/:sp_ns_id' do
+	get '/network-services/id/:sp_ns_id' do
 		begin
 			ns = Ns.find(params[:sp_ns_id] )
 			#ns = Ns.find_by( { "nsd.id" =>  params[:external_ns_id]})
@@ -121,7 +121,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a NS or NS list in JSON or YAML format
 	#	@param [String] ns_name NS Name
 	# Show a NS by name
-	get '/catalogues/network-services/name/:ns_name' do
+	get '/network-services/name/:ns_name' do
 
 		begin
 			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
@@ -154,7 +154,7 @@ class SonataCatalogue < Sinatra::Application
 	# Show a NS name
 	#	@param [Integer] ns_version NS version
 	# Show a NS version
-	get '/catalogues/network-services/name/:ns_name/version/:version' do
+	get '/network-services/name/:ns_name/version/:version' do
 		begin
 			ns = Ns.where({"ns_name" =>  params[:ns_name], "ns_version" => params[:version]})
 
@@ -183,7 +183,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a NS list for last version in JSON or YAML format
 	#	@param [String] ns_name NS Name
 	# Show a NS name
-	get '/catalogues/network-services/name/:ns_name/last' do
+	get '/network-services/name/:ns_name/last' do
 
 		# Search and get all items of NS by name
 		begin
@@ -282,7 +282,7 @@ class SonataCatalogue < Sinatra::Application
 	# Post a NSD
 	# @param [JSON] NS in JSON format
 	# Post a NSD
-	post '/catalogues/network-services' do
+	post '/network-services' do
 		# Return if content-type is invalid
 		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -378,7 +378,7 @@ class SonataCatalogue < Sinatra::Application
 	# @param [JSON] NS in JSON format
 	# Update a NS
 	## Catalogue - UPDATE
-	put '/catalogues/network-services/id/:sp_ns_id' do
+	put '/network-services/id/:sp_ns_id' do
 
 		# Return if content-type is invalid
 		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
@@ -484,7 +484,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Delete a NS by its ID
 	#	@param [Integer] sp_ns_id NS sp ID
 	# Delete a NS
-	delete '/catalogues/network-services/id/:sp_ns_id' do
+	delete '/network-services/id/:sp_ns_id' do
 		#logger.error params[:external_ns_id]
 		begin
 			#ns = CatalogueModels.find( params[:external_ns_id] )
@@ -503,7 +503,7 @@ class SonataCatalogue < Sinatra::Application
 	# @overload get '/catalogues/vnfs'
 	#	Returns a list of VNFs
 	# List all VNFs in JSON or YAML format
-	get '/catalogues/vnfs' do
+	get '/vnfs' do
 		params[:offset] ||= 1
 		params[:limit] ||= 2
 
@@ -540,7 +540,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a VNF in JSON or YAML format
 	#	@param [String] id VNF ID
 	# Show a VNF by internal ID (uuid)
-	get '/catalogues/vnfs/id/:id' do
+	get '/vnfs/id/:id' do
 		begin
 			vnf = Vnf.find(params[:id])
 		rescue Mongoid::Errors::DocumentNotFound => e
@@ -565,7 +565,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a VNF or VNF list in JSON or YAML format
 	#	@param [String] vnf_name VNF Name
 	# Show a VNF by name
-	get '/catalogues/vnfs/name/:vnf_name' do
+	get '/vnfs/name/:vnf_name' do
 		#params[:offset] ||= 1
 		#params[:limit] ||= 10
 
@@ -610,7 +610,7 @@ class SonataCatalogue < Sinatra::Application
 	# Show a VNF name
 	#	@param [Integer] vnf_version VNF version
 	# Show a VNF version
-	get '/catalogues/vnfs/name/:vnf_name/version/:version' do
+	get '/vnfs/name/:vnf_name/version/:version' do
 		begin
 #			ns = CatalogueModels.find( params[:external_ns_id] )
 			vnf = Vnf.where( { "vnf_name" =>  params[:vnf_name], "vnf_version" => params[:version]})
@@ -641,7 +641,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a VNF list with last version in JSON or YAML format
 	#	@param [String] vnf_name VNF Name
 	# Show a VNF name
-	get '/catalogues/vnfs/name/:vnf_name/last' do
+	get '/vnfs/name/:vnf_name/last' do
 
 		# Search and get all items of NS by name
 		begin
@@ -718,7 +718,7 @@ class SonataCatalogue < Sinatra::Application
 	# Post a VNFD
 	# 	@param [JSON] VNF in JSON format
 	# Post a VNFD
-	post '/catalogues/vnfs' do
+	post '/vnfs' do
 		# Return if content-type is invalid
 		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -805,7 +805,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Update a VNF by its ID in JSON or YAML format
 	#	@param [String] id VNF ID
 	# Update a VNF
-	put '/catalogues/vnfs/id/:id' do
+	put '/vnfs/id/:id' do
 		# Return if content-type is invalid
 		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 		#halt 415 unless request.content_type == 'application/json'
@@ -899,7 +899,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Delete a VNF by its ID
 	#	@param [String] id VNF ID
 	# Delete a VNF
-	delete '/catalogues/vnfs/id/:id' do
+	delete '/vnfs/id/:id' do
 		begin
 			vnf = Vnf.find(params[:id])
 		rescue Mongoid::Errors::DocumentNotFound => e
@@ -918,7 +918,7 @@ class SonataCatalogue < Sinatra::Application
 	# @overload get '/catalogues/packages'
 	#	Returns a list of all Packages
 	# List all Packages in JSON or YAML format
-	get '/catalogues/packages' do
+	get '/packages' do
 		raise NotImplementedError
 	end
 
@@ -927,7 +927,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Returns an array of all packages by group in JSON or YAML format
 	#	@param [String] package_group Package Group
 	# Show a Package group
-	get '/catalogues/packages/group/:package_group' do
+	get '/packages/group/:package_group' do
 		raise NotImplementedError
 	end
 
@@ -938,7 +938,7 @@ class SonataCatalogue < Sinatra::Application
 	# Show a Package group
 	#	@param [String] package_name Package Name
 	# Show a Package name
-	get '/catalogues/packages/group/:package_group/name/:package_name' do
+	get '/packages/group/:package_group/name/:package_name' do
 		raise NotImplementedError
 	end
 
@@ -951,7 +951,7 @@ class SonataCatalogue < Sinatra::Application
 	# Show a Package name
 	#	@param [Integer] package_version Package version
 	# Show a Package version
-	get '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version' do
+	get '/packages/group/:package_group/name/:package_name/version/:package_version' do
 		raise NotImplementedError
 	end
 
@@ -962,7 +962,7 @@ class SonataCatalogue < Sinatra::Application
 	# Post a Package
 	# 	@param [JSON] Package in JSON format
 	# Post a Package
-	post '/catalogues/packages' do
+	post '/packages' do
 		#A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
 		raise NotImplementedError
 	end
@@ -976,7 +976,7 @@ class SonataCatalogue < Sinatra::Application
 	# Update a Package name
 	#	@param [Integer] package_version Package version
 	# Update a Package version
-	put '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version' do
+	put '/packages/group/:package_group/name/:package_name/version/:package_version' do
 		raise NotImplementedError
 	end
 
@@ -985,7 +985,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Delete a VNF by its ID
 	#	@param [String] id VNF ID
 	# Delete a VNF
-	delete '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version' do
+	delete '/packages/group/:package_group/name/:package_name/version/:package_version' do
 		raise NotImplementedError
 	end
 
