@@ -30,9 +30,9 @@ class SonataVnfRepository < Sinatra::Application
 	# @return [Hash, nil] if the parsed message is a valid JSON
 	# @return [Hash, String] if the parsed message is an invalid JSON
 
-	def validate_json(json_message,schema)
+	def validate_json(message,schema)
 		begin
-		       JSON::Validator.validate!(schema,json_message)
+		       JSON::Validator.validate!(schema,message)
 		rescue JSON::Schema::ValidationError => e
 			logger.error "JSON validating: #{e.to_s}"
 			return e.to_s + "\n"
