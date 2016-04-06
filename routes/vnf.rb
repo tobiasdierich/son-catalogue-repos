@@ -22,13 +22,18 @@ class SonataVnfRepository < Sinatra::Application
 		#authorized?
 	end
 
-	
+	# @method get_root
+ 	# @overload get '/'
+	get '/' do
+    	headers "Content-Type" => "text/plain; charset=utf8"
+		halt 200, interfaces_list.to_yaml
+	end
 	
 	# @method get_log
-	# @overload get '/virtual-network-functions-records/log'
+	# @overload get '/vnf-instances/log'
 	#	Returns contents of log file
 	# Management method to get log file of repository remotely
-	get '/virtual-network-functions-records/log' do
+	get '/vnf-instances/log' do
 		filename = 'log/development.log'
 
 		# For testing purposes only
@@ -44,10 +49,10 @@ class SonataVnfRepository < Sinatra::Application
 	end
 
 	# @method get_vnfs
-	# @overload get '/virtual-network-functions-records'
+	# @overload get '/vnf-instances'
 	#	Returns a list of VNFRs
 	# List all VNFRs
-	get '/virtual-network-functions-records' do
+	get '/vnf-instances' do
 		params[:offset] ||= 1
 		params[:limit] ||= 10
 
@@ -73,13 +78,13 @@ class SonataVnfRepository < Sinatra::Application
 	end
 
 	# @method get_vnfr_external_vnf_version
-	# @overload get '/virtual-network-functions-records/:external_vnfr_name/version/:version'
+	# @overload get '/vnf-instances/:external_vnfr_name/version/:version'
 	#	Show a vnf
 	#	@param [String] external_vnf_name VNF external Name
 	# Show a vnf name
 	#	@param [Integer] external_vnf_version VNF version
 	# Show a vnf version
-	get '/virtual-network-functions-records/name/:external_vnf_name/version/:version' do
+	get '/vnf-instances/name/:external_vnf_name/version/:version' do
 		begin
 			vnf = Vnfr.find_by( { "vnfr.properties.name" =>  params[:external_vnf_name], "vnfr.properties.version" => params[:version]})
 		rescue Mongoid::Errors::DocumentNotFound => e
@@ -93,11 +98,11 @@ class SonataVnfRepository < Sinatra::Application
 	end
 
 	# @method get_vnfr_external_vnf_last_version
-	# @overload get '/virtual-network-functions-records/:external_vnfr_name/last'
+	# @overload get '/vnf-instances/:external_vnfr_name/last'
 	#	Show a VNF last version
 	#	@param [String] external_vnfr_name vnf external Name
 	# Show a VNFR name
-	get '/virtual-network-functions-records/name/:external_vnfr_name/last' do
+	get '/vnf-instances/name/:external_vnfr_name/last' do
 
 		# Search and get all items of vnf by name
 		begin
@@ -126,11 +131,11 @@ class SonataVnfRepository < Sinatra::Application
 	end
 
 	# @method post_vnfrs
-	# @overload post '/virtual-network-functions-records'
+	# @overload post '/vnf-instances'
 	# Post a VNF in YAML format
 	# @param [YAML] VNF in YAML format
 	# Post a vnfr
-	post '/virtual-network-functions-records' do
+	post '/vnf-instances' do
 		# Return if content-type is invalid
 		return 415 unless request.content_type == 'application/x-yaml'
 
@@ -173,11 +178,11 @@ class SonataVnfRepository < Sinatra::Application
 	end
 
 	# @method delete_vnfr_external_vnf_id
-	# @overload delete '/virtual-network-functions-records/:external_vnf_id'
+	# @overload delete '/vnf-instances/:external_vnf_id'
 	#	Delete a vnf by its ID
 	#	@param [Integer] external_vnf_id vnf external ID
 	# Delete a vnf
-	delete '/virtual-network-functions-records/id/:external_vnf_id' do
+	delete '/vnf-instances/id/:external_vnf_id' do
 		begin
 			vnf = Vnfr.find_by( { "vnfr.id" =>  params[:external_vnf_id]})
 		rescue Mongoid::Errors::DocumentNotFound => e

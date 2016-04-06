@@ -151,4 +151,29 @@ class SonataVnfRepository < Sinatra::Application
 		link
 	end
 	
+	def interfaces_list
+		[
+				{
+						'uri' => '/records/vnfr/',
+						'method' => 'GET',
+						'purpose' => 'REST API Structure and Capability Discovery for /records/vnfr/'
+				},
+				{
+						'uri' => '/records/vnfr/vnf-instances',
+						'method' => 'GET',
+						'purpose' => 'List all VNFR'
+				},
+				{
+						'uri' => '/records/vnfr/vnf-instances/:id',
+						'method' => 'GET',
+						'purpose' => 'List specific VNFR'
+				},
+				{
+						'uri' => '/records/vnfr/vnf-instances',
+						'method' => 'POST',
+						'purpose' => 'Store a new VNFR'
+				}
+		]
+	end
+	
 end
