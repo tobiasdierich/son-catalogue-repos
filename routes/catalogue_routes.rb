@@ -95,9 +95,9 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a NS in JSON or YAML format
 	#	@param [Integer] sp_ns_id NS sp ID
 	# Show a NS by internal ID (uuid)
-	get '/network-services/id/:sp_ns_id' do
+	get '/network-services/id/:id' do
 		begin
-			ns = Ns.find(params[:sp_ns_id] )
+			ns = Ns.find(params[:id] )
 			#ns = Ns.find_by( { "nsd.id" =>  params[:external_ns_id]})
 		rescue Mongoid::Errors::DocumentNotFound => e
 			logger.error e
@@ -121,11 +121,11 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a NS or NS list in JSON or YAML format
 	#	@param [String] ns_name NS Name
 	# Show a NS by name
-	get '/network-services/name/:ns_name' do
+	get '/network-services/name/:name' do
 
 		begin
 			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
-			ns = Ns.where({"ns_name" => params[:ns_name]})
+			ns = Ns.where({"name" => params[:name]})
 			puts 'NS: ', ns.size.to_s
 
 			if ns.size.to_i == 0
@@ -154,9 +154,9 @@ class SonataCatalogue < Sinatra::Application
 	# Show a NS name
 	#	@param [Integer] ns_version NS version
 	# Show a NS version
-	get '/network-services/name/:ns_name/version/:version' do
+	get '/network-services/name/:name/version/:version' do
 		begin
-			ns = Ns.where({"ns_name" =>  params[:ns_name], "ns_version" => params[:version]})
+			ns = Ns.where({"name" =>  params[:name], "version" => params[:version]})
 
 			if ns.size.to_i == 0
 				logger.error "ERROR: NSD not found"
@@ -183,7 +183,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a NS list for last version in JSON or YAML format
 	#	@param [String] ns_name NS Name
 	# Show a NS name
-	get '/network-services/name/:ns_name/last' do
+	get '/network-services/name/:name/last' do
 
 		# Search and get all items of NS by name
 		begin
@@ -196,7 +196,7 @@ class SonataCatalogue < Sinatra::Application
 
 			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
 			#ns = Ns.where({"nsd.name" => params[:external_ns_name]})
-			ns = Ns.where({"ns_name" => params[:ns_name]}).sort({"ns_version" => -1})#.limit(1).first()
+			ns = Ns.where({"name" => params[:name]}).sort({"version" => -1})#.limit(1).first()
 			#puts 'NS: ', ns
 			#puts 'NS SiZe: ', ns.size.to_s
 
@@ -211,10 +211,10 @@ class SonataCatalogue < Sinatra::Application
 			else
 				ns_list = []
 				#puts 'first', ns.first.ns_version
-				last_version = ns.first.ns_version
+				last_version = ns.first.version
 				#App.all.to_a
 				ns.each do |nsd|
-					ns_list.push(nsd) if nsd.ns_version == last_version
+					ns_list.push(nsd) if nsd.version == last_version
 				end
 				#puts 'ns_list', ns_list.to_s
 			end
@@ -247,18 +247,18 @@ class SonataCatalogue < Sinatra::Application
 	end
 
 
-	# @method get_nsd_ns_group.name.version
-	# @overload get '/catalogues/network-services/group/:ns_group/name/:ns_name/version/:version'
+	# @method get_nsd_ns_vendor.name.version
+	# @overload get '/catalogues/network-services/vendor/:ns_vendor/name/:ns_name/version/:version'
 	#	Show a specific NS in JSON or YAML format
-	#	@param [String] ns_group NS Group
-	# Show a NS group
+	#	@param [String] ns_vendor NS vendor
+	# Show a NS vendor
 	#	@param [String] ns_name NS Name
 	# Show a NS name
 	#	@param [Integer] ns_version NS version
 	# Show a NS version
-	get '/network-services/group/:ns_group/name/:ns_name/version/:version' do
+	get '/network-services/vendor/:vendor/name/:name/version/:version' do
 		begin
-			ns = Ns.find_by({"ns_group" =>  params[:ns_group], "ns_name" =>  params[:ns_name], "ns_version" => params[:version]})
+			ns = Ns.find_by({"vendor" =>  params[:vendor], "name" =>  params[:name], "version" => params[:version]})
 		rescue Mongoid::Errors::DocumentNotFound => e
 			logger.error e
 			return 404
@@ -321,9 +321,9 @@ class SonataCatalogue < Sinatra::Application
 		#return 400, 'ERROR: NS Name not found' unless ns.has_key?('name')
 		#return 400, 'ERROR: NSD not found' unless ns.has_key?('nsd')
 
-		return 400, 'ERROR: NS Name not found' unless ns.has_key?('ns_name')
-		return 400, 'ERROR: NS Group not found' unless ns.has_key?('ns_group')
-		return 400, 'ERROR: NS Version not found' unless ns.has_key?('ns_version')
+		return 400, 'ERROR: NS Name not found' unless ns.has_key?('name')
+		return 400, 'ERROR: NS Vendor not found' unless ns.has_key?('vendor')
+		return 400, 'ERROR: NS Version not found' unless ns.has_key?('version')
 
 		# --> Validation disabled
 		# Validate NSD
@@ -334,10 +334,10 @@ class SonataCatalogue < Sinatra::Application
 		#end
 		
 		#vnfExists(ns['nsd']['vnfds'])
-		# Check if NS already exists in the catalogue by name, group and version
+		# Check if NS already exists in the catalogue by name, vendor and version
 		begin
-			ns = Ns.find_by({"ns_name" =>  ns['ns_name'], "ns_group" => ns['ns_group'], "ns_version" => ns['ns_version']})
-			return 400, 'ERROR: Duplicated NS Name, Group and Version'
+			ns = Ns.find_by({"name" =>  ns['name'], "vendor" => ns['vendor'], "version" => ns['version']})
+			return 400, 'ERROR: Duplicated NS Name, Vendor and Version'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 		# Check if NSD has an ID (it should not) and if it already exists in the catalogue
@@ -378,7 +378,7 @@ class SonataCatalogue < Sinatra::Application
 	# @param [JSON] NS in JSON format
 	# Update a NS
 	## Catalogue - UPDATE
-	put '/network-services/id/:sp_ns_id' do
+	put '/network-services/id/:id' do
 
 		# Return if content-type is invalid
 		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
@@ -408,33 +408,32 @@ class SonataCatalogue < Sinatra::Application
 			return 400, errors.to_json if errors
 		end
 
-		# Validate JSON format
 		# When updating a NSD, the json object sent to API must contain just data inside
 		# of the nsd, without the json field nsd: before <- this might be resolved
 		#new_ns, errors = parse_json(request.body.read)
 		#return 400, errors.to_json if errors
 
 		# Validate NS
-		# TODO: Check if same Group, Name, Version do already exists in the database
+		# TODO: Check if same vendor, Name, Version do already exists in the database
 		#halt 400, 'ERROR: NSD not found' unless ns.has_key?('vnfd')
-		return 400, 'ERROR: NS Group not found' unless new_ns.has_key?('ns_group')
-		return 400, 'ERROR: NS Name not found' unless new_ns.has_key?('ns_name')
-		return 400, 'ERROR: NS Version not found' unless new_ns.has_key?('ns_version')
+		return 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
+		return 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
+		return 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
 
 		# Retrieve stored version
 		begin
-			puts 'Searching ' + params[:sp_ns_id].to_s
+			puts 'Searching ' + params[:id].to_s
 
-			ns = Ns.find_by( { "_id" =>  params[:sp_ns_id] })
+			ns = Ns.find_by( { "_id" =>  params[:id] })
 
 			puts 'NS is found'
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 400, 'This NSD does not exists'
 		end
-		# Check if NS already exists in the catalogue by name, group and version
+		# Check if NS already exists in the catalogue by name, vendor and version
 		begin
-			ns = Ns.find_by({"ns_name" =>  new_ns['ns_name'], "ns_group" => new_ns['ns_group'], "ns_version" => new_ns['ns_version']})
-			return 400, 'ERROR: Duplicated NS Name, Group and Version'
+			ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
+			return 400, 'ERROR: Duplicated NS Name, Vendor and Version'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 
@@ -484,11 +483,11 @@ class SonataCatalogue < Sinatra::Application
 	#	Delete a NS by its ID
 	#	@param [Integer] sp_ns_id NS sp ID
 	# Delete a NS
-	delete '/network-services/id/:sp_ns_id' do
+	delete '/network-services/id/:id' do
 		#logger.error params[:external_ns_id]
 		begin
 			#ns = CatalogueModels.find( params[:external_ns_id] )
-			ns = Ns.find_by(params[:sp_ns_id] )
+			ns = Ns.find(params[:id] )
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 404,'ERROR: Operation failed'
 		end
@@ -565,7 +564,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a VNF or VNF list in JSON or YAML format
 	#	@param [String] vnf_name VNF Name
 	# Show a VNF by name
-	get '/vnfs/name/:vnf_name' do
+	get '/vnfs/name/:name' do
 		#params[:offset] ||= 1
 		#params[:limit] ||= 10
 
@@ -581,7 +580,7 @@ class SonataCatalogue < Sinatra::Application
 			#headers['Link'] = build_http_link_name(params[:offset].to_i, params[:limit], params[:vnf_name])
 
 			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
-			vnf = Vnf.where({"vnf_name" => params[:vnf_name]})
+			vnf = Vnf.where({"name" => params[:name]})
 			puts 'VNF: ', vnf.size.to_s
 
 			if vnf.size.to_i == 0
@@ -610,10 +609,10 @@ class SonataCatalogue < Sinatra::Application
 	# Show a VNF name
 	#	@param [Integer] vnf_version VNF version
 	# Show a VNF version
-	get '/vnfs/name/:vnf_name/version/:version' do
+	get '/vnfs/name/:name/version/:version' do
 		begin
 #			ns = CatalogueModels.find( params[:external_ns_id] )
-			vnf = Vnf.where( { "vnf_name" =>  params[:vnf_name], "vnf_version" => params[:version]})
+			vnf = Vnf.where( { "name" =>  params[:name], "version" => params[:version]})
 
 			if vnf.size.to_i == 0
 				logger.error "ERROR: VNFD not found"
@@ -641,12 +640,12 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a VNF list with last version in JSON or YAML format
 	#	@param [String] vnf_name VNF Name
 	# Show a VNF name
-	get '/vnfs/name/:vnf_name/last' do
+	get '/vnfs/name/:name/last' do
 
 		# Search and get all items of NS by name
 		begin
 			puts 'params', params
-			vnf = Vnf.where({"vnf_name" => params[:vnf_name]}).sort({"vnf_version" => -1})#.limit(1).first()
+			vnf = Vnf.where({"name" => params[:name]}).sort({"version" => -1})#.limit(1).first()
 			puts 'VNF: ', vnf
 
 			if vnf.size.to_i == 0
@@ -659,9 +658,9 @@ class SonataCatalogue < Sinatra::Application
 
 			else
 				vnf_list = []
-				last_version = vnf.first.vnf_version
+				last_version = vnf.first.version
 				vnf.each do |vnfd|
-					vnf_list.push(vnfd) if vnfd.vnf_version == last_version
+					vnf_list.push(vnfd) if vnfd.version == last_version
 				end
 				#puts 'ns_list', ns_list.to_s
 
@@ -683,18 +682,18 @@ class SonataCatalogue < Sinatra::Application
 	end
 
 
-	# @method get_vnfd_vnf_group.name.version
-	# @overload get '/vnfs/group/:_vnf_group/name/:vnf_name/version/:version'
+	# @method get_vnfd_vnf_vendor.name.version
+	# @overload get '/vnfs/vendor/:_vnf_vendor/name/:vnf_name/version/:version'
 	#	Show a specific VNF in JSON or YAML format
-	#	@param [String] vnf_group VNF Group
-	# Show a VNF group
+	#	@param [String] vnf_vendor VNF vendor
+	# Show a VNF vendor
 	#	@param [String] vnf_name VNF Name
 	# Show a VNF name
 	#	@param [Integer] vnf_version VNF version
 	# Show a VNF version
-	get '/vnfs/group/:vnf_group/name/:vnf_name/version/:version' do
+	get '/vnfs/vendor/:vendor/name/:name/version/:version' do
 		begin
-			vnf = Vnf.find_by( {"vnf_group" =>  params[:vnf_group], "vnf_name" =>  params[:vnf_name], "vnf_version" => params[:version]})
+			vnf = Vnf.find_by( {"vendor" =>  params[:vendor], "name" =>  params[:name], "version" => params[:version]})
 		rescue Mongoid::Errors::DocumentNotFound => e
 			logger.error e
 			return 404
@@ -750,9 +749,9 @@ class SonataCatalogue < Sinatra::Application
 
 		# Validate VNF
 		#halt 400, 'ERROR: VNFD not found' unless vnf.has_key?('vnfd')
-		return 400, 'ERROR: VNF Group not found' unless vnf.has_key?('vnf_group')
-		return 400, 'ERROR: VNF Name not found' unless vnf.has_key?('vnf_name')
-		return 400, 'ERROR: VNF Version not found' unless vnf.has_key?('vnf_version')
+		return 400, 'ERROR: VNF Vendor not found' unless vnf.has_key?('vendor')
+		return 400, 'ERROR: VNF Name not found' unless vnf.has_key?('name')
+		return 400, 'ERROR: VNF Version not found' unless vnf.has_key?('version')
 
 		# --> Validation disabled
 		# Validate VNFD
@@ -765,10 +764,10 @@ class SonataCatalogue < Sinatra::Application
 		#	halt e.response.code, e.response.body
 		#end
 
-		# Check if VNF already exists in the catalogue by name, group and version
+		# Check if VNF already exists in the catalogue by name, vendor and version
 		begin
-			vnf = Vnf.find_by( {"vnf_name"=>vnf['vnf_name'], "vnf_group" => vnf['vnf_group'], "vnf_version"=>vnf['vnf_version']} )
-			return 400, 'ERROR: Duplicated VNF Name, Group and Version'
+			vnf = Vnf.find_by( {"name"=>vnf['name'], "vendor" => vnf['vendor'], "version"=>vnf['version']} )
+			return 400, 'ERROR: Duplicated VNF Name, Vendor and Version'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 		# Check if VNFD has an ID (it should not) and if it already exists in the catalogue
@@ -839,11 +838,11 @@ class SonataCatalogue < Sinatra::Application
 		end
 
 		# Validate VNF
-		# TODO: Check if same Group, Name, Version do already exists in the database
+		# TODO: Check if same vendor, Name, Version do already exists in the database
 		#halt 400, 'ERROR: VNFD not found' unless vnf.has_key?('vnfd')
-		return 400, 'ERROR: VNF Group not found' unless new_vnf.has_key?('vnf_group')
-		return 400, 'ERROR: VNF Name not found' unless new_vnf.has_key?('vnf_name')
-		return 400, 'ERROR: VNF Version not found' unless new_vnf.has_key?('vnf_version')
+		return 400, 'ERROR: VNF Vendor not found' unless new_vnf.has_key?('vendor')
+		return 400, 'ERROR: VNF Name not found' unless new_vnf.has_key?('name')
+		return 400, 'ERROR: VNF Version not found' unless new_vnf.has_key?('version')
 
 		# Validate VNFD
 		#begin
@@ -862,8 +861,8 @@ class SonataCatalogue < Sinatra::Application
 			halt 404 # 'This VNFD does not exists'
 		end
 		begin
-			vnf = Vnf.find_by( {"vnf_name"=>new_vnf['vnf_name'], "vnf_group"=>new_vnf['vnf_group'], "vnf_version"=>new_vnf['vnf_version']} )
-			return 400, 'ERROR: Duplicated VNF Name, Group and Version'
+			vnf = Vnf.find_by( {"name"=>new_vnf['name'], "vendor"=>new_vnf['vendor'], "version"=>new_vnf['version']} )
+			return 400, 'ERROR: Duplicated VNF Name, Vendor and Version'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 
@@ -919,39 +918,197 @@ class SonataCatalogue < Sinatra::Application
 	#	Returns a list of all Packages
 	# List all Packages in JSON or YAML format
 	get '/packages' do
-		raise NotImplementedError
+		params[:offset] ||= 1
+		params[:limit] ||= 10
+
+		# Only accept positive numbers
+		params[:offset] = 1 if params[:offset].to_i < 1
+		params[:limit] = 2 if params[:limit].to_i < 1
+
+		# Get paginated list
+		pks = Package.paginate(:page => params[:offset], :limit => params[:limit])
+		logger.debug(pks)
+
+		# Build HTTP Link Header
+		#headers['Link'] = build_http_link_packs(params[:offset].to_i, params[:limit])
+
+		begin
+			pks_json = pks.to_json # to remove _id field from documents (:except => :_id)
+			#puts 'NSS: ', nss_json
+			if request.content_type == 'application/json'
+				return 200, pks_json
+			elsif request.content_type == 'application/x-yaml'
+				pks_yml = json_to_yaml(pks_json)
+				return 200, pks_yml
+			end
+		rescue
+			logger.error "Error Establishing a Database Connection"
+			return 500, "Error Establishing a Database Connection"
+		end
+	end
+
+	# @method get_packages_package_id
+	# @overload get '/catalogues//packages/id/:id'
+	#	Return one (or zero) Package by ID in JSON or YAML format
+	#	@param [String] package_group Package id
+	# Show a Package group
+	get '/packages/id/:id' do
+		begin
+			pks = Package.find(params[:id] )
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+
+		pks_json = pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
+		#return 200, ns.nsd.to_json
 	end
 
 	# @method get_packages_package_group
-	# @overload get '/catalogues/packages/group/:package_group'
-	#	Returns an array of all packages by group in JSON or YAML format
-	#	@param [String] package_group Package Group
+	# @overload get '/catalogues/packages/vendor/:package_group'
+	#	Returns an array of all packages by vendor in JSON or YAML format
+	#	@param [String] package_group Package vendor
 	# Show a Package group
-	get '/packages/group/:package_group' do
-		raise NotImplementedError
+	get '/packages/vendor/:package_group' do
+		begin
+			pks = Package.where({"package_group" => params[:package_group]})
+			puts 'Package: ', pks.size.to_s
+
+			if pks.size.to_i == 0
+				logger.error "ERROR: PD not found"
+				return 404
+			end
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+		pks_json = pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(ns_json)
+			return 200, pks_yml
+		end
 	end
 
 	# @method get_packages_package_group.name
-	# @overload get '/catalogues/packages/group/:package_group/name/:package_name'
+	# @overload get '/catalogues/packages/vendor/:package_group/name/:package_name'
 	#	Returns an array of all packages by group and name in JSON or YAML format
-	#	@param [String] package_group Package Group
+	#	@param [String] package_group Package vendor
 	# Show a Package group
 	#	@param [String] package_name Package Name
 	# Show a Package name
-	get '/packages/group/:package_group/name/:package_name' do
-		raise NotImplementedError
+	get '/packages/vendor/:package_group/name/:package_name' do
+		begin
+			pks = Package.where({"package_group" =>  params[:package_group], "package_name" => params[:package_name]})
+
+			if pks.size.to_i == 0
+				logger.error "ERROR: PD not found"
+				return 404
+			end
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+
+		pks_json = pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
 	end
 
 	# @method get_packages_package_group.name.version
-	# @overload get '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version'
-	#	Return one (or zero) Package by group, name, version in JSON or YAML format
-	#	@param [String] package_group Package Group
+	# @overload get '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
+	#	Return one (or zero) Package by vendor, name, version in JSON or YAML format
+	#	@param [String] package_group Package vendor
 	# Show a Package group
 	#	@param [String] package_name Package Name
 	# Show a Package name
 	#	@param [Integer] package_version Package version
 	# Show a Package version
-	get '/packages/group/:package_group/name/:package_name/version/:package_version' do
+	get '/packages/vendor/:package_group/name/:package_name/version/:package_version' do
+		begin
+			pks = Package.find_by({"package_group" =>  params[:package_group], "package_name" =>  params[:package_name], "package_version" => params[:package_version]})
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+
+		pks_json = pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
+	end
+
+	# @method get_packages_package_vendor_last_version
+	# @overload get '/catalogues/packages/vendor/:package_group/last'
+	#	Show a Package Vendor list for last version in JSON or YAML format
+	#	@param [String] package_vendor Package Vendor
+	# Show a Package vendor
+	get '/packages/vendor/:package_group/last' do
+		raise NotImplementedError
+	end
+
+	# @method get_packages_package_name
+	# @overload get '/catalogues/packages/name/:name'
+	#	Show a Package or Package list in JSON or YAML format
+	#	@param [String] package_name NS Name
+	# Show a Package by name
+	get '/packages/name/:package_name' do
+		begin
+			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
+			pks = Package.where({"package_name" => params[:package_name]})
+			puts 'Package: ', pks.size.to_s
+
+			if pks.size.to_i == 0
+				logger.error "ERROR: NSD not found"
+				return 404
+			end
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+		pks_json = pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
+	end
+
+	# @method get_packages_package_name_version
+	# @overload get '/catalogues/packages/name/:name/version/:version'
+	#	Show a Package list in JSON or YAML format
+	#	@param [String] package_name Package Name
+	# Show a Package name
+	#	@param [Integer] package_version Package version
+	# Show a Package version
+	get '/packages/name/:name/version/:version' do
+		raise NotImplementedError
+	end
+
+	# @method get_packages_package_name_last_version
+	# @overload get '/catalogues/packages/name/:name/last'
+	#	Show a Package list for last version in JSON or YAML format
+	#	@param [String] package_name Package Name
+	# Show a Package name
+	get '/packages/name/:name/last' do
 		raise NotImplementedError
 	end
 
@@ -964,29 +1121,288 @@ class SonataCatalogue < Sinatra::Application
 	# Post a Package
 	post '/packages' do
 		#A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
-		raise NotImplementedError
+		# Return if content-type is invalid
+		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+		# Compatibility support for YAML content-type
+		if request.content_type == 'application/x-yaml'
+
+			# Validate YAML format
+			pks, errors = parse_yaml(request.body.read)
+
+			return 400, errors.to_json if errors
+
+			# Translate from YAML format to JSON format
+			pks_json = yaml_to_json(pks)
+
+			# Validate JSON format
+			pks, errors = parse_json(pks_json)
+			#puts 'PD: ', pks.to_json
+			return 400, errors.to_json if errors
+
+			# Compatibility support for JSON content-type
+		elsif request.content_type == 'application/json'
+			# Parses and validates JSON format
+			pks, errors = parse_json(request.body.read)
+			return 400, errors.to_json if errors
+		end
+
+		return 400, 'ERROR: Package Name not found' unless pks.has_key?('package_name')
+		return 400, 'ERROR: Package Vendor not found' unless pks.has_key?('package_group')
+		return 400, 'ERROR: Package Version not found' unless pks.has_key?('package_version')
+
+		# --> Validation disabled
+		# Validate PD
+		#begin
+		#	RestClient.post settings.pd_validator + '/pds', pks.to_json, :content_type => :json
+		#rescue => e
+		#	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
+		#end
+
+		# Check if package already exists in the catalogue by name, vendor and version
+		begin
+			pks = Package.find_by({"package_name" =>  pks['package_name'], "package_vendor" => pks['package_vendor'], "package_version" => pks['package_version']})
+			return 400, 'ERROR: Duplicated PD Name, Vendor and Version'
+		rescue Mongoid::Errors::DocumentNotFound => e
+		end
+		# Check if PD has an ID (it should not) and if it already exists in the catalogue
+		begin
+			pks = Package.find_by({"_id" =>  pks['_id']})
+			return 400, 'ERROR: Duplicated PD ID'
+		rescue Mongoid::Errors::DocumentNotFound => e
+		end
+
+		# Save to DB
+		begin
+			# Generate the UUID for the descriptor
+			pks['_id'] = SecureRandom.uuid
+			new_pks = Package.create!(pks)
+		rescue Moped::Errors::OperationFailure => e
+			return 400, 'ERROR: Duplicated PD ID' if e.message.include? 'E11000'
+		end
+
+		puts 'New PD has been added'
+		pks_json = new_pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+
+		end
 	end
 
-	# @method update_package
-	# @overload put '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version
+	# @method update_package_group_name_version
+	# @overload put '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version
 	#	Update a Package by group, name and version in JSON or YAML format
-	#	@param [String] package_group Package Group
+	#	@param [String] package_group Package vendor
 	# Update a Package group
 	#	@param [String] package_name Package Name
 	# Update a Package name
 	#	@param [Integer] package_version Package version
 	# Update a Package version
-	put '/packages/group/:package_group/name/:package_name/version/:package_version' do
-		raise NotImplementedError
+	put '/packages/vendor/:package_group/name/:package_name/version/:package_version' do
+		# Return if content-type is invalid
+		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+		# Compatibility support for YAML content-type
+		if request.content_type == 'application/x-yaml'
+			# Validate YAML format
+			pks, errors = parse_yaml(request.body.read)
+			return 400, errors.to_json if errors
+
+			# Translate from YAML format to JSON format
+			new_pks_json = yaml_to_json(pks)
+
+			# Validate JSON format
+			new_pks, errors = parse_json(new_pks_json)
+			puts 'pks: ', new_pks.to_json
+			puts 'new_pks id', new_pks['_id'].to_json
+			return 400, errors.to_json if errors
+
+			# Compatibility support for JSON content-type
+		elsif request.content_type == 'application/json'
+			# Parses and validates JSON format
+			new_pks, errors = parse_json(request.body.read)
+			return 400, errors.to_json if errors
+		end
+
+		# Validate NS
+		# TODO: Check if same vendor, Name, Version do already exists in the database
+		return 400, 'ERROR: PD Vendor not found' unless new_pks.has_key?('package_group')
+		return 400, 'ERROR: PD Name not found' unless new_pks.has_key?('package_name')
+		return 400, 'ERROR: PD Version not found' unless new_pks.has_key?('package_version')
+
+		# Retrieve stored version
+		begin
+			puts 'Searching ' + params[:id].to_s
+
+			pks = Package.find_by({"package_name" =>  params[:package_name], "package_vendor" => params[:package_vendor], "package_version" => params[:package_version]})
+			#puts 'PD is found'
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			return 400, 'This PD does not exists'
+		end
+		# Check if PD already exists in the catalogue by name, vendor and version
+		begin
+			pks = Package.find_by({"package_name" =>  new_pks['package_name'], "package_vendor" => new_pks['package_vendor'], "package_version" => new_pks['package_version']})
+			return 400, 'ERROR: Duplicated Package Name, Vendor and Version'
+		rescue Mongoid::Errors::DocumentNotFound => e
+		end
+
+		# Update to new version
+		pks = {}
+		prng = Random.new
+		puts 'Updating...'
+
+		new_pks['_id'] = SecureRandom.uuid
+		pks = new_pks # Avoid having multiple PD fields containers
+
+		# --> Validation disabled
+		# Validate PD
+		#begin
+		#	RestClient.post settings.pd_validator + '/pds', pd.to_json, :content_type => :json
+		#rescue => e
+		#	logger.error e.response
+		#	return e.response.code, e.response.body
+		#end
+
+		begin
+			new_pks = Package.create!(pks)
+		rescue Moped::Errors::OperationFailure => e
+			return 400, 'ERROR: Duplicated Package ID' if e.message.include? 'E11000'
+		end
+
+		pks_json = new_pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
 	end
 
-	# @method delete_vnfd_sp_vnf_id
-	# @overload delete '/catalogues/vnfs/id/:id'
-	#	Delete a VNF by its ID
-	#	@param [String] id VNF ID
-	# Delete a VNF
-	delete '/packages/group/:package_group/name/:package_name/version/:package_version' do
-		raise NotImplementedError
+	# @method update_package_id
+	# @overload put '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version
+	#	Update a Package by group, name and version in JSON or YAML format
+	#	@param [String] id PD ID
+	# Update a PD by ID
+	put '/packages/id/:id' do
+		# Return if content-type is invalid
+		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+		# Compatibility support for YAML content-type
+		if request.content_type == 'application/x-yaml'
+			# Validate YAML format
+			pks, errors = parse_yaml(request.body.read)
+			return 400, errors.to_json if errors
+
+			# Translate from YAML format to JSON format
+			new_pks_json = yaml_to_json(pks)
+
+			# Validate JSON format
+			new_pks, errors = parse_json(new_pks_json)
+			puts 'pks: ', new_pks.to_json
+			puts 'new_pks id', new_pks['_id'].to_json
+			return 400, errors.to_json if errors
+
+			# Compatibility support for JSON content-type
+		elsif request.content_type == 'application/json'
+			# Parses and validates JSON format
+			new_pks, errors = parse_json(request.body.read)
+			return 400, errors.to_json if errors
+		end
+
+		# Validate NS
+		# TODO: Check if same vendor, Name, Version do already exists in the database
+		return 400, 'ERROR: PD Vendor not found' unless new_pks.has_key?('package_group')
+		return 400, 'ERROR: PD Name not found' unless new_pks.has_key?('package_name')
+		return 400, 'ERROR: PD Version not found' unless new_pks.has_key?('package_version')
+
+		# Retrieve stored version
+		begin
+			puts 'Searching ' + params[:id].to_s
+
+			pks = Package.find_by({"_id" =>  params[:id]})
+				#puts 'PD is found'
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			return 400, 'This PD does not exists'
+		end
+		# Check if PD already exists in the catalogue by name, vendor and version
+		begin
+			pks = Package.find_by({"package_name" =>  new_pks['package_name'], "package_vendor" => new_pks['package_vendor'], "package_version" => new_pks['package_version']})
+			return 400, 'ERROR: Duplicated Package Name, Vendor and Version'
+		rescue Mongoid::Errors::DocumentNotFound => e
+		end
+
+		# Update to new version
+		pks = {}
+		prng = Random.new
+		puts 'Updating...'
+
+		new_pks['_id'] = SecureRandom.uuid
+		pks = new_pks # Avoid having multiple PD fields containers
+
+		# --> Validation disabled
+		# Validate PD
+		#begin
+		#	RestClient.post settings.pd_validator + '/pds', pd.to_json, :content_type => :json
+		#rescue => e
+		#	logger.error e.response
+		#	return e.response.code, e.response.body
+		#end
+
+		begin
+			new_pks = Package.create!(pks)
+		rescue Moped::Errors::OperationFailure => e
+			return 400, 'ERROR: Duplicated Package ID' if e.message.include? 'E11000'
+		end
+
+		pks_json = new_pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
+	end
+
+	# @method delete_pd_package_group_name_version
+	# @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
+	#	Delete a PD by group, name and version in JSON or YAML format
+	#	@param [String] package_group Package vendor
+	# Delete a Package by group
+	#	@param [String] package_name Package Name
+	# Delete a Package by name
+	#	@param [Integer] package_version Package version
+	# Delete a Package by version
+	delete '/packages/vendor/:package_group/name/:package_name/version/:package_version' do
+		begin
+			pks = Package.find_by({"package_name" =>  params[:package_name], "package_vendor" => params[:package_vendor], "package_version" => params[:package_version]})
+		rescue Mongoid::Errors::DocumentNotFound => e
+			return 404,'ERROR: Operation failed'
+		end
+		pks.destroy
+		return 200, 'OK: PD removed'
+	end
+
+	# @method delete_pd_package_id
+	# @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
+	#	Delete a PD by its ID
+	#	@param [String] id PD ID
+	# Delete a PD
+	delete '/packages/id/:id' do
+		begin
+			pks = Package.find(params[:id] )
+		rescue Mongoid::Errors::DocumentNotFound => e
+			return 404,'ERROR: Operation failed'
+		end
+		pks.destroy
+		return 200, 'OK: PD removed'
 	end
 
 end

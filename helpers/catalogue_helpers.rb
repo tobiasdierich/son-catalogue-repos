@@ -188,7 +188,7 @@ class SonataCatalogue < Sinatra::Application
 	#
 	# @return [Array] an array of hashes containing all interfaces
 	def interfaces_list
-		[
+		["Some methods are under development and may not work yet! (raise NotImplementedError)",
 				{
 						'uri' => '/catalogues/',
 						'method' => 'GET',
@@ -200,27 +200,27 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'List all NSs'
 				},
 				{
-						'uri' => '/catalogues/network-services/id/{sp_ns_id}',
+						'uri' => '/catalogues/network-services/id/{id}',
 						'method' => 'GET',
 						'purpose' => 'List a specific NS'
 				},
 				{
-						'uri' => '/catalogues/network-services/name/{ns_name}',
+						'uri' => '/catalogues/network-services/name/{name}',
 						'method' => 'GET',
 						'purpose' => 'List a specific NS or specifics NS with common name'
 				},
 				{
-						'uri' => '/catalogues/network-services/name/{ns_name}/version/{ns_version}',
+						'uri' => '/catalogues/network-services/name/{name}/version/{version}',
 						'method' => 'GET',
 						'purpose' => 'List a specific NS by name and version'
 				},
 				{
-						'uri' => '/catalogues/network-services/group/{ns_group}/name/{ns_name}/version/{ns_version}',
+						'uri' => '/catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}',
 						'method' => 'GET',
 						'purpose' => 'List a specific NS'
 				},
 				{
-						'uri' => '/catalogues/network-services/name/{ns_name}/last',
+						'uri' => '/catalogues/network-services/name/{name}/last',
 						'method' => 'GET',
 						'purpose' => 'List last version of specific NS by name'
 				},
@@ -230,12 +230,12 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'Store a new NS'
 				},
 				{
-						'uri' => '/catalogues/network-services/{sp_ns_id}',
+						'uri' => '/catalogues/network-services/id/{id}',
 						'method' => 'PUT',
 						'purpose' => 'Update a stored NS'
 				},
 				{
-						'uri' => '/catalogues/network-services/{sp_ns_id}',
+						'uri' => '/catalogues/network-services/id/{id}',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific NS'
 				},
@@ -245,27 +245,27 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'List all VNFs'
 				},
 				{
-						'uri' => '/catalogues/vnfs/name/{vnf_name}',
+						'uri' => '/catalogues/vnfs/name/{name}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF or specifics VNF with common name'
 				},
 				{
-						'uri' => '/catalogues/vnfs/name/{vnf_name}/last',
+						'uri' => '/catalogues/vnfs/name/{name}/last',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
 				},
 				{
-						'uri' => '/catalogues/vnfs/name/{vnf_name}/version/{vnf_version}',
+						'uri' => '/catalogues/vnfs/name/{name}/version/{version}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
 				},
 				{
-						'uri' => '/catalogues/vnfs/group/{vnf_group}/name/{vnf_name}/version/{vnf_version}',
+						'uri' => '/catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
 				},
 				{
-						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
+						'uri' => '/catalogues/vnfs/id/{id}',
 						'method' => 'GET',
 						'purpose' => 'List a specific VNF'
 				},
@@ -275,12 +275,12 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'Store a new VNF'
 				},
 				{
-						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
+						'uri' => '/catalogues/vnfs/id/{id}',
 						'method' => 'PUT',
 						'purpose' => 'Update a stored VNF'
 				},
 				{
-						'uri' => '/catalogues/vnfs/id/{sp_vnf_id}',
+						'uri' => '/catalogues/vnfs/id/{id}',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific VNF'
 				},
@@ -288,18 +288,22 @@ class SonataCatalogue < Sinatra::Application
 						'method' => 'GET',
 						'purpose' => 'Returns an array of all packages'
 				},
-				{
-						'uri' => '/catalogues/packages/group/{package_group}',
+				{		'uri' => '/catalogues/packages/id/{_id}',
 						'method' => 'GET',
-						'purpose' => 'Returns an array of all packages of group'
+						'purpose' => 'Return one (or zero) package'
 				},
 				{
-						'uri' => '/catalogues/packages/group/{package_group}/name/{package_name}',
+						'uri' => '/catalogues/packages/vendor/{package_group}',
 						'method' => 'GET',
-						'purpose' => 'Returns an array of all packages of group and name'
+						'purpose' => 'Returns an array of all packages of vendor'
 				},
 				{
-						'uri' => '/catalogues/packages/group/{package_group}/name/{package_name}/version/{package_version}',
+						'uri' => '/catalogues/packages/vendor/{package_group}/name/{package_name}',
+						'method' => 'GET',
+						'purpose' => 'Returns an array of all packages of vendor and name'
+				},
+				{
+						'uri' => '/catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}',
 						'method' => 'GET',
 						'purpose' => 'Return one (or zero) package'
 				},
@@ -309,12 +313,12 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'Store a new Package'
 				},
 				{
-						'uri' => '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version',
+						'uri' => '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version',
 						'method' => 'PUT',
 						'purpose' => 'Update a stored Package'
 				},
 				{
-						'uri' => '/catalogues/packages/group/:package_group/name/:package_name/version/:package_version',
+						'uri' => '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific Package'
 				},
