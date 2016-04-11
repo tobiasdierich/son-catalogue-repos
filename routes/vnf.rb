@@ -78,58 +78,18 @@ class SonataVnfRepository < Sinatra::Application
 		return 200, vnfs_yml
 	end
 
-	# @method get_vnfr_external_vnf_version
-	# @overload get '/vnf-instances/:external_vnfr_name/version/:version'
-	#	Show a vnf
-	#	@param [String] external_vnf_name VNF external Name
-	# Show a vnf name
-	#	@param [Integer] external_vnf_version VNF version
-	# Show a vnf version
-	get '/vnf-instances/name/:external_vnf_name/version/:version' do
+	# @method get_vnf-instances
+	# @overload get "/vnf-instances"
+	# Gets vnf-instances with an id
+
+	get '/vnf-instances/:id' do
 		begin
-			vnf = Vnfr.find_by( { "vnfr.properties.name" =>  params[:external_vnf_name], "vnfr.properties.version" => params[:version]})
+			@vnfInstance = Vnfr.find(params[:id])
 		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
+			halt (404)
 		end
-
-		vnf_json = Vnfr.vnfr.to_json
-		vnf_yml = json_to_yaml(vnf_json)
-		return 200, vnf_yml
-	end
-
-	# @method get_vnfr_external_vnf_last_version
-	# @overload get '/vnf-instances/:external_vnfr_name/last'
-	#	Show a VNF last version
-	#	@param [String] external_vnfr_name vnf external Name
-	# Show a VNFR name
-	get '/vnf-instances/name/:external_vnfr_name/last' do
-
-		# Search and get all items of vnf by name
-		begin
-			puts 'params', params
-			
-			vnf = Vnfr.where({"vnf.properties.name" => params[:external_vnf_name]}).sort({"vnf.properties.version" => -1}).limit(1).first()
-			puts 'VNF: ', vnf
-
-			if vnf == nil
-				logger.error "ERROR: vnfr not found"
-				return 404
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		vnf_json = vnf.to_json
-		puts 'VNF: ', vnf_json
-
-		vnf_yml = json_to_yaml(vnf_json)
-		return 200, vnf_yml
-
-		
-	end
+		return json_to_yaml(@vnfInstance.to_json)
+	end	
 
 	# @method post_vnfrs
 	# @overload post '/vnf-instances'
@@ -183,7 +143,7 @@ class SonataVnfRepository < Sinatra::Application
 	#	Delete a vnf by its ID
 	#	@param [Integer] external_vnf_id vnf external ID
 	# Delete a vnf
-	delete '/vnf-instances/id/:external_vnf_id' do
+	delete '/vnf-instances/:external_vnf_id' do
 		begin
 			vnf = Vnfr.find_by( { "vnfr.id" =>  params[:external_vnf_id]})
 		rescue Mongoid::Errors::DocumentNotFound => e
