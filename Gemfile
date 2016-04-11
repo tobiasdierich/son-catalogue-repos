@@ -16,6 +16,8 @@ group :development, :test do
 	gem 'rack-test'
 	gem 'database_cleaner'
 	gem 'factory_girl'
+	gem 'rubocop'
+	gem 'rubocop-checkstyle_formatter', require: false
 end
 
 group :doc do
