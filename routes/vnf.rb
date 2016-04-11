@@ -6,7 +6,7 @@ APIDOC comment
 class SonataVnfRepository < Sinatra::Application
 
   #@@vnfr_schema=JSON.parse(JSON.dump(YAML.load_file("#{settings.root}/schemas/vnfr_schema.yml")))  
-  @@vnfr_schema=JSON.parse(JSON.dump(YAML.load(open('https://github.com/sonata-nfv/son-schema/blob/master/function-record/vnfr-schema.yml'){|f| f.read})))
+  @@vnfr_schema=JSON.parse(JSON.dump(YAML.load(open('https://raw.githubusercontent.com/sonata-nfv/son-schema/master/function-record/vnfr-schema.yml'){|f| f.read})))
 
 	before do
 
