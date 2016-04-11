@@ -2,7 +2,7 @@ FROM ruby:2.1
 RUN mkdir -p /app
 COPY Gemfile /app/
 WORKDIR /app
-RUN bundle install --quiet
+RUN bundle install
 COPY . /app
 RUN rake yard
 ENV PORT 4567
