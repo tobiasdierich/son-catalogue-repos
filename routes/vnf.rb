@@ -96,39 +96,38 @@ class SonataVnfRepository < Sinatra::Application
 	# @param [YAML] VNF in YAML format
 	# Post a vnfr
 	post '/vnf-instances' do
-		# Return if content-type is invalid
-		return 415 unless request.content_type == 'application/x-yaml'
+		
+		if request.content_type ==  'application/json' then
+			instance, errors = parse_json(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = instance
+		else if request.content_type == 'application/x-yaml' then
+			instance, errors = parse_yaml(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = yaml_to_json(instance)
+			instance, errors = parse_json(vnf_json)
+			return 400, errors.to_json if errors
+		end
 
-		# Validate YAML format
-		vnf, errors = parse_yaml(request.body.read)
-
-		return 400, errors.to_json if errors
-
-
-		vnf_json = yaml_to_json(vnf)
-
-
-		vnf, errors = parse_json(vnf_json)
 		puts 'vnf: ', Vnfr.to_json
 		errors = validate_json(vnf_json,@@vnfr_schema)
 		return 400, errors.to_json if errors
 
 		begin
-			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['id'] })
-			#, "nsr.properties.version" => ns['nsr']['properties']['version'],"nsr.properties.vendor" => ns['nsr']['properties']['vendor']})
+			instance = Vnfr.find_by( { "_id" =>  instance['id'] })
 			return 400, 'ERROR: Duplicated VNF ID'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 
 		# Save to DB
 		begin
-			new_vnf = Vnfr.create!(vnf)
+			instance = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
 			return 400, 'ERROR: Duplicated VNF ID' if e.message.include? 'E11000'
 		end
 
 		puts 'New VNF has been added'
-		vnf_json = new_vnf.to_json
+		vnf_json = instance.to_json
 		vnf_yml = json_to_yaml(vnf_json)
 		return 200, vnf_yml
 	end
@@ -139,47 +138,39 @@ class SonataVnfRepository < Sinatra::Application
 	# @param [YAML] VNF in YAML format
 	# Put a vnfr
 	put '/vnf-instances/:id' do
-		# Return if content-type is invalid
-		return 415 unless request.content_type == 'application/x-yaml'
-
-		# Validate YAML format
-		vnf, errors = parse_yaml(request.body.read)
-		return 400, errors.to_json if errors		
-
-		vnf_json = yaml_to_json(vnf)
-		new_vnf = vnf_json
-
-		vnf, errors = parse_json(vnf_json)
-		puts 'vnf: ', Vnfr.to_json
-		errors = validate_json(vnf_json,@@vnfr_schema)
-		return 400, errors.to_json if errors
-
-		return 400, 'ERROR: vnfr not found' unless vnf.has_key?('vnfr')
-
-		
+	
+		if request.content_type ==  'application/json' then
+			instance, errors = parse_json(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = instance
+		else if request.content_type == 'application/x-yaml' then
+			instance, errors = parse_yaml(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = yaml_to_json(instance)
+			instance, errors = parse_json(vnf_json)
+			return 400, errors.to_json if errors
+		end
 
 		begin
-			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['id'] })
-			#, "nsr.properties.version" => ns['nsr']['properties']['version'],"nsr.properties.vendor" => ns['nsr']['properties']['vendor']})
+			instance = Vnfr.find_by( { "_id" =>  instance['id'] })
 			puts 'VNF is found'
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 400, 'This VNFR does not exists'
 		end
 				
 		# Update to new version
-		vnf = {}
 		puts 'Updating...'
-		new_vnf['_id'] = SecureRandom.uuid
-		vnf = new_vnf # TODO: Avoid having multiple 'vnfd' fields containers
-
 		begin
-			new_vnf = Vnfr.create!(vnf)
+			#Delete old record
+			Vnfr.where( { "_id" => params[:id] }).delete
+			#Create a record
+			new_vnfr = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated VNFD ID' if e.message.include? 'E11000'
+			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
 		end
 
 		puts 'New VNF has been updated'
-		vnf_json = new_vnf.to_json
+		vnf_json = new_vnfr.to_json
 		vnf_yml = json_to_yaml(vnf_json)
 		return 200, vnf_yml
 	end	
