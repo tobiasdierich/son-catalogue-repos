@@ -138,6 +138,57 @@ class SonataVnfRepository < Sinatra::Application
 		return 200, vnf_yml
 	end
 
+	# @method put_vnfrs
+	# @overload put '/vnf-instances'
+	# Put a VNF in YAML format
+	# @param [YAML] VNF in YAML format
+	# Put a vnfr
+	put '/vnf-instances/:id' do
+		# Return if content-type is invalid
+		return 415 unless request.content_type == 'application/x-yaml'
+
+		# Validate YAML format
+		vnf, errors = parse_yaml(request.body.read)
+		return 400, errors.to_json if errors		
+
+		vnf_json = yaml_to_json(vnf)
+		new_vnf = vnf_json
+
+		vnf, errors = parse_json(vnf_json)
+		puts 'vnf: ', Vnfr.to_json
+		errors = validate_json(vnf_json,@@vnfr_schema)
+		return 400, errors.to_json if errors
+
+		return 400, 'ERROR: vnfr not found' unless vnf.has_key?('vnfr')
+
+		
+
+		begin
+			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['vnfr']['id'] })
+			#, "nsr.properties.version" => ns['nsr']['properties']['version'],"nsr.properties.vendor" => ns['nsr']['properties']['vendor']})
+			puts 'VNF is found'
+		rescue Mongoid::Errors::DocumentNotFound => e
+			return 400, 'This VNFR does not exists'
+		end
+				
+		# Update to new version
+		vnf = {}
+		puts 'Updating...'
+		new_vnf['_id'] = SecureRandom.uuid
+		vnf = new_vnf # TODO: Avoid having multiple 'vnfd' fields containers
+
+		begin
+			new_vnf = Vnfr.create!(vnf)
+		rescue Moped::Errors::OperationFailure => e
+			return 400, 'ERROR: Duplicated VNFD ID' if e.message.include? 'E11000'
+		end
+
+		puts 'New VNF has been updated'
+		vnf_json = new_vnf.to_json
+		vnf_yml = json_to_yaml(vnf_json)
+		return 200, vnf_yml
+	end	
+	
 	# @method delete_vnfr_external_vnf_id
 	# @overload delete '/vnf-instances/:external_vnf_id'
 	#	Delete a vnf by its ID
