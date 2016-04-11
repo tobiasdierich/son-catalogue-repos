@@ -71,10 +71,9 @@ class SonataNsRepository < Sinatra::Application
 		instance, errors = parse_json(request.body.read)
 		return 400, errors.to_json if errors
 
-		# TODO: Check if same Group, Name, Version do already exists in the database
 		# Retrieve stored version
 		new_nsr = instance
-		
+
 		begin
 			nsr = Nsr.find_by( { "_id" =>  params[:id] })
 			puts 'NS is found'
@@ -83,13 +82,12 @@ class SonataNsRepository < Sinatra::Application
 		end
 
 		# Update to new version
-		nsr = {}
 		puts 'Updating...'
-		new_nsr['_id'] = SecureRandom.uuid
-		nsr = new_nsr # TODO: Avoid having multiple 'nsd' fields containers
-
 		begin
-			new_nsr = Nsr.create!(nsr)
+			#Delete old record
+			Nsr.where( { "_id" => params[:id] }).delete
+			#Create a record
+			new_nsr = Nsr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
 			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
 		end
@@ -98,8 +96,5 @@ class SonataNsRepository < Sinatra::Application
 		return 200, nsr_json
 		#return 200, new_ns.to_json
 	end
-
-
-
 
 end

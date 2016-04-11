@@ -25,7 +25,7 @@ mongo:
   volumes_from:
     - mongodata
   ports:
-    - "27017:27017"
+    - "27017"
   command: --smallfiles --rest
   restart: always
 
