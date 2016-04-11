@@ -114,7 +114,7 @@ class SonataVnfRepository < Sinatra::Application
 		return 400, errors.to_json if errors
 
 		begin
-			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['vnfr']['id'] })
+			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['id'] })
 			#, "nsr.properties.version" => ns['nsr']['properties']['version'],"nsr.properties.vendor" => ns['nsr']['properties']['vendor']})
 			return 400, 'ERROR: Duplicated VNF ID'
 		rescue Mongoid::Errors::DocumentNotFound => e
@@ -159,7 +159,7 @@ class SonataVnfRepository < Sinatra::Application
 		
 
 		begin
-			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['vnfr']['id'] })
+			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['id'] })
 			#, "nsr.properties.version" => ns['nsr']['properties']['version'],"nsr.properties.vendor" => ns['nsr']['properties']['vendor']})
 			puts 'VNF is found'
 		rescue Mongoid::Errors::DocumentNotFound => e
