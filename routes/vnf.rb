@@ -4,8 +4,7 @@ APIDOC comment
 
 # @see VNFRepository
 class SonataVnfRepository < Sinatra::Application
-
-  #@@vnfr_schema=JSON.parse(JSON.dump(YAML.load_file("#{settings.root}/schemas/vnfr_schema.yml")))  
+  
   @@vnfr_schema=JSON.parse(JSON.dump(YAML.load(open('https://raw.githubusercontent.com/sonata-nfv/son-schema/master/function-record/vnfr-schema.yml'){|f| f.read})))
 
 	before do
@@ -113,10 +112,6 @@ class SonataVnfRepository < Sinatra::Application
 		puts 'vnf: ', Vnfr.to_json
 		errors = validate_json(vnf_json,@@vnfr_schema)
 		return 400, errors.to_json if errors
-
-		return 400, 'ERROR: vnfr not found' unless vnf.has_key?('vnfr')
-
-		
 
 		begin
 			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['vnfr']['id'] })
