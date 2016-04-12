@@ -64,6 +64,12 @@ class SonataVnfRepository < Sinatra::Application
 		params[:offset] = 1 if params[:offset].to_i < 1
 		params[:limit] = 2 if params[:limit].to_i < 1
 		
+		# Get paginated list
+		vnfs = Vnfr.paginate(:page => params[:offset], :limit => params[:limit])
+		logger.debug(vnfs)
+		# Build HTTP Link Header
+		headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
+		
 		if params[:output] == 'YAML'
 			content_type = 'application/x-yaml'
 		else
