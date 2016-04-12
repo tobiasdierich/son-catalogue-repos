@@ -198,6 +198,10 @@ class SonataVnfRepository < Sinatra::Application
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 400, 'This VNFR does not exists'
 		end
+		
+		puts 'validating entry: ', vnf_json
+		errors = validate_json(vnf_json,@@vnfr_schema)
+		return 400, errors.to_json if errors
 				
 		# Update to new version
 		puts 'Updating...'
