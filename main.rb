@@ -4,8 +4,8 @@ ENV['RACK_ENV'] ||= 'production'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'yaml'
-require 'logstash-logger'
 require 'json-schema'
+#require 'logstash-logger'
 
 # Require the bundler gem and then call Bundler.require to load in all gems
 # listed in Gemfile.
