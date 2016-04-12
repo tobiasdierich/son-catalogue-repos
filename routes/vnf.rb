@@ -60,19 +60,25 @@ class SonataVnfRepository < Sinatra::Application
 		params[:offset] = 1 if params[:offset].to_i < 1
 		params[:limit] = 2 if params[:limit].to_i < 1
 
-		# Get paginated list
-		vnfs = Vnfr.paginate(:page => params[:offset], :limit => params[:limit])
-		logger.debug(vnfs)
-		# Build HTTP Link Header
-		headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
-
-		vnfs_json = vnfs.to_json
+		begin
 		
-		if request.content_type == 'application/json'
-			return 200, vnfs_json
-		elsif request.content_type == 'application/x-yaml'
-			vnfs_yml = json_to_yaml(vnfs_json)
-			return 200, vnfs_yml
+			# Get paginated list
+			vnfs = Vnfr.paginate(:page => params[:offset], :limit => params[:limit])
+			logger.debug(vnfs)
+			# Build HTTP Link Header
+			headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
+
+			vnfs_json = vnfs.to_json
+			
+			if request.content_type == 'application/json'
+				return 200, vnfs_json
+			elsif request.content_type == 'application/x-yaml'
+				vnfs_yml = json_to_yaml(vnfs_json)
+				return 200, vnfs_yml
+			end
+		rescue
+			logger.error "Error Establishing a Database Connection"
+			return 500, "Error Establishing a Database Connection"
 		end
 	end
 
@@ -103,11 +109,11 @@ class SonataVnfRepository < Sinatra::Application
 	# Post a vnfr
 	post '/vnf-instances' do
 		
-		if request.content_type ==  'application/json' then
+		if request.content_type ==  'application/json'
 			instance, errors = parse_json(request.body.read)
 			return 400, errors.to_json if errors
 			vnf_json = instance
-		else if request.content_type == 'application/x-yaml' then
+		elsif request.content_type == 'application/x-yaml'
 			instance, errors = parse_yaml(request.body.read)
 			return 400, errors.to_json if errors
 			vnf_json = yaml_to_json(instance)
@@ -120,7 +126,7 @@ class SonataVnfRepository < Sinatra::Application
 		return 400, errors.to_json if errors
 
 		begin
-			instance = Vnfr.find_by( { "_id" =>  instance['id'] })
+			instance = Vnfr.find_by( { "id" =>  instance['id'] })
 			return 400, 'ERROR: Duplicated VNF ID'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
@@ -152,11 +158,11 @@ class SonataVnfRepository < Sinatra::Application
 	# Put a vnfr
 	put '/vnf-instances/:id' do
 	
-		if request.content_type ==  'application/json' then
+		if request.content_type ==  'application/json'
 			instance, errors = parse_json(request.body.read)
 			return 400, errors.to_json if errors
 			vnf_json = instance
-		else if request.content_type == 'application/x-yaml' then
+		elsif request.content_type == 'application/x-yaml'
 			instance, errors = parse_yaml(request.body.read)
 			return 400, errors.to_json if errors
 			vnf_json = yaml_to_json(instance)
@@ -165,7 +171,7 @@ class SonataVnfRepository < Sinatra::Application
 		end
 
 		begin
-			instance = Vnfr.find_by( { "_id" =>  instance['id'] })
+			instance = Vnfr.find_by( { "id" =>  instance['id'] })
 			puts 'VNF is found'
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 400, 'This VNFR does not exists'
@@ -201,7 +207,7 @@ class SonataVnfRepository < Sinatra::Application
 	# Delete a vnf
 	delete '/vnf-instances/:external_vnf_id' do
 		begin
-			vnf = Vnfr.find_by( { "vnfr.id" =>  params[:external_vnf_id]})
+			vnf = Vnfr.find_by( { "id" =>  params[:external_vnf_id]})
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 404,'ERROR: Operation failed'
 		end
