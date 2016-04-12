@@ -24,6 +24,8 @@ class SonataVnfRepository < Sinatra::Application
 
 	# @method get_root
  	# @overload get '/'
+	# Get all available interfaces
+	# -> Get all interfaces	
 	get '/' do
     	headers "Content-Type" => "text/plain; charset=utf8"
 		halt 200, interfaces_list.to_yaml
@@ -51,7 +53,9 @@ class SonataVnfRepository < Sinatra::Application
 	# @method get_vnfs
 	# @overload get '/vnf-instances'
 	#	Returns a list of VNFRs
-	# List all VNFRs
+	# List all VNFRs in JSON or YAML
+	#   - JSON (default)
+	#   - YAML including output parameter (e.g /vnf-instances/output=YAML)
 	get '/vnf-instances' do
 		params[:offset] ||= 1
 		params[:limit] ||= 10
@@ -59,7 +63,13 @@ class SonataVnfRepository < Sinatra::Application
 		# Only accept positive numbers
 		params[:offset] = 1 if params[:offset].to_i < 1
 		params[:limit] = 2 if params[:limit].to_i < 1
-
+		
+		if params[:output] == 'YAML'
+			content_type = 'application/x-yaml'
+		else
+			content_type = 'application/json'
+		end
+		
 		begin
 		
 			# Get paginated list
@@ -70,9 +80,9 @@ class SonataVnfRepository < Sinatra::Application
 
 			vnfs_json = vnfs.to_json
 			
-			if request.content_type == 'application/json'
+			if content_type == 'application/json'
 				return 200, vnfs_json
-			elsif request.content_type == 'application/x-yaml'
+			elsif content_type == 'application/x-yaml'
 				vnfs_yml = json_to_yaml(vnfs_json)
 				return 200, vnfs_yml
 			end
@@ -85,6 +95,9 @@ class SonataVnfRepository < Sinatra::Application
 	# @method get_vnf-instances
 	# @overload get "/vnf-instances"
 	# Gets vnf-instances with an id
+	# Return JSON or YAML
+	#   - JSON (default)
+	#   - YAML including output parameter (e.g /vnf-instances/output=YAML)
 
 	get '/vnf-instances/:id' do
 		begin
@@ -93,10 +106,16 @@ class SonataVnfRepository < Sinatra::Application
 			halt (404)
 		end
 		
+		if params[:output] == 'YAML'
+			content_type = 'application/x-yaml'
+		else
+			content_type = 'application/json'
+		end
+		
 		vnfs_json = @vnfInstance.to_json
-		if request.content_type == 'application/json'
+		if content_type == 'application/json'
 			return 200, vnfs_json
-		elsif request.content_type == 'application/x-yaml'
+		elsif content_type == 'application/x-yaml'
 			vnfs_yml = json_to_yaml(vnfs_json)
 			return 200, vnfs_yml
 		end		
@@ -105,8 +124,9 @@ class SonataVnfRepository < Sinatra::Application
 	# @method post_vnfrs
 	# @overload post '/vnf-instances'
 	# Post a VNF in YAML format
-	# @param [YAML] VNF in YAML format
+	# @param [YAML/JSON]
 	# Post a vnfr
+	# Return JSON or YAML depending on content_type
 	post '/vnf-instances' do
 		
 		if request.content_type ==  'application/json'
@@ -154,8 +174,10 @@ class SonataVnfRepository < Sinatra::Application
 	# @method put_vnfrs
 	# @overload put '/vnf-instances'
 	# Put a VNF in YAML format
-	# @param [YAML] VNF in YAML format
+	# @param [JSON/YAML]
 	# Put a vnfr
+	# Return JSON or YAML depending on content_type
+	
 	put '/vnf-instances/:id' do
 	
 		if request.content_type ==  'application/json'
