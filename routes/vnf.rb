@@ -66,15 +66,14 @@ class SonataVnfRepository < Sinatra::Application
 		# Build HTTP Link Header
 		headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
 
-		begin
-			vnfs_json = vnfs.to_json
+		vnfs_json = vnfs.to_json
+		
+		if request.content_type == 'application/json'
+			return 200, vnfs_json
+		elsif request.content_type == 'application/x-yaml'
 			vnfs_yml = json_to_yaml(vnfs_json)
-		rescue
-			logger.error "Error Establishing a Database Connection"
-			return 500, "Error Establishing a Database Connection"
+			return 200, vnfs_yml
 		end
-
-		return 200, vnfs_yml
 	end
 
 	# @method get_vnf-instances
@@ -87,7 +86,14 @@ class SonataVnfRepository < Sinatra::Application
 		rescue Mongoid::Errors::DocumentNotFound => e
 			halt (404)
 		end
-		return json_to_yaml(@vnfInstance.to_json)
+		
+		vnfs_json = @vnfInstance.to_json
+		if request.content_type == 'application/json'
+			return 200, vnfs_json
+		elsif request.content_type == 'application/x-yaml'
+			vnfs_yml = json_to_yaml(vnfs_json)
+			return 200, vnfs_yml
+		end		
 	end	
 
 	# @method post_vnfrs
@@ -127,9 +133,16 @@ class SonataVnfRepository < Sinatra::Application
 		end
 
 		puts 'New VNF has been added'
+		
 		vnf_json = instance.to_json
-		vnf_yml = json_to_yaml(vnf_json)
-		return 200, vnf_yml
+		
+		if request.content_type == 'application/json'
+			return 200, vnf_json
+		elsif request.content_type == 'application/x-yaml'
+			vnf_yml = json_to_yaml(vnf_json)
+			return 200, vnf_yml
+		end
+
 	end
 
 	# @method put_vnfrs
@@ -170,9 +183,15 @@ class SonataVnfRepository < Sinatra::Application
 		end
 
 		puts 'New VNF has been updated'
-		vnf_json = new_vnfr.to_json
-		vnf_yml = json_to_yaml(vnf_json)
-		return 200, vnf_yml
+		
+		vnf_json = instance.to_json
+		
+		if request.content_type == 'application/json'
+			return 200, vnf_json
+		elsif request.content_type == 'application/x-yaml'
+			vnf_yml = json_to_yaml(vnf_json)
+			return 200, vnf_yml
+		end		
 	end	
 	
 	# @method delete_vnfr_external_vnf_id
