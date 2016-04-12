@@ -8,7 +8,7 @@ gem 'nokogiri', '~>1.6'
 gem 'json-schema', '~>2.5'
 gem 'rest-client', '~>1.8'
 gem 'rubysl-securerandom', '~> 2.0'
-gem 'logstash-logger'
+#gem 'logstash-logger'
 
 group :development, :test do
 	gem 'rerun'
