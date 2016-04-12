@@ -55,7 +55,7 @@ class SonataVnfRepository < Sinatra::Application
 	#	Returns a list of VNFRs
 	# List all VNFRs in JSON or YAML
 	#   - JSON (default)
-	#   - YAML including output parameter (e.g /vnf-instances/output=YAML)
+	#   - YAML including output parameter (e.g /vnf-instances?output=YAML)
 	get '/vnf-instances' do
 		params[:offset] ||= 1
 		params[:limit] ||= 10
@@ -97,7 +97,7 @@ class SonataVnfRepository < Sinatra::Application
 	# Gets vnf-instances with an id
 	# Return JSON or YAML
 	#   - JSON (default)
-	#   - YAML including output parameter (e.g /vnf-instances/output=YAML)
+	#   - YAML including output parameter (e.g /vnf-instances?output=YAML)
 
 	get '/vnf-instances/:id' do
 		begin
@@ -146,7 +146,7 @@ class SonataVnfRepository < Sinatra::Application
 		return 400, errors.to_json if errors
 
 		begin
-			instance = Vnfr.find_by( { "id" =>  instance['id'] })
+			instance = Vnfr.find( instance['id'] )
 			return 400, 'ERROR: Duplicated VNF ID'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
@@ -193,7 +193,7 @@ class SonataVnfRepository < Sinatra::Application
 		end
 
 		begin
-			instance = Vnfr.find_by( { "id" =>  instance['id'] })
+			instance = Vnfr.find( instance['id'] )
 			puts 'VNF is found'
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 400, 'This VNFR does not exists'
@@ -203,7 +203,7 @@ class SonataVnfRepository < Sinatra::Application
 		puts 'Updating...'
 		begin
 			#Delete old record
-			Vnfr.where( { "_id" => params[:id] }).delete
+			Vnfr.where( { "id" => params[:id] }).delete
 			#Create a record
 			new_vnfr = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
