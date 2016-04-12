@@ -193,7 +193,7 @@ class SonataVnfRepository < Sinatra::Application
 		end
 
 		begin
-			instance = Vnfr.find( instance['id'] )
+			vnfr = Vnfr.find( instance['id'] )
 			puts 'VNF is found'
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 400, 'This VNFR does not exists'
@@ -203,7 +203,7 @@ class SonataVnfRepository < Sinatra::Application
 		puts 'Updating...'
 		begin
 			#Delete old record
-			Vnfr.where( { "_id" => params[:id] }).delete
+			Vnfr.where( { "id" => params[:id] }).delete
 			#Create a record
 			new_vnfr = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
