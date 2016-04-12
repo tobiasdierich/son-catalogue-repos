@@ -203,7 +203,7 @@ class SonataVnfRepository < Sinatra::Application
 		puts 'Updating...'
 		begin
 			#Delete old record
-			Vnfr.where( { "id" => params[:id] }).delete
+			Vnfr.where( { "_id" => params[:id] }).delete
 			#Create a record
 			new_vnfr = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
