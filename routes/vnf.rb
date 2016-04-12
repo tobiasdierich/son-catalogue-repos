@@ -227,13 +227,13 @@ class SonataVnfRepository < Sinatra::Application
 	end	
 	
 	# @method delete_vnfr_external_vnf_id
-	# @overload delete '/vnf-instances/:external_vnf_id'
+	# @overload delete '/vnf-instances/:id'
 	#	Delete a vnf by its ID
 	#	@param [Integer] external_vnf_id vnf external ID
 	# Delete a vnf
-	delete '/vnf-instances/:external_vnf_id' do
+	delete '/vnf-instances/:id' do
 		begin
-			vnf = Vnfr.find_by( { "id" =>  params[:external_vnf_id]})
+			vnf = Vnfr.find_by( { "id" =>  params[:id]})
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 404,'ERROR: Operation failed'
 		end
