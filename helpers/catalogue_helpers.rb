@@ -333,15 +333,25 @@ class SonataCatalogue < Sinatra::Application
 						'purpose' => 'Store a new Package'
 				},
 				{
-						'uri' => '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version',
+						'uri' => '/catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}',
 						'method' => 'PUT',
 						'purpose' => 'Update a stored Package'
 				},
+        {
+            'uri' => '/catalogues/packages/id/{_id}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored Package'
+        },
 				{
-						'uri' => '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version',
+						'uri' => '/catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific Package'
 				},
+        {
+            'uri' => '/catalogues/packages/id/{_id}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific Package'
+        },
 		]
 	end
 
