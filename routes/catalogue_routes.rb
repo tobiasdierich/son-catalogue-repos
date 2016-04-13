@@ -969,7 +969,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Returns an array of all packages by vendor in JSON or YAML format
 	#	@param [String] package_group Package vendor
 	# Show a Package group
-	get '/packages/vendor/:package_group' do
+	get '/packages/vendor/:package_group' do # '/catalogues/packages?vendor=:package_group'
 		begin
 			pks = Package.where({"package_group" => params[:package_group]})
 			puts 'Package: ', pks.size.to_s
@@ -999,7 +999,7 @@ class SonataCatalogue < Sinatra::Application
 	# Show a Package group
 	#	@param [String] package_name Package Name
 	# Show a Package name
-	get '/packages/vendor/:package_group/name/:package_name' do
+	get '/packages/vendor/:package_group/name/:package_name' do # '/catalogues/packages?vendor=:package_group&name=:package_name'
 		begin
 			pks = Package.where({"package_group" =>  params[:package_group], "package_name" => params[:package_name]})
 
@@ -1053,8 +1053,9 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a Package Vendor list for last version in JSON or YAML format
 	#	@param [String] package_vendor Package Vendor
 	# Show a Package vendor
-	get '/packages/vendor/:package_group/last' do
-		# Search and get all package items by vendor
+	get '/packages/vendor/:package_group/last' do  # '/catalogues/packages?vendor=:package_group&last'
+  #get '/catalogues/packages?vendor=:package_group/last' do
+    # Search and get all package items by vendor
 		begin
 			#puts 'params', params
 
@@ -1068,13 +1069,22 @@ class SonataCatalogue < Sinatra::Application
 				logger.error "ERROR: PD not found"
 				return 404
 
-			else
+      else
 				pks_list = []
-				last_version = pks.first.package_version
+        name_list = []
+        pk_name = pks.first.package_name
+        name_list.push(pk_name)
+        pks_list.push(pks.first)
 				pks.each do |pd|
-					pks_list.push(pd) if pd.package_version == last_version
-				end
-			end
+				  #if pd.package_name == pk_name #and pd.package_version == last_version
+          #  pks_list.push(pd)
+          #  pks.shift
+          if pd.package_name != pk_name
+            pk_name = pd.package_name
+            pks_list.push(pd) unless name_list.include?(pk_name)
+          end
+        end
+      end
 
 		rescue Mongoid::Errors::DocumentNotFound => e
 			logger.error e
@@ -1171,13 +1181,19 @@ class SonataCatalogue < Sinatra::Application
 				logger.error "ERROR: PD not found"
 				return 404
 
-			else
-				pks_list = []
-				last_version = pks.first.package_version
-				pks.each do |pd|
-					pks_list.push(pd) if pd.package_version == last_version
-				end
-			end
+      else
+        pks_list = []
+        vendor_list = []
+        pk_vendor = pks.first.package_group
+        vendor_list.push(pk_vendor)
+        pks_list.push(pks.first)
+        pks.each do |pd|
+          if pd.package_group != pk_vendor
+            pk_vendor = pd.package_group
+            pks_list.push(pd) unless vendor_list.include?(pk_vendor)
+          end
+        end
+      end
 
 		rescue Mongoid::Errors::DocumentNotFound => e
 			logger.error e
