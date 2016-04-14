@@ -6,7 +6,11 @@ require 'sinatra/config_file'
 require 'yaml'
 require 'json-schema'
 <<<<<<< HEAD
+<<<<<<< HEAD
 #require 'logstash-logger'
+=======
+require 'open-uri'
+>>>>>>> 93c42751e7b31e9216df6cb757ba1ab7f42afa57
 =======
 require 'open-uri'
 >>>>>>> 93c42751e7b31e9216df6cb757ba1ab7f42afa57
