@@ -1,7 +1,3 @@
-=begin
-APIDOC comment
-=end
-
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
 
@@ -19,7 +15,6 @@ class SonataCatalogue < Sinatra::Application
 
 		#authorized?
 	end
-
 
 	# @method get_log
 	# @overload get '/network-services/log'
@@ -41,7 +36,6 @@ class SonataCatalogue < Sinatra::Application
 	#	#return 200, nss.to_json
 	#	return 200, txt.read.to_s
 	#end
-
 
 	# @method get_root
 	# @overload get '/catalogues/'
@@ -357,7 +351,7 @@ class SonataCatalogue < Sinatra::Application
 		end
 
 		puts 'New NS has been added'
-		ns_json = new_ns.to_json
+		ns_json = new_ns['_id'].to_json
 		if request.content_type == 'application/json'
 			return 200, ns_json
 			#return 200, new_ns['_id'].to_json
@@ -465,7 +459,7 @@ class SonataCatalogue < Sinatra::Application
 			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
 		end
 
-		ns_json = new_ns.to_json
+		ns_json = new_ns['_id'].to_json
 		if request.content_type == 'application/json'
 			return 200, ns_json
 			#return 200, new_ns['_id'].to_json
@@ -788,7 +782,7 @@ class SonataCatalogue < Sinatra::Application
 		end
 
 		puts 'New VNF has been added'
-		vnf_json = new_vnf.to_json
+		vnf_json = new_vnf['_id'].to_json
 		if request.content_type == 'application/json'
 			return 200, vnf_json
 		elsif request.content_type == 'application/x-yaml'
@@ -882,7 +876,7 @@ class SonataCatalogue < Sinatra::Application
 			return 400, 'ERROR: Duplicated VNF ID' if e.message.include? 'E11000'
 		end
 
-		vnf_json = new_vnf.to_json
+		vnf_json = new_vnf['_id'].to_json
 		if request.content_type == 'application/json'
 			return 200, vnf_json
 		elsif request.content_type == 'application/x-yaml'
@@ -975,7 +969,7 @@ class SonataCatalogue < Sinatra::Application
 	#	Returns an array of all packages by vendor in JSON or YAML format
 	#	@param [String] package_group Package vendor
 	# Show a Package group
-	get '/packages/vendor/:package_group' do
+	get '/packages/vendor/:package_group' do # '/catalogues/packages?vendor=:package_group'
 		begin
 			pks = Package.where({"package_group" => params[:package_group]})
 			puts 'Package: ', pks.size.to_s
@@ -993,7 +987,7 @@ class SonataCatalogue < Sinatra::Application
 		if request.content_type == 'application/json'
 			return 200, pks_json
 		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(ns_json)
+			pks_yml = json_to_yaml(pks_json)
 			return 200, pks_yml
 		end
 	end
@@ -1005,7 +999,7 @@ class SonataCatalogue < Sinatra::Application
 	# Show a Package group
 	#	@param [String] package_name Package Name
 	# Show a Package name
-	get '/packages/vendor/:package_group/name/:package_name' do
+	get '/packages/vendor/:package_group/name/:package_name' do # '/catalogues/packages?vendor=:package_group&name=:package_name'
 		begin
 			pks = Package.where({"package_group" =>  params[:package_group], "package_name" => params[:package_name]})
 
@@ -1059,8 +1053,53 @@ class SonataCatalogue < Sinatra::Application
 	#	Show a Package Vendor list for last version in JSON or YAML format
 	#	@param [String] package_vendor Package Vendor
 	# Show a Package vendor
-	get '/packages/vendor/:package_group/last' do
-		raise NotImplementedError
+	get '/packages/vendor/:package_group/last' do  # '/catalogues/packages?vendor=:package_group&last'
+  #get '/catalogues/packages?vendor=:package_group/last' do
+    # Search and get all package items by vendor
+		begin
+			#puts 'params', params
+
+			pks = Package.where({"package_group" => params[:package_group]}).sort({"package_version" => -1})#.limit(1).first()
+
+			if pks.size.to_i == 0
+				logger.error "ERROR: PD not found"
+				return 404
+
+			elsif pks == nil
+				logger.error "ERROR: PD not found"
+				return 404
+
+      else
+				pks_list = []
+        name_list = []
+        pk_name = pks.first.package_name
+        name_list.push(pk_name)
+        pks_list.push(pks.first)
+				pks.each do |pd|
+				  #if pd.package_name == pk_name #and pd.package_version == last_version
+          #  pks_list.push(pd)
+          #  pks.shift
+          if pd.package_name != pk_name
+            pk_name = pd.package_name
+            pks_list.push(pd) unless name_list.include?(pk_name)
+          end
+        end
+      end
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+
+		pks_json = pks_list.to_json
+		puts 'Packages: ', pks_json
+
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
 	end
 
 	# @method get_packages_package_name
@@ -1100,7 +1139,26 @@ class SonataCatalogue < Sinatra::Application
 	#	@param [Integer] package_version Package version
 	# Show a Package version
 	get '/packages/name/:name/version/:version' do
-		raise NotImplementedError
+		begin
+			pks = Package.where({"package_name" =>  params[:name], "package_version" => params[:version]})
+
+			if pks.size.to_i == 0
+				logger.error "ERROR: PD not found"
+				return 404
+			end
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+
+		pks_json = pks.to_json
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
 	end
 
 	# @method get_packages_package_name_last_version
@@ -1109,7 +1167,48 @@ class SonataCatalogue < Sinatra::Application
 	#	@param [String] package_name Package Name
 	# Show a Package name
 	get '/packages/name/:name/last' do
-		raise NotImplementedError
+		# Search and get all package items by vendor
+		begin
+			#puts 'params', params
+
+			pks = Package.where({"package_name" => params[:name]}).sort({"package_version" => -1})#.limit(1).first()
+
+			if pks.size.to_i == 0
+				logger.error "ERROR: PD not found"
+				return 404
+
+			elsif pks == nil
+				logger.error "ERROR: PD not found"
+				return 404
+
+      else
+        pks_list = []
+        vendor_list = []
+        pk_vendor = pks.first.package_group
+        vendor_list.push(pk_vendor)
+        pks_list.push(pks.first)
+        pks.each do |pd|
+          if pd.package_group != pk_vendor
+            pk_vendor = pd.package_group
+            pks_list.push(pd) unless vendor_list.include?(pk_vendor)
+          end
+        end
+      end
+
+		rescue Mongoid::Errors::DocumentNotFound => e
+			logger.error e
+			return 404
+		end
+
+		pks_json = pks_list.to_json
+		puts 'Packages: ', pks_json
+
+		if request.content_type == 'application/json'
+			return 200, pks_json
+		elsif request.content_type == 'application/x-yaml'
+			pks_yml = json_to_yaml(pks_json)
+			return 200, pks_yml
+		end
 	end
 
 	# @method post_package
@@ -1182,7 +1281,7 @@ class SonataCatalogue < Sinatra::Application
 		end
 
 		puts 'New PD has been added'
-		pks_json = new_pks.to_json
+		pks_json = new_pks['_id'].to_json
 		if request.content_type == 'application/json'
 			return 200, pks_json
 
@@ -1274,7 +1373,7 @@ class SonataCatalogue < Sinatra::Application
 			return 400, 'ERROR: Duplicated Package ID' if e.message.include? 'E11000'
 		end
 
-		pks_json = new_pks.to_json
+		pks_json = new_pks['_id'].to_json
 		if request.content_type == 'application/json'
 			return 200, pks_json
 
@@ -1361,7 +1460,7 @@ class SonataCatalogue < Sinatra::Application
 			return 400, 'ERROR: Duplicated Package ID' if e.message.include? 'E11000'
 		end
 
-		pks_json = new_pks.to_json
+		pks_json = new_pks['_id'].to_json
 		if request.content_type == 'application/json'
 			return 200, pks_json
 

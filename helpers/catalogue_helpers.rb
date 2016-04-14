@@ -188,7 +188,7 @@ class SonataCatalogue < Sinatra::Application
 	#
 	# @return [Array] an array of hashes containing all interfaces
 	def interfaces_list
-		["Some methods are under development and may not work yet! (raise NotImplementedError)",
+		['Some methods are under development and may not work yet! (raise NotImplementedError)',
 				{
 						'uri' => '/catalogues/',
 						'method' => 'GET',
@@ -307,26 +307,51 @@ class SonataCatalogue < Sinatra::Application
 						'method' => 'GET',
 						'purpose' => 'Return one (or zero) package'
 				},
+        {
+            'uri' => '/catalogues/packages/vendor/{package_group}/last}',
+            'method' => 'GET',
+            'purpose' => 'Return last version of packages from a vendor'
+        },
+        {
+            'uri' => '/catalogues/packages/name/{package_name}',
+            'method' => 'GET',
+            'purpose' => 'Returns an array of all packages for a name'
+        },
+        {
+            'uri' => '/catalogues/packages/name/{package_name}/version/{package_version}',
+            'method' => 'GET',
+            'purpose' => 'Returns an array of all packages for a name and version'
+        },
+        {
+            'uri' => '/catalogues/packages/name/{package_name}/last',
+            'method' => 'GET',
+            'purpose' => 'Returns last version of all packages for a name'
+        },
 				{
 						'uri' => '/catalogues/packages',
 						'method' => 'POST',
 						'purpose' => 'Store a new Package'
 				},
 				{
-						'uri' => '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version',
+						'uri' => '/catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}',
 						'method' => 'PUT',
 						'purpose' => 'Update a stored Package'
 				},
+        {
+            'uri' => '/catalogues/packages/id/{_id}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored Package'
+        },
 				{
-						'uri' => '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version',
+						'uri' => '/catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}',
 						'method' => 'DELETE',
 						'purpose' => 'Delete a specific Package'
 				},
-				{
-						'uri' => '',
-						'method' => '',
-						'purpose' => ''
-				},
+        {
+            'uri' => '/catalogues/packages/id/{_id}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific Package'
+        },
 		]
 	end
 
