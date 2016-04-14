@@ -40,7 +40,7 @@ docker-compose up
 Method post:
 
 ```sh
-curl -X POST --data-binary @test_vnfr.yaml -H "Content-type:application/x-yaml" http://localhost:4011/virtual-network-functions-records
+curl -X POST --data-binary @test_vnfr.yaml -H "Content-type:application/x-yaml" http://localhost:4011/records/vnfr
 
 ```
 
@@ -48,13 +48,13 @@ Method get:
 All instances
 
 ```sh
- curl http://localhost:4011/virtual-network-functions-registers
+ curl http://localhost:4011/records/vnfr
 ```
 
 Instance by an id:
 
 ```sh
-curl -X GET http://localhost:4011/virtual-network-functions-registers/9f18bc1b-b18d-483b-88da-a600e9255868
+curl -X GET http://localhost:4011/records/vnfr/9f18bc1b-b18d-483b-88da-a600e9255868
 ```
 
 You can use mongoexpress to manage the mongo databases.
