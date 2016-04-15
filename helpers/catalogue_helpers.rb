@@ -194,96 +194,146 @@ class SonataCatalogue < Sinatra::Application
 						'method' => 'GET',
 						'purpose' => 'REST API Structure and Capability Discovery'
 				},
-				{
-						'uri' => '/catalogues/network-services',
-						'method' => 'GET',
-						'purpose' => 'List all NSs'
-				},
-				{
-						'uri' => '/catalogues/network-services/id/{id}',
-						'method' => 'GET',
-						'purpose' => 'List a specific NS'
-				},
-				{
-						'uri' => '/catalogues/network-services/name/{name}',
-						'method' => 'GET',
-						'purpose' => 'List a specific NS or specifics NS with common name'
-				},
-				{
-						'uri' => '/catalogues/network-services/name/{name}/version/{version}',
-						'method' => 'GET',
-						'purpose' => 'List a specific NS by name and version'
-				},
-				{
-						'uri' => '/catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}',
-						'method' => 'GET',
-						'purpose' => 'List a specific NS'
-				},
-				{
-						'uri' => '/catalogues/network-services/name/{name}/last',
-						'method' => 'GET',
-						'purpose' => 'List last version of specific NS by name'
-				},
-				{
-						'uri' => '/catalogues/network-services',
-						'method' => 'POST',
-						'purpose' => 'Store a new NS'
-				},
-				{
-						'uri' => '/catalogues/network-services/id/{id}',
-						'method' => 'PUT',
-						'purpose' => 'Update a stored NS'
-				},
-				{
-						'uri' => '/catalogues/network-services/id/{id}',
-						'method' => 'DELETE',
-						'purpose' => 'Delete a specific NS'
-				},
-				{
-						'uri' => '/catalogues/vnfs',
-						'method' => 'GET',
-						'purpose' => 'List all VNFs'
-				},
-				{
-						'uri' => '/catalogues/vnfs/name/{name}',
-						'method' => 'GET',
-						'purpose' => 'List a specific VNF or specifics VNF with common name'
-				},
-				{
-						'uri' => '/catalogues/vnfs/name/{name}/last',
-						'method' => 'GET',
-						'purpose' => 'List a specific VNF'
-				},
-				{
-						'uri' => '/catalogues/vnfs/name/{name}/version/{version}',
-						'method' => 'GET',
-						'purpose' => 'List a specific VNF'
-				},
-				{
-						'uri' => '/catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}',
-						'method' => 'GET',
-						'purpose' => 'List a specific VNF'
-				},
-				{
-						'uri' => '/catalogues/vnfs/id/{id}',
-						'method' => 'GET',
-						'purpose' => 'List a specific VNF'
-				},
-				{
-						'uri' => '/catalogues/vnfs',
-						'method' => 'POST',
-						'purpose' => 'Store a new VNF'
-				},
-				{
-						'uri' => '/catalogues/vnfs/id/{id}',
-						'method' => 'PUT',
-						'purpose' => 'Update a stored VNF'
-				},
-				{
-						'uri' => '/catalogues/vnfs/id/{id}',
-						'method' => 'DELETE',
-						'purpose' => 'Delete a specific VNF'
-				},
+        {
+            'uri' => '/catalogues/network-services',
+            'method' => 'GET',
+            'purpose' => 'List all NSs'
+        },
+        {
+            'uri' => '/catalogues/network-services/id/{id}',
+            'method' => 'GET',
+            'purpose' => 'List a specific NS'
+        },
+        {
+            'uri' => '/catalogues/network-services/vendor/{vendor}',
+            'method' => 'GET',
+            'purpose' => 'List a specific NS or specifics NS with common vendor'
+        },
+        {
+            'uri' => '/catalogues/network-services/vendor/{vendor}/name/{name}',
+            'method' => 'GET',
+            'purpose' => 'List a specific NS or specifics NS with common vendor and name'
+        },
+        {
+            'uri' => '/catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}',
+            'method' => 'GET',
+            'purpose' => 'List a specific NS'
+        },
+        {
+            'uri' => '/catalogues/network-services/vendor/{vendor}/last',
+            'method' => 'GET',
+            'purpose' => 'List last version of specifics NS by vendor'
+        },
+        {
+            'uri' => '/catalogues/network-services/name/{name}',
+            'method' => 'GET',
+            'purpose' => 'List a specific NS or specifics NS with common name'
+        },
+        {
+            'uri' => '/catalogues/network-services/name/{name}/version/{version}',
+            'method' => 'GET',
+            'purpose' => 'List a specifics NS by name and version'
+        },
+        {
+            'uri' => '/catalogues/network-services/name/{name}/last',
+            'method' => 'GET',
+            'purpose' => 'List last version of specifics NS by name'
+        },
+        {
+            'uri' => '/catalogues/network-services',
+            'method' => 'POST',
+            'purpose' => 'Store a new NS'
+        },
+        {
+            'uri' => '/catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored NS specifying its vendor.name.version'
+        },
+        {
+            'uri' => '/catalogues/network-services/id/{id}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored NS specifying its ID'
+        },
+        {
+            'uri' => '/catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific NS specifying its vendor.name.version'
+        },
+        {
+            'uri' => '/catalogues/network-services/id/{id}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific NS specifying its ID'
+        },
+        {
+            'uri' => '/catalogues/vnfs',
+            'method' => 'GET',
+            'purpose' => 'List all VNFs'
+        },
+        {
+            'uri' => '/catalogues/vnfs/id/{id}',
+            'method' => 'GET',
+            'purpose' => 'List a specific VNF'
+        },
+        {
+            'uri' => '/catalogues/vnfs/vendor/{vendor}',
+            'method' => 'GET',
+            'purpose' => 'List a specific VNF or specifics VNF with common vendor'
+        },
+        {
+            'uri' => '/catalogues/vnfs/vendor/{vendor}/name/{name}',
+            'method' => 'GET',
+            'purpose' => 'List a specific VNF or specifics VNF with common vendor and name'
+        },
+        {
+            'uri' => '/catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}',
+            'method' => 'GET',
+            'purpose' => 'List a specific VNF'
+        },
+        {
+            'uri' => '/catalogues/vnfs/vendor/{vendor}/last',
+            'method' => 'GET',
+            'purpose' => 'List last version of specifics VNF by vendor'
+         },
+        {
+            'uri' => '/catalogues/vnfs/name/{name}',
+            'method' => 'GET',
+            'purpose' => 'List a specific VNF or specifics VNF with common name'
+        },
+        {
+            'uri' => '/catalogues/vnfs/name/{name}/version/{version}',
+            'method' => 'GET',
+            'purpose' => 'List specifics VNF'
+        },
+        {
+            'uri' => '/catalogues/vnfs/name/{name}/last',
+            'method' => 'GET',
+            'purpose' => 'List last version of specifics VNF by name'
+        },
+        {
+            'uri' => '/catalogues/vnfs',
+            'method' => 'POST',
+            'purpose' => 'Store a new VNF'
+        },
+        {
+            'uri' => '/catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored VNF specifying its vendor.name.version'
+        },
+        {
+            'uri' => '/catalogues/vnfs/id/{id}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored VNF specifying its ID'
+        },
+        {
+            'uri' => '/catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific VNF specifying its vendor.name.version'
+        },
+        {
+            'uri' => '/catalogues/vnfs/id/{id}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific VNF specifying its ID'
+        },
 				{		'uri' => '/catalogues/packages',
 						'method' => 'GET',
 						'purpose' => 'Returns an array of all packages'

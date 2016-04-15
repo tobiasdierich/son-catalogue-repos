@@ -1,5 +1,4 @@
 ---
-  vnfr: 
     id: "id number"
     vendor: "vendor generating this VNFD"
     descriptor_version: "version of this VNFD"

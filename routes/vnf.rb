@@ -4,8 +4,8 @@ APIDOC comment
 
 # @see VNFRepository
 class SonataVnfRepository < Sinatra::Application
-
-  @@vnfr_schema=JSON.parse(JSON.dump(YAML.load_file("#{settings.root}/schemas/vnfr_schema.yml")))
+  
+  @@vnfr_schema=JSON.parse(JSON.dump(YAML.load(open('https://raw.githubusercontent.com/sonata-nfv/son-schema/master/function-record/vnfr-schema.yml'){|f| f.read})))
 
 	before do
 
@@ -24,6 +24,8 @@ class SonataVnfRepository < Sinatra::Application
 
 	# @method get_root
  	# @overload get '/'
+	# Get all available interfaces
+	# -> Get all interfaces	
 	get '/' do
     	headers "Content-Type" => "text/plain; charset=utf8"
 		halt 200, interfaces_list.to_yaml
@@ -51,7 +53,9 @@ class SonataVnfRepository < Sinatra::Application
 	# @method get_vnfs
 	# @overload get '/vnf-instances'
 	#	Returns a list of VNFRs
-	# List all VNFRs
+	# List all VNFRs in JSON or YAML
+	#   - JSON (default)
+	#   - YAML including output parameter (e.g /vnf-instances?output=YAML)
 	get '/vnf-instances' do
 		params[:offset] ||= 1
 		params[:limit] ||= 10
@@ -59,132 +63,183 @@ class SonataVnfRepository < Sinatra::Application
 		# Only accept positive numbers
 		params[:offset] = 1 if params[:offset].to_i < 1
 		params[:limit] = 2 if params[:limit].to_i < 1
-
+		
 		# Get paginated list
 		vnfs = Vnfr.paginate(:page => params[:offset], :limit => params[:limit])
 		logger.debug(vnfs)
 		# Build HTTP Link Header
 		headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
-
+		
+		if params[:output] == 'YAML'
+			content_type = 'application/x-yaml'
+		else
+			content_type = 'application/json'
+		end
+		
 		begin
+		
+			# Get paginated list
+			vnfs = Vnfr.paginate(:page => params[:offset], :limit => params[:limit])
+			logger.debug(vnfs)
+			# Build HTTP Link Header
+			headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
+
 			vnfs_json = vnfs.to_json
-			vnfs_yml = json_to_yaml(vnfs_json)
+			
+			if content_type == 'application/json'
+				return 200, vnfs_json
+			elsif content_type == 'application/x-yaml'
+				vnfs_yml = json_to_yaml(vnfs_json)
+				return 200, vnfs_yml
+			end
 		rescue
 			logger.error "Error Establishing a Database Connection"
 			return 500, "Error Establishing a Database Connection"
 		end
-
-		return 200, vnfs_yml
 	end
 
-	# @method get_vnfr_external_vnf_version
-	# @overload get '/vnf-instances/:external_vnfr_name/version/:version'
-	#	Show a vnf
-	#	@param [String] external_vnf_name VNF external Name
-	# Show a vnf name
-	#	@param [Integer] external_vnf_version VNF version
-	# Show a vnf version
-	get '/vnf-instances/name/:external_vnf_name/version/:version' do
+	# @method get_vnf-instances
+	# @overload get "/vnf-instances"
+	# Gets vnf-instances with an id
+	# Return JSON or YAML
+	#   - JSON (default)
+	#   - YAML including output parameter (e.g /vnf-instances?output=YAML)
+
+	get '/vnf-instances/:id' do
 		begin
-			vnf = Vnfr.find_by( { "vnfr.properties.name" =>  params[:external_vnf_name], "vnfr.properties.version" => params[:version]})
+			@vnfInstance = Vnfr.find(params[:id])
 		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
+			halt (404)
 		end
-
-		vnf_json = Vnfr.vnfr.to_json
-		vnf_yml = json_to_yaml(vnf_json)
-		return 200, vnf_yml
-	end
-
-	# @method get_vnfr_external_vnf_last_version
-	# @overload get '/vnf-instances/:external_vnfr_name/last'
-	#	Show a VNF last version
-	#	@param [String] external_vnfr_name vnf external Name
-	# Show a VNFR name
-	get '/vnf-instances/name/:external_vnfr_name/last' do
-
-		# Search and get all items of vnf by name
-		begin
-			puts 'params', params
-			
-			vnf = Vnfr.where({"vnf.properties.name" => params[:external_vnf_name]}).sort({"vnf.properties.version" => -1}).limit(1).first()
-			puts 'VNF: ', vnf
-
-			if vnf == nil
-				logger.error "ERROR: vnfr not found"
-				return 404
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		vnf_json = vnf.to_json
-		puts 'VNF: ', vnf_json
-
-		vnf_yml = json_to_yaml(vnf_json)
-		return 200, vnf_yml
-
 		
-	end
+		if params[:output] == 'YAML'
+			content_type = 'application/x-yaml'
+		else
+			content_type = 'application/json'
+		end
+		
+		vnfs_json = @vnfInstance.to_json
+		if content_type == 'application/json'
+			return 200, vnfs_json
+		elsif content_type == 'application/x-yaml'
+			vnfs_yml = json_to_yaml(vnfs_json)
+			return 200, vnfs_yml
+		end		
+	end	
 
 	# @method post_vnfrs
 	# @overload post '/vnf-instances'
 	# Post a VNF in YAML format
-	# @param [YAML] VNF in YAML format
+	# @param [YAML/JSON]
 	# Post a vnfr
+	# Return JSON or YAML depending on content_type
 	post '/vnf-instances' do
-		# Return if content-type is invalid
-		return 415 unless request.content_type == 'application/x-yaml'
+		
+		if request.content_type ==  'application/json'
+			instance, errors = parse_json(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = instance
+		elsif request.content_type == 'application/x-yaml'
+			instance, errors = parse_yaml(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = yaml_to_json(instance)
+			instance, errors = parse_json(vnf_json)
+			return 400, errors.to_json if errors
+		end
 
-		# Validate YAML format
-		vnf, errors = parse_yaml(request.body.read)
-
-		return 400, errors.to_json if errors
-
-
-		vnf_json = yaml_to_json(vnf)
-
-
-		vnf, errors = parse_json(vnf_json)
 		puts 'vnf: ', Vnfr.to_json
 		errors = validate_json(vnf_json,@@vnfr_schema)
 		return 400, errors.to_json if errors
 
-		return 400, 'ERROR: vnfr not found' unless vnf.has_key?('vnfr')
-
-		
-
 		begin
-			vnf = Vnfr.find_by( { "vnfr.id" =>  vnf['vnfr']['id'] })
-			#, "nsr.properties.version" => ns['nsr']['properties']['version'],"nsr.properties.vendor" => ns['nsr']['properties']['vendor']})
+			instance = Vnfr.find( instance['id'] )
 			return 400, 'ERROR: Duplicated VNF ID'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 
 		# Save to DB
 		begin
-			new_vnf = Vnfr.create!(vnf)
+			instance = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
 			return 400, 'ERROR: Duplicated VNF ID' if e.message.include? 'E11000'
 		end
 
 		puts 'New VNF has been added'
-		vnf_json = new_vnf.to_json
-		vnf_yml = json_to_yaml(vnf_json)
-		return 200, vnf_yml
+		
+		vnf_json = instance.to_json
+		
+		if request.content_type == 'application/json'
+			return 200, vnf_json
+		elsif request.content_type == 'application/x-yaml'
+			vnf_yml = json_to_yaml(vnf_json)
+			return 200, vnf_yml
+		end
+
 	end
 
+	# @method put_vnfrs
+	# @overload put '/vnf-instances'
+	# Put a VNF in YAML format
+	# @param [JSON/YAML]
+	# Put a vnfr
+	# Return JSON or YAML depending on content_type
+	
+	put '/vnf-instances/:id' do
+	
+		if request.content_type ==  'application/json'
+			instance, errors = parse_json(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = instance
+		elsif request.content_type == 'application/x-yaml'
+			instance, errors = parse_yaml(request.body.read)
+			return 400, errors.to_json if errors
+			vnf_json = yaml_to_json(instance)
+			instance, errors = parse_json(vnf_json)
+			return 400, errors.to_json if errors
+		end
+
+		begin
+			vnfr = Vnfr.find( instance['id'] )
+			puts 'VNF is found'
+		rescue Mongoid::Errors::DocumentNotFound => e
+			return 400, 'This VNFR does not exists'
+		end
+		
+		puts 'validating entry: ', vnf_json
+		errors = validate_json(vnf_json,@@vnfr_schema)
+		return 400, errors.to_json if errors
+				
+		# Update to new version
+		puts 'Updating...'
+		begin
+			#Delete old record
+			Vnfr.where( { "id" => params[:id] }).delete
+			#Create a record
+			new_vnfr = Vnfr.create!(instance)
+		rescue Moped::Errors::OperationFailure => e
+			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+		end
+
+		puts 'New VNF has been updated'
+		
+		vnf_json = instance.to_json
+		
+		if request.content_type == 'application/json'
+			return 200, vnf_json
+		elsif request.content_type == 'application/x-yaml'
+			vnf_yml = json_to_yaml(vnf_json)
+			return 200, vnf_yml
+		end		
+	end	
+	
 	# @method delete_vnfr_external_vnf_id
-	# @overload delete '/vnf-instances/:external_vnf_id'
+	# @overload delete '/vnf-instances/:id'
 	#	Delete a vnf by its ID
 	#	@param [Integer] external_vnf_id vnf external ID
 	# Delete a vnf
-	delete '/vnf-instances/id/:external_vnf_id' do
+	delete '/vnf-instances/:id' do
 		begin
-			vnf = Vnfr.find_by( { "vnfr.id" =>  params[:external_vnf_id]})
+			vnf = Vnfr.find_by( { "id" =>  params[:id]})
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 404,'ERROR: Operation failed'
 		end
