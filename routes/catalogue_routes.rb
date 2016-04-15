@@ -37,6 +37,53 @@ class SonataCatalogue < Sinatra::Application
 	#	return 200, txt.read.to_s
 	#end
 
+=begin
+    GET /catalogues/network-services
+    GET /catalogues/network-services/id/{_id}
+    GET /catalogues/network-services/vendor/{vendor}
+    GET /catalogues/network-services/vendor/{vendor}/name/{name}
+    GET /catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}
+    GET /catalogues/network-services/vendor/{vendor}/last}
+    GET /catalogues/network-services/name/{name}
+    GET /catalogues/network-services/name/{name}/version/{version}
+    GET /catalogues/network-services/name/{name}/last
+    POST /catalogues/network-services
+    PUT /catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}
+    PUT /catalogues/network-services/id/{_id}
+    DELETE /catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}
+    DELETE /catalogues/network-services/id/{_id}
+
+    GET /catalogues/vnfs
+    GET /catalogues/vnfs/id/{_id}
+    GET /catalogues/vnfs/vendor/{vendor}
+    GET /catalogues/vnfs/vendor/{vendor}/name/{name}
+    GET /catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}
+    GET /catalogues/vnfs/vendor/{vendor}/last}
+    GET /catalogues/vnfs/name/{name}
+    GET /catalogues/vnfs/name/{name}/version/{version}
+    GET /catalogues/vnfs/name/{name}/last
+    POST /catalogues/vnfs
+    PUT /catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}
+    PUT /catalogues/vnfs/id/{_id}
+    DELETE /catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}
+    DELETE /catalogues/vnfs/id/{_id}
+
+    GET /catalogues/packages
+    GET /catalogues/packages/id/{_id}
+    GET /catalogues/packages/vendor/{package_group}
+    GET /catalogues/packages/vendor/{package_group}/name/{package_name}
+    GET /catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}
+    GET /catalogues/packages/vendor/{package_group}/last}
+    GET /catalogues/packages/name/{package_name}
+    GET /catalogues/packages/name/{package_name}/version/{package_version}
+    GET /catalogues/packages/name/{package_name}/last
+    POST /catalogues/packages
+    PUT /catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}
+    PUT /catalogues/packages/id/{_id}
+    DELETE /catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}
+    DELETE /catalogues/packages/id/{_id}
+=end
+
 	# @method get_root
 	# @overload get '/catalogues/'
 	# Get all available interfaces
@@ -109,6 +156,140 @@ class SonataCatalogue < Sinatra::Application
 		#return 200, ns.nsd.to_json
 	end
 
+  # @method get_ns_sp_vendor
+  # @overload get '/catalogues/network-services/vendor/:vendor'
+  #	Returns an array of all NS by vendor in JSON or YAML format
+  #	@param [String] ns_vendor NS vendor
+  # Show a NS vendor
+  get '/network-services/vendor/:vendor' do
+    begin
+      ns = Ns.where({"vendor" => params[:vendor]})
+      puts 'NS: ', ns.size.to_s
+
+      if ns.size.to_i == 0
+        logger.error "ERROR: NSD not found"
+        return 404
+      end
+
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+    ns_json = ns.to_json
+    if request.content_type == 'application/json'
+      return 200, ns_json
+    elsif request.content_type == 'application/x-yaml'
+      ns_yml = json_to_yaml(ns_json)
+      return 200, ns_yml
+    end
+  end
+
+  # @method get_Nss_NS_vendor.name
+  # @overload get '/catalogues/network-services/vendor/:vendor/name/:name'
+  #	Returns an array of all NS by vendor and name in JSON or YAML format
+  #	@param [String] ns_group NS vendor
+  # Show a NS vendor
+  #	@param [String] ns_name NS Name
+  # Show a NS name
+  get '/network-services/vendor/:vendor/name/:name' do
+    begin
+      ns = Ns.where({"vendor" =>  params[:vendor], "name" => params[:name]})
+
+      if ns.size.to_i == 0
+        logger.error "ERROR: NSD not found"
+        return 404
+      end
+
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+
+    ns_json = ns.to_json
+    if request.content_type == 'application/json'
+      return 200, ns_json
+    elsif request.content_type == 'application/x-yaml'
+      ns_yml = json_to_yaml(ns_json)
+      return 200, ns_yml
+    end
+  end
+
+  # @method get_nsd_ns_vendor.name.version
+  # @overload get '/network-services/vendor/:vendor/name/:name/version/:version'
+  #	Show a specific NS in JSON or YAML format
+  #	@param [String] vendor NS external Vendor
+  # Show a NS vendor
+  #	@param [String] name NS external Name
+  # Show a NS name
+  #	@param [Integer] version NS version
+  # Show a NS version
+  get '/network-services/vendor/:vendor/name/:name/version/:version' do
+    begin
+      ns = Ns.find_by({"vendor" =>  params[:vendor], "name" =>  params[:name], "version" => params[:version]})
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+
+    ns_json = ns.to_json
+    if request.content_type == 'application/json'
+      return 200, ns_json
+    elsif request.content_type == 'application/x-yaml'
+      ns_yml = json_to_yaml(ns_json)
+      return 200, ns_yml
+    end
+    #return 200, ns.nsd.to_json
+  end
+
+  # @method get_nsd_ns_vendor_last_version
+  # @overload get '/catalogues/network-services/vendor/:vendor/last'
+  #	Show a NS Vendor list for last version in JSON or YAML format
+  #	@param [String] vendor NS Vendor
+  # Show a NS vendor
+  get '/network-services/vendor/:vendor/last' do
+    # Search and get all NS items by vendor
+    begin
+
+      ns = Ns.where({"vendor" => params[:vendor]}).sort({"version" => -1})#.limit(1).first()
+
+      if ns.size.to_i == 0
+        logger.error "ERROR: NSD not found"
+        return 404
+
+      elsif ns == nil
+        logger.error "ERROR: NSD not found"
+        return 404
+
+      else
+        ns_list = []
+        name_list = []
+        ns_name = ns.first.name
+        name_list.push(ns_name)
+        ns_list.push(ns.first)
+        ns.each do |nsd|
+
+          if nsd.name != ns_name
+            ns_name = nsd.name
+            ns_list.push(nsd) unless name_list.include?(ns_name)
+          end
+        end
+      end
+
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+
+    ns_json = ns_list.to_json
+    puts 'NSs: ', ns_json
+
+    if request.content_type == 'application/json'
+      return 200, ns_json
+    elsif request.content_type == 'application/x-yaml'
+      ns_yml = json_to_yaml(ns_json)
+      return 200, ns_yml
+    end
+  end
 
 	# @method get_nss_ns_name
 	# @overload get '/catalogues/network-services/:ns_name'
@@ -118,7 +299,6 @@ class SonataCatalogue < Sinatra::Application
 	get '/network-services/name/:name' do
 
 		begin
-			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
 			ns = Ns.where({"name" => params[:name]})
 			puts 'NS: ', ns.size.to_s
 
@@ -181,7 +361,7 @@ class SonataCatalogue < Sinatra::Application
 
 		# Search and get all items of NS by name
 		begin
-			puts 'params', params
+			#puts 'params', params
 			# Get paginated list
 			#ns = CatalogueModels.paginate(:page => params[:offset], :limit => params[:limit])
 
@@ -191,8 +371,6 @@ class SonataCatalogue < Sinatra::Application
 			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
 			#ns = Ns.where({"nsd.name" => params[:external_ns_name]})
 			ns = Ns.where({"name" => params[:name]}).sort({"version" => -1})#.limit(1).first()
-			#puts 'NS: ', ns
-			#puts 'NS SiZe: ', ns.size.to_s
 
 			if ns.size.to_i == 0
 				logger.error "ERROR: NSD not found"
@@ -203,14 +381,20 @@ class SonataCatalogue < Sinatra::Application
 				return 404
 
 			else
-				ns_list = []
-				#puts 'first', ns.first.ns_version
-				last_version = ns.first.version
-				#App.all.to_a
-				ns.each do |nsd|
-					ns_list.push(nsd) if nsd.version == last_version
+        ns_list = []
+        vendor_list = []
+        ns_vendor = ns.first.vendor
+        vendor_list.push(ns_vendor)
+        #puts 'first', ns.first.ns_version
+        #last_version = ns.first.version
+        #App.all.to_a
+        ns_list.push(ns.first)
+        ns.each do |nsd|
+          if nsd.vendor != ns_vendor
+            ns_vendor = nsd.vendor
+            ns_list.push(nsd) unless vendor_list.include?(ns_vendor)
+          end
 				end
-				#puts 'ns_list', ns_list.to_s
 			end
 
 		rescue Mongoid::Errors::DocumentNotFound => e
@@ -218,10 +402,6 @@ class SonataCatalogue < Sinatra::Application
 			return 404
 		end
 
-		#puts 'NS size: ', ns.size.to_s
-		#puts 'version example', '4.1'.to_f
-
-		#ns_json = ns.to_json
 		ns_json = ns_list.to_json
 		puts 'NS: ', ns_json
 
@@ -236,38 +416,8 @@ class SonataCatalogue < Sinatra::Application
 			return 200, ns_yml
 		end
 
-		#return 200, ns.nsd.to_json
 		#return 200, ns.to_json
 	end
-
-
-	# @method get_nsd_ns_vendor.name.version
-	# @overload get '/catalogues/network-services/vendor/:ns_vendor/name/:ns_name/version/:version'
-	#	Show a specific NS in JSON or YAML format
-	#	@param [String] ns_vendor NS vendor
-	# Show a NS vendor
-	#	@param [String] ns_name NS Name
-	# Show a NS name
-	#	@param [Integer] ns_version NS version
-	# Show a NS version
-	get '/network-services/vendor/:vendor/name/:name/version/:version' do
-		begin
-			ns = Ns.find_by({"vendor" =>  params[:vendor], "name" =>  params[:name], "version" => params[:version]})
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		ns_json = ns.to_json
-		if request.content_type == 'application/json'
-			return 200, ns_json
-		elsif request.content_type == 'application/x-yaml'
-			ns_yml = json_to_yaml(ns_json)
-			return 200, ns_yml
-		end
-		#return 200, ns.nsd.to_json
-	end
-
 
 	# @method post_nss
 	# @overload post '/catalogues/network-services'
@@ -363,6 +513,103 @@ class SonataCatalogue < Sinatra::Application
 		end
 	end
 
+  # @method update_nss_version_name_version
+  # @overload put '/network-services/vendor/:vendor/name/:name/version/:version'
+  # Update a NS by vendor, name and version in JSON or YAML format
+  #	@param [String] NS_vendor NS vendor
+  # Update a NS vendor
+  #	@param [String] NS_name NS Name
+  # Update a NS name
+  #	@param [Integer] NS_version NS version
+  # Update a NS version
+  ## Catalogue - UPDATE
+  put '/network-services/vendor/:vendor/name/:name/version/:version' do
+    # Return if content-type is invalid
+    return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+    # Compatibility support for YAML content-type
+    if request.content_type == 'application/x-yaml'
+      # Validate YAML format
+      # When updating a NSD, the json object sent to API must contain just data inside
+      # of the nsd, without the json field nsd: before <- this might be resolved
+      ns, errors = parse_yaml(request.body.read)
+      return 400, errors.to_json if errors
+
+      # Translate from YAML format to JSON format
+      new_ns_json = yaml_to_json(ns)
+
+      # Validate JSON format
+      new_ns, errors = parse_json(new_ns_json)
+      puts 'ns: ', new_ns.to_json
+      puts 'new_ns id', new_ns['_id'].to_json
+      return 400, errors.to_json if errors
+
+      # Compatibility support for JSON content-type
+    elsif request.content_type == 'application/json'
+      # Parses and validates JSON format
+      new_ns, errors = parse_json(request.body.read)
+      return 400, errors.to_json if errors
+    end
+
+    # Validate JSON format
+    # When updating a NSD, the json object sent to API must contain just data inside
+    # of the nsd, without the json field nsd: before <- this might be resolved
+    #new_ns, errors = parse_json(request.body.read)
+    #return 400, errors.to_json if errors
+
+    # Validate NS
+    # TODO: Check if same Group, Name, Version do already exists in the database
+    #halt 400, 'ERROR: NSD not found' unless ns.has_key?('vnfd')
+    return 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
+    return 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
+    return 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
+
+    # Retrieve stored version
+    begin
+      ns = Ns.find_by({"name" =>  params[:name], "vendor" => params[:vendor], "version" => params[:version]})
+      puts 'NS is found'
+    rescue Mongoid::Errors::DocumentNotFound => e
+      return 400, 'This NSD does not exists'
+    end
+    # Check if NS already exists in the catalogue by name, group and version
+    begin
+      ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
+      return 400, 'ERROR: Duplicated NS Name, Vendor and Version'
+    rescue Mongoid::Errors::DocumentNotFound => e
+    end
+
+    # Update to new version
+    nsd = {}
+    puts 'Updating...'
+    new_ns['_id'] = new_ns['vendor'].to_s + '.' + new_ns['name'].to_s + '.' + new_ns['version'].to_s	# Unique IDs per NSD entries
+    puts new_ns['_id'].to_s
+    nsd = new_ns
+
+    # --> Validation disabled
+    # Validate NSD
+    #begin
+    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+    #rescue => e
+    #	logger.error e.response
+    #	return e.response.code, e.response.body
+    #end
+
+    begin
+      new_ns = Ns.create!(nsd)
+    rescue Moped::Errors::OperationFailure => e
+      return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+    end
+
+    ns_json = new_ns['_id'].to_json
+
+    if request.content_type == 'application/json'
+      return 200, ns_json
+
+    elsif request.content_type == 'application/x-yaml'
+      ns_yml = json_to_yaml(ns_json)
+      return 200, ns_yml
+    end
+  end
 
 	# @method update_nss
 	# @overload put '/catalogues/network-services/id/:sp_ns_id'
@@ -471,6 +718,24 @@ class SonataCatalogue < Sinatra::Application
 		#return 200, new_ns.to_json
 	end
 
+  # @method delete_nsd_sp_ns_id
+  # @overload delete '/network-services/vendor/:vendor/name/:name/version/:version'
+  #	Delete a NS by vendor, name and version in JSON or YAML format
+  #	@param [String] NS_vendor NS vendor
+  # Delete a NS by group
+  #	@param [String] ns_name NS Name
+  # Delete a NS by name
+  #	@param [Integer] ns_version NS version
+  # Delete a NS by version
+  delete '/network-services/vendor/:vendor/name/:name/version/:version' do
+    begin
+      ns = Ns.find_by({"name" =>  params[:name], "vendor" => params[:vendor], "version" => params[:version]})
+    rescue Mongoid::Errors::DocumentNotFound => e
+      return 404,'ERROR: Operation failed'
+    end
+    ns.destroy
+    return 200, 'OK: NSD removed'
+  end
 
 	# @method delete_nsd_sp_ns_id
 	# @overload delete '/catalogues/network-service/:sp_ns_id'
@@ -480,7 +745,6 @@ class SonataCatalogue < Sinatra::Application
 	delete '/network-services/id/:id' do
 		#logger.error params[:external_ns_id]
 		begin
-			#ns = CatalogueModels.find( params[:external_ns_id] )
 			ns = Ns.find(params[:id] )
 		rescue Mongoid::Errors::DocumentNotFound => e
 			return 404,'ERROR: Operation failed'
@@ -552,6 +816,139 @@ class SonataCatalogue < Sinatra::Application
 		#halt 200, vnf.to_json
 	end
 
+  # @method get_vnf_sdk_vendor
+  # @overload get '/catalogues/vnfs/vendor/:vendor'
+  #	Returns an array of all VNF by vendor in JSON or YAML format
+  #	@param [String] vnf_vendor VNF vendor
+  # Show a VNF vendor
+  get '/vnfs/vendor/:vendor' do
+    begin
+      vnf = Vnf.where({"vendor" => params[:vendor]})
+      puts 'VNF: ', vnf.size.to_s
+
+      if vnf.size.to_i == 0
+        logger.error "ERROR: VNFD not found"
+        return 404
+      end
+
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+    vnf_json = vnf.to_json
+    if request.content_type == 'application/json'
+      return 200, vnf_json
+    elsif request.content_type == 'application/x-yaml'
+      vnf_yml = json_to_yaml(vnf_json)
+      return 200, vnf_yml
+    end
+  end
+
+  # @method get_vnfs_vnf_vendor.name
+  # @overload get '/catalogues/vnfs/vendor/:vendor/name/:name'
+  #	Returns an array of all VNF by vendor and name in JSON or YAML format
+  #	@param [String] vnf_group VNF vendor
+  # Show a VNF vendor
+  #	@param [String] vnf_name VNF Name
+  # Show a VNF name
+  get '/vnfs/vendor/:vendor/name/:name' do
+    begin
+      vnf = Vnf.where({"vendor" =>  params[:vendor], "name" => params[:name]})
+
+      if vnf.size.to_i == 0
+        logger.error "ERROR: VNFD not found"
+        return 404
+      end
+
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+
+    vnf_json = vnf.to_json
+    if request.content_type == 'application/json'
+      return 200, vnf_json
+    elsif request.content_type == 'application/x-yaml'
+      vnf_yml = json_to_yaml(vnf_json)
+      return 200, vnf_yml
+    end
+  end
+
+  # @method get_vnfd_vnf_vendor.name.version
+  # @overload get '/vnfs/vendor/:_vnf_vendor/name/:vnf_name/version/:version'
+  #	Show a specific VNF in JSON or YAML format
+  #	@param [String] vnf_vendor VNF vendor
+  # Show a VNF vendor
+  #	@param [String] vnf_name VNF Name
+  # Show a VNF name
+  #	@param [Integer] vnf_version VNF version
+  # Show a VNF version
+  get '/vnfs/vendor/:vendor/name/:name/version/:version' do
+    begin
+      vnf = Vnf.find_by( {"vendor" =>  params[:vendor], "name" =>  params[:name], "version" => params[:version]})
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+
+    vnf_json = vnf.to_json
+    if request.content_type == 'application/json'
+      return 200, vnf_json
+    elsif request.content_type == 'application/x-yaml'
+      vnf_yml = json_to_yaml(vnf_json)
+      return 200, vnf_yml
+    end
+    #return 200, ns.nsd.to_json
+  end
+
+  # @method get_vnfs_vnf_vendor_last_version
+  # @overload get '/catalogues/vnfs/vendor/:vendor/last'
+  #	Show a VNF Vendor list for last version in JSON or YAML format
+  #	@param [String] vendor VNF Vendor
+  # Show a VNF vendor
+  get '/vnfs/vendor/:vendor/last' do
+    # Search and get all VNF items by vendor
+    begin
+
+      vnf = Vnf.where({"vendor" => params[:vendor]}).sort({"version" => -1})#.limit(1).first()
+
+      if vnf.size.to_i == 0
+        logger.error "ERROR: VNFD not found"
+        return 404
+
+      elsif vnf == nil
+        logger.error "ERROR: VNFD not found"
+        return 404
+
+      else
+        vnf_list = []
+        name_list = []
+        vnf_name = vnf.first.name
+        name_list.push(vnf_name)
+        vnf_list.push(vnf.first)
+        vnf.each do |vnfd|
+          if vnfd.name != vnf_name
+            vnf_name = vnfd.name
+            vnf_list.push(vnfd) unless name_list.include?(vnf_name)
+          end
+        end
+      end
+
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+
+    vnf_json = vnf_list.to_json
+    puts 'VNFs: ', vnf_json
+
+    if request.content_type == 'application/json'
+      return 200, vnf_json
+    elsif request.content_type == 'application/x-yaml'
+      vnf_yml = json_to_yaml(vnf_json)
+      return 200, vnf_yml
+    end
+  end
 
 	# @method get_vnfs_vnf_name
 	# @overload get '/catalogues/vnfs/name/:vnf_name'
@@ -643,7 +1040,7 @@ class SonataCatalogue < Sinatra::Application
 			puts 'VNF: ', vnf
 
 			if vnf.size.to_i == 0
-				logger.error "ERROR: NSD not found"
+				logger.error "ERROR: VNFD not found"
 				return 404
 
 			elsif vnf == nil
@@ -651,13 +1048,18 @@ class SonataCatalogue < Sinatra::Application
 				return 404
 
 			else
-				vnf_list = []
-				last_version = vnf.first.version
-				vnf.each do |vnfd|
-					vnf_list.push(vnfd) if vnfd.version == last_version
-				end
-				#puts 'ns_list', ns_list.to_s
+        vnf_list = []
 
+        vendor_list = []
+        vnf_vendor = vnf.first.vendor
+        vendor_list.push(vnf_vendor)
+        vnf_list.push(vnf.first)
+        vnf.each do |vnfd|
+          if vnfd.vendor != vnf_vendor
+            vnf_vendor = vnfd.vendor
+            vnf_list.push(vnfd) unless vendor_list.include?(vnf_vendor)
+          end
+        end
 			end
 
 		rescue Mongoid::Errors::DocumentNotFound => e
@@ -674,35 +1076,6 @@ class SonataCatalogue < Sinatra::Application
 			return 200, vnf_yml
 		end
 	end
-
-
-	# @method get_vnfd_vnf_vendor.name.version
-	# @overload get '/vnfs/vendor/:_vnf_vendor/name/:vnf_name/version/:version'
-	#	Show a specific VNF in JSON or YAML format
-	#	@param [String] vnf_vendor VNF vendor
-	# Show a VNF vendor
-	#	@param [String] vnf_name VNF Name
-	# Show a VNF name
-	#	@param [Integer] vnf_version VNF version
-	# Show a VNF version
-	get '/vnfs/vendor/:vendor/name/:name/version/:version' do
-		begin
-			vnf = Vnf.find_by( {"vendor" =>  params[:vendor], "name" =>  params[:name], "version" => params[:version]})
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		vnf_json = vnf.to_json
-		if request.content_type == 'application/json'
-			return 200, vnf_json
-		elsif request.content_type == 'application/x-yaml'
-			vnf_yml = json_to_yaml(vnf_json)
-			return 200, vnf_yml
-		end
-		#return 200, ns.nsd.to_json
-	end
-
 
 	# @method post_vnfs
 	# @overload post '/catalogues/vnfs'
@@ -792,6 +1165,95 @@ class SonataCatalogue < Sinatra::Application
 		#return 200, new_vnf.to_json
 	end
 
+  # @method update_vnfs_vendor_name_version
+  # @overload put '/vnfs/vendor/:vendor/name/:name/version/:version'
+  # Update a VNF by vendor, name and version in JSON or YAML format
+  #	@param [String] VNF_vendor VNF vendor
+  # Update a VNF vendor
+  #	@param [String] VNF_name VNF Name
+  # Update a VNF name
+  #	@param [Integer] VNF_version VNF version
+  # Update a VNF version
+  put '/vnfs/vendor/:vendor/name/:name/version/:version' do
+    # Return if content-type is invalid
+    return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+    #halt 415 unless request.content_type == 'application/json'
+
+    # Compatibility support for YAML content-type
+    if request.content_type == 'application/x-yaml'
+      # Validate YAML format
+      # When updating a NSD, the json object sent to API must contain just data inside
+      # of the nsd, without the json field nsd: before <- this might be resolved
+      new_vnf, errors = parse_yaml(request.body.read)
+      return 400, errors.to_json if errors
+
+      # Translate from YAML format to JSON format
+      new_vnf_json = yaml_to_json(new_vnf)
+
+      # Validate JSON format
+      new_vnf, errors = parse_json(new_vnf_json)
+      puts 'vnf: ', new_vnf.to_json
+      puts 'new_vnf id', new_vnf['_id'].to_json
+      return 400, errors.to_json if errors
+
+      # Compatibility support for JSON content-type
+    elsif request.content_type == 'application/json'
+      # Parses and validates JSON format
+      new_vnf, errors = parse_json(request.body.read)
+      return 400, errors.to_json if errors
+    end
+
+    # Validate VNF
+    #halt 400, 'ERROR: VNFD not found' unless vnf.has_key?('vnfd')
+    return 400, 'ERROR: VNF Vendor not found' unless new_vnf.has_key?('vendor')
+    return 400, 'ERROR: VNF Name not found' unless new_vnf.has_key?('name')
+    return 400, 'ERROR: VNF Version not found' unless new_vnf.has_key?('version')
+
+    # Validate VNFD
+    #begin
+    #	RestClient.post settings.vnfd_validator + '/vnfds', new_vnf['vnfd'].to_json, 'X-Auth-Token' => @client_token, :content_type => :json
+    #rescue Errno::ECONNREFUSED
+    #	halt 500, 'VNFD Validator unreachable'
+    #rescue => e
+    #	logger.error e.response
+    #	halt e.response.code, e.response.body
+    #end
+
+    # Retrieve stored version
+    begin
+      vnf = Vnf.find_by({"name" =>  params[:name], "vendor" => params[:vendor], "version" => params[:version]})
+    rescue Mongoid::Errors::DocumentNotFound => e
+      halt 404 # 'This VNFD does not exists'
+    end
+    begin
+      vnf = Vnf.find_by( {"name"=>new_vnf['name'], "vendor"=>new_vnf['vendor'], "version"=>new_vnf['version']} )
+      return 400, 'ERROR: Duplicated VNF Name, Vendor and Version'
+    rescue Mongoid::Errors::DocumentNotFound => e
+    end
+
+    # Update to new version
+    #vnf.update_attributes(new_vnf)
+    vnfd = {}
+    puts 'Updating...'
+    # Update the group.name.version ID for the descriptor
+    new_vnf['_id'] = new_vnf['vendor'].to_s + '.' + new_vnf['name'].to_s + '.' + new_vnf['version'].to_s
+    vnfd = new_vnf # TODO: Avoid having multiple 'vnfd' fields containers
+
+    begin
+      new_vnf = Vnf.create!(vnfd)
+    rescue Moped::Errors::OperationFailure => e
+      return 400, 'ERROR: Duplicated VNF ID' if e.message.include? 'E11000'
+    end
+
+    vnf_json = new_vnf['_id'].to_json
+    if request.content_type == 'application/json'
+      return 200, vnf_json
+    elsif request.content_type == 'application/x-yaml'
+      vnf_yml = json_to_yaml(vnf_json)
+      return 200, vnf_yml
+    end
+    #halt 200, vnf.to_json
+  end
 
 	# @method update_vnfs
 	# @overload put '/catalogues/vnfs/id/:id'
@@ -886,6 +1348,24 @@ class SonataCatalogue < Sinatra::Application
 		#halt 200, vnf.to_json
 	end
 
+  # @method delete_vnfd_sdk_vnf_id
+  # @overload delete '/vnfs/vendor/:vendor/name/:name/version/:version'
+  #	Delete a VNF by vendor, name and version in JSON or YAML format
+  #	@param [String] vnf_vendor VNF vendor
+  # Delete a VNF by group
+  #	@param [String] vnf_name VNF Name
+  # Delete a VNF by name
+  #	@param [Integer] vnf_version VNF version
+  # Delete a VNF by version
+  delete '/vnfs/vendor/:vendor/name/:name/version/:version' do
+    begin
+      vnf = Vnf.find_by({"name" =>  params[:name], "vendor" => params[:vendor], "version" => params[:version]})
+    rescue Mongoid::Errors::DocumentNotFound => e
+      return 404,'ERROR: Operation failed'
+    end
+    vnf.destroy
+    return 200, 'OK: VNFD removed'
+  end
 
 	# @method delete_vnfd_sp_vnf_id
 	# @overload delete '/catalogues/vnfs/id/:id'
@@ -1167,7 +1647,7 @@ class SonataCatalogue < Sinatra::Application
 	#	@param [String] package_name Package Name
 	# Show a Package name
 	get '/packages/name/:name/last' do
-		# Search and get all package items by vendor
+		# Search and get all package items by name
 		begin
 			#puts 'params', params
 
