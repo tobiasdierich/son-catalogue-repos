@@ -2,4 +2,4 @@ AllCops:
   Includes:
     - '*.rb'
   Excludes:
-    - '**'
+    - '*'
