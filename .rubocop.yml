@@ -1,0 +1,5 @@
+AllCops:
+  Includes:
+    - *.rb
+  Excludes:
+    - **
