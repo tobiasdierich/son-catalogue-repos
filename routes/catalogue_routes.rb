@@ -102,7 +102,7 @@ class SonataCatalogue < Sinatra::Application
 	# -> List all NSs in JSON or YAML format
 	get '/network-services' do
 		params[:offset] ||= 1
-		params[:limit] ||= 10
+		params[:limit] ||= 50
 
 		# Only accept positive numbers
 		params[:offset] = 1 if params[:offset].to_i < 1
@@ -762,7 +762,7 @@ class SonataCatalogue < Sinatra::Application
 	# List all VNFs in JSON or YAML format
 	get '/vnfs' do
 		params[:offset] ||= 1
-		params[:limit] ||= 2
+		params[:limit] ||= 50
 
 		# Only accept positive numbers
 		params[:offset] = 1 if params[:offset].to_i < 1
@@ -1393,7 +1393,7 @@ class SonataCatalogue < Sinatra::Application
 	# List all Packages in JSON or YAML format
 	get '/packages' do
 		params[:offset] ||= 1
-		params[:limit] ||= 10
+		params[:limit] ||= 50
 
 		# Only accept positive numbers
 		params[:offset] = 1 if params[:offset].to_i < 1
