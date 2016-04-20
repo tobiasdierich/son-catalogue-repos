@@ -27,5 +27,6 @@ end
 # Database
 gem 'mongoid', '~>4.0' # MongoDB driver
 gem 'mongoid-pagination', '~>0.2' # Pagination library
+gem 'mongoid-grid_fs', '~>2.2' # mongoid-grid_fs-2.2.1 - GridFS for store binary data
 
 #gem 'sinatra-gkauth', '~>0.2.0', path: '../sinatra-gkauth-gem' # <- Disabled
