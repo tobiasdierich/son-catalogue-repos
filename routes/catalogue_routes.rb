@@ -1984,4 +1984,77 @@ class SonataCatalogue < Sinatra::Application
 		return 200, 'OK: PD removed'
 	end
 
+
+  ############################################ PZIP API METHODS ############################################
+
+  # @method post_zip_package
+  # @overload post '/catalogues/zip-package'
+  # 	Post a Package zip in binary-data
+  post '/zip-packages' do
+    # Return if content-type is invalid
+    return 415 unless request.content_type == 'application/zip'
+
+    # Reads body data
+    file, errors = request.body
+    return 400, errors.to_json if errors
+
+    #Zip::Archive.open_buffer(response.body) do |ar|
+    #  ar.fopen(0) do |zf|
+    #    open(zf.name, 'wb') do |f|
+    #      f << zf.read
+    #    end
+    #  end
+    #end
+
+    #return 400, 'ERROR: Package Name not found' unless pzip.has_key?('package_name')
+    #return 400, 'ERROR: Package Vendor not found' unless pzip.has_key?('package_group')
+    #return 400, 'ERROR: Package Version not found' unless pzip.has_key?('package_version')
+
+    #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
+
+    grid_fs   = Mongoid::GridFs
+    grid_file = grid_fs.put(file,
+                            #:filename     => "package.zip",
+                            :content_type => "application/zip",
+                            #:_id          => 'a-unique-id-to-use-in-lieu-of-a-random-one',
+                            #:chunk_size   => 100 * 1024,
+                            #:metadata     => {'description' => "taken after a game of ultimate"}
+                            )
+
+    FileContainer.new.tap do |file_container|
+      file_container.grid_fs_id = grid_file.id
+      file_container.save
+    end
+
+    return 200, grid_file.id.to_s
+  end
+
+  # @method get_package_zip_pzip_id
+  # @overload get '/catalogues/zip-packages/id/:pzip_id'
+  #	Get a zip-package
+  #	@param [Integer] zip-package ID
+  # Zip-package internal database identifier
+  get '/zip-packages/id/:id' do
+    puts 'ID: ', params[:id]
+    begin
+      FileContainer.find_by({"grid_fs_id" => params[:id]} )
+      puts 'FileContainer FOUND'
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      return 404
+    end
+
+    grid_fs   = Mongoid::GridFs
+    grid_file = grid_fs.get(params[:id])
+    #grid_file.data # big huge blob
+
+    #temp=Tempfile.new('package.zip', 'wb')
+    #grid_file.each do |chunk|
+    #  temp.write(chunk) # streaming write
+    #end
+
+    return 200, grid_file.data
+
+  end
+
 end
