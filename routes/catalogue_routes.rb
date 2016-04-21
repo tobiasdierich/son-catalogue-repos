@@ -495,6 +495,7 @@ class SonataCatalogue < Sinatra::Application
 		begin
 			# Generate the UUID for the descriptor
 			ns['_id'] = SecureRandom.uuid
+      ns['status'] = 'Inactive'
 			new_ns = Ns.create!(ns)
 		rescue Moped::Errors::OperationFailure => e
 			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
@@ -716,7 +717,56 @@ class SonataCatalogue < Sinatra::Application
 			return 200, ns_yml
 		end
 		#return 200, new_ns.to_json
-	end
+  end
+
+  # @method update_ns_status
+  # @overload put '/catalogues/network-services/status/:new_status/id/:sp_ns_id'
+  # Update a NS status in the catalogue
+  # @param [new_status] NS status
+  # Update a NS status
+  # @param [sp_ns_id] NS id
+  # Update a NS status
+  put '/network-services/status/:new_status/id/:id' do
+
+    # Return if content-type is invalid
+    #return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+    # Validate NS
+    # Retrieve stored version
+    begin
+      puts 'Searching ' + params[:id].to_s
+      ns = Ns.find_by( { "_id" =>  params[:id] })
+      puts 'NS is found'
+    rescue Mongoid::Errors::DocumentNotFound => e
+      return 400, 'This NSD does not exists'
+    end
+
+    #Validate new status
+    valid_status = ['Active', 'Inactive', 'Delete']
+    if valid_status.include? params[:new_status]
+      puts 'OK'
+    else
+      return 400, 'Invalid new status'
+    end
+        
+    # Update to new status
+    begin
+      ns.update_attributes(:status => params[:new_status])
+    rescue Moped::Errors::OperationFailure => e
+      return 400, 'ERROR: Operation failed'
+    end
+
+    # --> Validation disabled
+    # Validate NSD
+    #begin
+    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+    #rescue => e
+    #	logger.error e.response
+    #	return e.response.code, e.response.body
+    #end
+
+    return 200, 'Status updated'
+  end
 
   # @method delete_nsd_sp_ns_id
   # @overload delete '/network-services/vendor/:vendor/name/:name/version/:version'
