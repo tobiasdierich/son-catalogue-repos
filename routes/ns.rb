@@ -1,5 +1,13 @@
+require 'addressable/uri'
+require 'pp'
+require 'json'
+
 # This Class is the Class of Sonata Ns Repository
 class SonataNsRepository < Sinatra::Application
+  DEFAULT_OFFSET = '0'
+  DEFAULT_LIMIT = '10'
+  DEFAULT_MAX_LIMIT = '100'
+
   # @method get_root
   # @overload get '/'
   get '/' do
@@ -11,30 +19,31 @@ class SonataNsRepository < Sinatra::Application
   # @overload get "/ns-instances"
   # Gets all ns-instances
   get '/ns-instances' do
-    params[:offset] ||= 1
-    params[:limit] ||= 10
+    uri = Addressable::URI.new
+    params['offset'] ||= DEFAULT_OFFSET
+    params['limit'] ||= DEFAULT_LIMIT
+    uri.query_values = params
+    logger.info "nsr: entered GET /records/nsr/ns-instances?#{uri.query}"
 
-    # Only accept positive numbers
-    params[:offset] = 1 if params[:offset].to_i < 1
-    params[:limit] = 2 if params[:limit].to_i < 1
+    # transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
 
     # Get paginated list
-    @nsr = Nsr.paginate(:page => params[:offset], :limit => params[:limit])
-    # Build HTTP Link Header
-    headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
+    headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
+    headers[:params] = params unless params.empty?
+    # get rid of :offset and :limit
+    [:offset, :limit].each { |k| keyed_params.delete(k) }
+    valid_fields = [:page]
+    logger.info "nsr: keyed_params.keys - valid_fields = #{keyed_params.keys - valid_fields}"
+    json_error 400, "nsr: wrong parameters #{params}" unless keyed_params.keys - valid_fields == []
 
-    if params[:output] == 'YAML'
-      content_type = 'application/x-yaml'
-    else
-      content_type = 'application/json'
-    end
+    requests = Nsr.paginate(:page => params[:page], :limit => params[:limit])
+    logger.info "nsr: leaving GET /requests?#{uri.query} with #{requests.to_json}"
+    halt 200, requests.to_json if requests
+    json_error 404, 'nsr: No requests were found'
 
     begin
       # Get paginated list
-      @nsr = Nsr.paginate(:page => params[:offset], :limit => params[:limit])
-      # Build HTTP Link Header
-      headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
-
       nsr_json = @nsr.to_json
       if content_type == 'application/json'
         return 200, nsr_json
@@ -58,21 +67,8 @@ class SonataNsRepository < Sinatra::Application
     rescue Mongoid::Errors::DocumentNotFound => e
       halt(404)
     end
-
     nsr_json = @nsinstance.to_json
-
-    if params[:output] == 'YAML'
-      content_type = 'application/x-yaml'
-    else
-      content_type = 'application/json'
-    end
-    if content_type == 'application/json'
-      return 200, nsr_json
-    elsif content_type == 'application/x-yaml'
-      headers 'Content-Type' => 'text/plain; charset=utf8'
-      nsr_yml = json_to_yaml(nsr_json)
-      return 200, nsr_yml
-    end
+    return 200, nsr_json
   end
 
   # @method post_ns-instances
