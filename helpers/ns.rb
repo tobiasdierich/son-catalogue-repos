@@ -20,6 +20,12 @@ class SonataNsRepository < Sinatra::Application
     return parsed_message, nil
   end
 
+  def json_error(code, message)
+    msg = {'error' => message}
+    logger.error msg.to_s
+    halt code, {'Content-type'=>'application/json'}, msg.to_json
+  end
+
   def json_to_yaml(input_json)
     require 'json'
     require 'yaml'
