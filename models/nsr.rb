@@ -40,7 +40,7 @@ class Nsr
   field :sla, type: Array
   field :auto_scale_policy, type: Object
   field :connection_point, type: Array
-  #nsr ETSI fields MAN001 6.2.2.1
+  # nsr ETSI fields MAN001 6.2.2.1
   field :service_deployment_flavour, type: String
   field :vnfr, type: Array
   field :pnfr, type: Array
@@ -51,9 +51,9 @@ class Nsr
   field :notification, type: String
   field :lifecycle_event_history, type: Array
   field :audit_log, type: Array
-  #Sonata's custom fields
+  # Sonata's custom fields
   field :mapping_time, type: Time
   field :instantiation_start_time, type: Time
   field :instantiation_end_time, type: Time
-  #future fields: Slicing and Recursiveness
+  # future fields: Slicing and Recursiveness
 end
