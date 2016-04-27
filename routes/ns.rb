@@ -11,36 +11,78 @@ class SonataNsRepository < Sinatra::Application
   # @overload get "/ns-instances"
   # Gets all ns-instances
   get '/ns-instances' do
-    if params[:status]
-      @nsInstances = Nsr.where(:status => params[:status])
+    params[:offset] ||= 1
+    params[:limit] ||= 10
+
+    # Only accept positive numbers
+    params[:offset] = 1 if params[:offset].to_i < 1
+    params[:limit] = 2 if params[:limit].to_i < 1
+
+    # Get paginated list
+    @nsr = Nsr.paginate(:page => params[:offset], :limit => params[:limit])
+    # Build HTTP Link Header
+    headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
+
+    if params[:output] == 'YAML'
+      content_type = 'application/x-yaml'
     else
-      @nsInstances = Nsr.all
+      content_type = 'application/json'
     end
-    return @nsInstances.to_json
+
+    begin
+      # Get paginated list
+      @nsr = Nsr.paginate(:page => params[:offset], :limit => params[:limit])
+      # Build HTTP Link Header
+      headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
+
+      nsr_json = @nsr.to_json
+      if content_type == 'application/json'
+        return 200, nsr_json
+      elsif content_type == 'application/x-yaml'
+        headers 'Content-Type' => 'text/plain; charset=utf8'
+        nsr_yml = json_to_yaml(nsr_json)
+        return 200, nsr_yml
+      end
+    rescue
+      logger.error 'Error Establishing a Database Connection'
+      return 500, 'Error Establishing a Database Connection'
+    end
   end
 
   # @method get_ns-instances
   # @overload get "/ns-instances"
   # Gets ns-instances with an id
-
   get '/ns-instances/:id' do
     begin
-      @nsInstance = Nsr.find(params[:id])
-        rescue Mongoid::Errors::DocumentNotFound => e
-          halt(404)
-        end
-    return @nsInstance.to_json
+      @nsinstance = Nsr.find(params[:id])
+    rescue Mongoid::Errors::DocumentNotFound => e
+      halt(404)
+    end
+
+    nsr_json = @nsinstance.to_json
+
+    if params[:output] == 'YAML'
+      content_type = 'application/x-yaml'
+    else
+      content_type = 'application/json'
+    end
+    if content_type == 'application/json'
+      return 200, nsr_json
+    elsif content_type == 'application/x-yaml'
+      headers 'Content-Type' => 'text/plain; charset=utf8'
+      nsr_yml = json_to_yaml(nsr_json)
+      return 200, nsr_yml
+    end
   end
 
-  # Method post_ns-instances
+  # @method post_ns-instances
   # @overload post "/ns-instances"
   # Post a new ns-instances information
-
   post '/ns-instances' do
     return 415 unless request.content_type == 'application/json'
     # Validate JSON format
     instance, errors = parse_json(request.body.read)
-    return 400, errors.to_json if errors
+    return 401, errors.to_json if errors
     begin
       instance = Nsr.find({ '_id' => instance['_id'] })
       return 400, 'ERROR: Duplicated NS ID'
@@ -55,6 +97,9 @@ class SonataNsRepository < Sinatra::Application
     return 200, instance.to_json
   end
 
+  # @method put_ns-instances
+  # @overload put "/ns-instances"
+  # Puts a ns-instances record
   put '/ns-instances/:id' do
     # Return if content-type is invalid
     415 unless request.content_type == 'application/json'
@@ -63,27 +108,26 @@ class SonataNsRepository < Sinatra::Application
     return 400, errors.to_json if errors
     # Retrieve stored version
     new_nsr = instance
-      begin
-        nsr = Nsr.find_by( { "_id" =>  params[:id] })
-			puts 'NS is found'
-		rescue Mongoid::Errors::DocumentNotFound => e
-			return 400, 'This NSD does not exists'
-		end
+    begin
+      nsr = Nsr.find_by('_id' => params[:id])
+      puts 'NS is found'
+    rescue Mongoid::Errors::DocumentNotFound => e
+      return 400, 'This NSD does not exists'
+    end
 
-		# Update to new version
-		puts 'Updating...'
-		begin
-			#Delete old record
-			Nsr.where( { "_id" => params[:id] }).delete
-			#Create a record
-			new_nsr = Nsr.create!(instance)
-		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
-		end
+    # Update to new version
+    puts 'Updating...'
+    begin
+      # Delete old record
+      Nsr.where('_id' => params[:id]).delete
+      # Create a record
+      new_nsr = Nsr.create!(instance)
+    rescue Moped::Errors::OperationFailure => e
+      return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+    end
 
-		nsr_json = new_nsr.to_json
-		return 200, nsr_json
-		#return 200, new_ns.to_json
-	end
-
+    nsr_json = new_nsr.to_json
+    return 200, nsr_json
+    # return 200, new_ns.to_json
+  end
 end
