@@ -46,16 +46,32 @@ class Vnf
 end
 
 class Package
+	include Mongoid::Document
+	include Mongoid::Timestamps
+	include Mongoid::Pagination
+	#include Mongoid::Versioning
+	include Mongoid::Attributes::Dynamic
+	store_in collection: "pd"
+
+	field :package_group, type: String
+	field :package_name, type: String
+	field :package_version, type: String
+
+	validates :package_group, :package_name, :package_version, :presence => true
+end
+
+# Temporary class model for experimenting purposes on binary data storage on database
+require 'mongoid/grid_fs'
+
+class FileContainer
   include Mongoid::Document
   include Mongoid::Timestamps
-  include Mongoid::Pagination
-  #include Mongoid::Versioning
-  include Mongoid::Attributes::Dynamic
-  store_in collection: "pd"
+  store_in collection: "file_containers"
 
-  field :package_group, type: String
-  field :package_name, type: String
-  field :package_version, type: String
+  field :grid_fs_id, type: String
+  #field :grid_fs_vendor, type: String
+  #field :grid_fs_name, type: String
+  #field :grid_fs_version, type: String
 
-  validates :package_group, :package_name, :package_version, :presence => true
+  #validates :package_group, :package_name, :package_version, :presence => true
 end
