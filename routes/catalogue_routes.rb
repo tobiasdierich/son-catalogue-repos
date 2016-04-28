@@ -84,6 +84,16 @@ class SonataCatalogue < Sinatra::Application
     DELETE /catalogues/packages/id/{_id}
 =end
 
+  #parsed = JSON.parse(nss_json)
+  # Filter for status=Active
+  #filtered_nss_json = nss_json.reject
+  #parsed.delete_if {|hash| hash["status"] != "Active"}
+  #puts 'RESULT: ', parsed.to_s
+  # Return Name, version, vendor, Description, SLA
+  #parsed_nss_json = parsed.to_json(:only => [ 'id', 'name', 'vendor', 'version', 'description' ])
+  #puts 'RESULT: ', parsed_nss_json.to_s
+  #return 200, parsed_nss_json
+
 	# @method get_root
 	# @overload get '/catalogues/'
 	# Get all available interfaces
@@ -93,6 +103,7 @@ class SonataCatalogue < Sinatra::Application
 		halt 200, interfaces_list.to_yaml
 	end
 
+  require 'addressable/uri'
 
 	############################################ NSD API METHODS ############################################
 
@@ -118,8 +129,10 @@ class SonataCatalogue < Sinatra::Application
 		begin
 			nss_json = nss.to_json # to remove _id field from documents (:except => :_id)
 			#puts 'NSS: ', nss_json
+
 			if request.content_type == 'application/json'
-				return 200, nss_json
+        return 200, nss_json
+
 			elsif request.content_type == 'application/x-yaml'
 				nss_yml = json_to_yaml(nss_json)
 				return 200, nss_yml
@@ -428,7 +441,7 @@ class SonataCatalogue < Sinatra::Application
 	# Post a NSD
 	post '/network-services' do
 		# Return if content-type is invalid
-		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+		halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
 		# Compatibility support for YAML content-type
 		if request.content_type == 'application/x-yaml'
@@ -502,16 +515,27 @@ class SonataCatalogue < Sinatra::Application
 		end
 
 		puts 'New NS has been added'
-		ns_json = new_ns['_id'].to_json
-		if request.content_type == 'application/json'
-			return 200, ns_json
+    case request.content_type
+
+      when 'application/json'
+        response = new_ns.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(new_ns.to_json)
+      else
+        halt 415
+    end
+
+    halt 201, response
+
+		#ns_json = new_ns.to_json
+		#if request.content_type == 'application/json'
+		#	halt 201, ns_json
 			#return 200, new_ns['_id'].to_json
 
-		elsif request.content_type == 'application/x-yaml'
-			ns_yml = json_to_yaml(ns_json)
-			return 200, ns_yml
+		#elsif request.content_type == 'application/x-yaml'
+		#	ns_yml = json_to_yaml(ns_json)
+		#	halt 201, ns_yml
 
-		end
 	end
 
   # @method update_nss_version_name_version
@@ -748,7 +772,7 @@ class SonataCatalogue < Sinatra::Application
     else
       return 400, 'Invalid new status'
     end
-        
+
     # Update to new status
     begin
       ns.update_attributes(:status => params[:new_status])
@@ -1205,13 +1229,23 @@ class SonataCatalogue < Sinatra::Application
 		end
 
 		puts 'New VNF has been added'
-		vnf_json = new_vnf['_id'].to_json
-		if request.content_type == 'application/json'
-			return 200, vnf_json
-		elsif request.content_type == 'application/x-yaml'
-			vnf_yml = json_to_yaml(vnf_json)
-			return 200, vnf_yml
-		end
+    case request.content_type
+      when 'application/json'
+        response = new_vnf.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(new_vnf.to_json)
+      else
+        halt 415
+    end
+    halt 201, response
+
+    #vnf_json = new_vnf['_id'].to_json
+		#if request.content_type == 'application/json'
+		#	return 200, vnf_json
+		#elsif request.content_type == 'application/x-yaml'
+		#	vnf_yml = json_to_yaml(vnf_json)
+		#	return 200, vnf_yml
+		#end
 		#return 200, new_vnf.to_json
 	end
 
@@ -1811,15 +1845,23 @@ class SonataCatalogue < Sinatra::Application
 		end
 
 		puts 'New PD has been added'
-		pks_json = new_pks['_id'].to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
+    case request.content_type
+      when 'application/json'
+        response = new_pks.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(new_pks.to_json)
+      else
+        halt 415
+    end
+    halt 201, response
 
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-
-		end
+		#pks_json = new_pks['_id'].to_json
+		#if request.content_type == 'application/json'
+		#	return 200, pks_json
+		#elsif request.content_type == 'application/x-yaml'
+		#	pks_yml = json_to_yaml(pks_json)
+		#	return 200, pks_yml
+		#end
 	end
 
 	# @method update_package_group_name_version
@@ -2076,7 +2118,7 @@ class SonataCatalogue < Sinatra::Application
       file_container.save
     end
 
-    return 200, grid_file.id.to_s
+    halt 201, grid_file.id.to_json
   end
 
   # @method get_package_zip_pzip_id

@@ -9,7 +9,6 @@ gem 'json-schema', '~>2.5'
 gem 'rest-client', '~>1.8'
 gem 'rubysl-securerandom', '~> 2.0'
 gem 'addressable'
-gem 'mongoid-grid_fs', '~>2.2'
 #gem 'logstash-logger'
 
 group :development, :test do
