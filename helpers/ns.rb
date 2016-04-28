@@ -38,6 +38,23 @@ class SonataNsRepository < Sinatra::Application
   return output_yml
   end
 
+  # Checks if a JSON message is valid acording to a json_schema
+  #
+  # @param [JSON] message some JSON message
+  # @return [Hash, nil] if the parsed message is a valid JSON
+  # @return [Hash, String] if the parsed message is an invalid JSON
+
+  def validate_json(message,schema)
+    begin
+      JSON::Validator.validate!(schema, message)
+    rescue JSON::Schema::ValidationError => e
+      logger.error "JSON validating: #{e.to_s}"
+      return e.to_s + "\n"
+    end
+    return nil
+  end
+
+
   def keyed_hash(hash)
     Hash[hash.map { |(k, v)| [k.to_sym, v] }]
   end
