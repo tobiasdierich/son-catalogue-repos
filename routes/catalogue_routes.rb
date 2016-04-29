@@ -1,98 +1,22 @@
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
+  require 'addressable/uri'
 
 	before do
-
 		# Gatekeepr authn. code will go here for future implementation
 		# --> Gatekeeper authn. disabled
 		#if request.path_info == '/gk_credentials'
 		#	return
 		#end
-
 		if settings.environment == 'development'
 			return
 		end
-
 		#authorized?
-	end
+  end
 
-	# @method get_log
-	# @overload get '/network-services/log'
-	#	Returns contents of log file
-	# Management method to get log file of catalogue remotely
-	#get '/log' do
-  #  	headers "Content-Type" => "text/plain; charset=utf8"
-	#	filename = 'log/development.log'
-  #
-	#	# For testing purposes only
-	#	begin
-	#		txt = open(filename)
-	#
-	#	rescue => err
-	#		logger.error "Error reading log file: #{err}"
-	#		return 500, "Error reading log file: #{err}"
-	#	end
-	#
-	#	#return 200, nss.to_json
-	#	return 200, txt.read.to_s
-	#end
-
-=begin
-    GET /catalogues/network-services
-    GET /catalogues/network-services/id/{_id}
-    GET /catalogues/network-services/vendor/{vendor}
-    GET /catalogues/network-services/vendor/{vendor}/name/{name}
-    GET /catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}
-    GET /catalogues/network-services/vendor/{vendor}/last}
-    GET /catalogues/network-services/name/{name}
-    GET /catalogues/network-services/name/{name}/version/{version}
-    GET /catalogues/network-services/name/{name}/last
-    POST /catalogues/network-services
-    PUT /catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}
-    PUT /catalogues/network-services/id/{_id}
-    DELETE /catalogues/network-services/vendor/{vendor}/name/{name}/version/{version}
-    DELETE /catalogues/network-services/id/{_id}
-
-    GET /catalogues/vnfs
-    GET /catalogues/vnfs/id/{_id}
-    GET /catalogues/vnfs/vendor/{vendor}
-    GET /catalogues/vnfs/vendor/{vendor}/name/{name}
-    GET /catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}
-    GET /catalogues/vnfs/vendor/{vendor}/last}
-    GET /catalogues/vnfs/name/{name}
-    GET /catalogues/vnfs/name/{name}/version/{version}
-    GET /catalogues/vnfs/name/{name}/last
-    POST /catalogues/vnfs
-    PUT /catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}
-    PUT /catalogues/vnfs/id/{_id}
-    DELETE /catalogues/vnfs/vendor/{vendor}/name/{name}/version/{version}
-    DELETE /catalogues/vnfs/id/{_id}
-
-    GET /catalogues/packages
-    GET /catalogues/packages/id/{_id}
-    GET /catalogues/packages/vendor/{package_group}
-    GET /catalogues/packages/vendor/{package_group}/name/{package_name}
-    GET /catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}
-    GET /catalogues/packages/vendor/{package_group}/last}
-    GET /catalogues/packages/name/{package_name}
-    GET /catalogues/packages/name/{package_name}/version/{package_version}
-    GET /catalogues/packages/name/{package_name}/last
-    POST /catalogues/packages
-    PUT /catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}
-    PUT /catalogues/packages/id/{_id}
-    DELETE /catalogues/packages/vendor/{package_group}/name/{package_name}/version/{package_version}
-    DELETE /catalogues/packages/id/{_id}
-=end
-
-  #parsed = JSON.parse(nss_json)
-  # Filter for status=Active
-  #filtered_nss_json = nss_json.reject
-  #parsed.delete_if {|hash| hash["status"] != "Active"}
-  #puts 'RESULT: ', parsed.to_s
-  # Return Name, version, vendor, Description, SLA
-  #parsed_nss_json = parsed.to_json(:only => [ 'id', 'name', 'vendor', 'version', 'description' ])
-  #puts 'RESULT: ', parsed_nss_json.to_s
-  #return 200, parsed_nss_json
+  DEFAULT_OFFSET = "0"
+  DEFAULT_LIMIT = "10"
+  DEFAULT_MAX_LIMIT = "100"
 
 	# @method get_root
 	# @overload get '/catalogues/'
@@ -103,334 +27,138 @@ class SonataCatalogue < Sinatra::Application
 		halt 200, interfaces_list.to_yaml
 	end
 
-  require 'addressable/uri'
-
 	############################################ NSD API METHODS ############################################
 
 	# @method get_nss
-	# @overload get '/catalogues/network-services'
+	# @overload get '/catalogues/network-services/?'
 	#	Returns a list of NSs
-	# -> List all NSs in JSON or YAML format
-	get '/network-services' do
-		params[:offset] ||= 1
-		params[:limit] ||= 50
+	# -> List many descriptors
+  get '/network-services/?' do
+    params['offset'] ||= DEFAULT_OFFSET
+    params['limit'] ||= DEFAULT_LIMIT
 
-		# Only accept positive numbers
-		params[:offset] = 1 if params[:offset].to_i < 1
-		params[:limit] = 2 if params[:limit].to_i < 1
+    uri = Addressable::URI.new
+    uri.query_values = params
+    puts 'params', params
+    puts 'query_values', uri.query_values
+    logger.info "Catalogue: entered GET /network-services?#{uri.query}"
 
-		# Get paginated list
-		nss = Ns.paginate(:page => params[:offset], :limit => params[:limit])
-		logger.debug(nss)
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    puts 'keyed_params', keyed_params
 
-		# Build HTTP Link Header
-		headers['Link'] = build_http_link_ns(params[:offset].to_i, params[:limit])
-
-		begin
-			nss_json = nss.to_json # to remove _id field from documents (:except => :_id)
-			#puts 'NSS: ', nss_json
-
-			if request.content_type == 'application/json'
-        return 200, nss_json
-
-			elsif request.content_type == 'application/x-yaml'
-				nss_yml = json_to_yaml(nss_json)
-				return 200, nss_yml
-			end
-		rescue
-			logger.error "Error Establishing a Database Connection"
-			return 500, "Error Establishing a Database Connection"
-		end
-	end
-
-
-	# @method get_ns_sp_ns_id
-	# @overload get '/catalogues/network-services/id/:sp_ns_id'
-	#	Show a NS in JSON or YAML format
-	#	@param [Integer] sp_ns_id NS sp ID
-	# Show a NS by internal ID (uuid)
-	get '/network-services/id/:id' do
-		begin
-			ns = Ns.find(params[:id] )
-			#ns = Ns.find_by( { "nsd.id" =>  params[:external_ns_id]})
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		ns_json = ns.to_json
-		#puts 'NSS: ', nss_json
-		if request.content_type == 'application/json'
-			return 200, ns_json
-		elsif request.content_type == 'application/x-yaml'
-			ns_yml = json_to_yaml(ns_json)
-			return 200, ns_yml
-		end
-		#return 200, ns.nsd.to_json
-	end
-
-  # @method get_ns_sp_vendor
-  # @overload get '/catalogues/network-services/vendor/:vendor'
-  #	Returns an array of all NS by vendor in JSON or YAML format
-  #	@param [String] ns_vendor NS vendor
-  # Show a NS vendor
-  get '/network-services/vendor/:vendor' do
-    begin
-      ns = Ns.where({"vendor" => params[:vendor]})
-      puts 'NS: ', ns.size.to_s
-
-      if ns.size.to_i == 0
-        logger.error "ERROR: NSD not found"
-        return 404
-      end
-
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      return 404
-    end
-    ns_json = ns.to_json
-    if request.content_type == 'application/json'
-      return 200, ns_json
-    elsif request.content_type == 'application/x-yaml'
-      ns_yml = json_to_yaml(ns_json)
-      return 200, ns_yml
-    end
-  end
-
-  # @method get_Nss_NS_vendor.name
-  # @overload get '/catalogues/network-services/vendor/:vendor/name/:name'
-  #	Returns an array of all NS by vendor and name in JSON or YAML format
-  #	@param [String] ns_group NS vendor
-  # Show a NS vendor
-  #	@param [String] ns_name NS Name
-  # Show a NS name
-  get '/network-services/vendor/:vendor/name/:name' do
-    begin
-      ns = Ns.where({"vendor" =>  params[:vendor], "name" => params[:name]})
-
-      if ns.size.to_i == 0
-        logger.error "ERROR: NSD not found"
-        return 404
-      end
-
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      return 404
-    end
-
-    ns_json = ns.to_json
-    if request.content_type == 'application/json'
-      return 200, ns_json
-    elsif request.content_type == 'application/x-yaml'
-      ns_yml = json_to_yaml(ns_json)
-      return 200, ns_yml
-    end
-  end
-
-  # @method get_nsd_ns_vendor.name.version
-  # @overload get '/network-services/vendor/:vendor/name/:name/version/:version'
-  #	Show a specific NS in JSON or YAML format
-  #	@param [String] vendor NS external Vendor
-  # Show a NS vendor
-  #	@param [String] name NS external Name
-  # Show a NS name
-  #	@param [Integer] version NS version
-  # Show a NS version
-  get '/network-services/vendor/:vendor/name/:name/version/:version' do
-    begin
-      ns = Ns.find_by({"vendor" =>  params[:vendor], "name" =>  params[:name], "version" => params[:version]})
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      return 404
-    end
-
-    ns_json = ns.to_json
-    if request.content_type == 'application/json'
-      return 200, ns_json
-    elsif request.content_type == 'application/x-yaml'
-      ns_yml = json_to_yaml(ns_json)
-      return 200, ns_yml
-    end
-    #return 200, ns.nsd.to_json
-  end
-
-  # @method get_nsd_ns_vendor_last_version
-  # @overload get '/catalogues/network-services/vendor/:vendor/last'
-  #	Show a NS Vendor list for last version in JSON or YAML format
-  #	@param [String] vendor NS Vendor
-  # Show a NS vendor
-  get '/network-services/vendor/:vendor/last' do
-    # Search and get all NS items by vendor
-    begin
-
-      ns = Ns.where({"vendor" => params[:vendor]}).sort({"version" => -1})#.limit(1).first()
-
-      if ns.size.to_i == 0
-        logger.error "ERROR: NSD not found"
-        return 404
-
-      elsif ns == nil
-        logger.error "ERROR: NSD not found"
-        return 404
-
+    # Set headers
+    case request.content_type
+      when 'application/x-yaml'
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        ns_list = []
-        name_list = []
-        ns_name = ns.first.name
-        name_list.push(ns_name)
-        ns_list.push(ns.first)
-        ns.each do |nsd|
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
+    end
+    headers[:params] = params unless params.empty?
 
-          if nsd.name != ns_name
-            ns_name = nsd.name
-            ns_list.push(nsd) unless name_list.include?(ns_name)
+    # Get rid of :offset and :limit
+    [:offset, :limit].each { |k| keyed_params.delete(k) }
+    puts 'keyed_params(1)', keyed_params
+
+    # Check for special case (:version param == last)
+    if keyed_params.key?(:version) && keyed_params[:version] == 'last'
+      # Do query for last version -> get_nsd_ns_vendor_last_version
+
+      keyed_params.delete(:version)
+      puts 'keyed_params(2)', keyed_params
+
+      nss = Ns.where((keyed_params)).sort({"version" => -1})#.limit(1).first()
+      #puts 'nss: ', nss.to_json
+
+      if nss && nss.size.to_i > 0
+        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
+
+        # Paginate results
+        nss = nss.paginate(:offset => params[:offset], :limit => params[:limit])
+
+        nss_list = []
+        checked_list = []
+
+        nss_name_vendor = Pair.new(nss.first.name, nss.first.vendor)
+        p 'nss_name_vendor:', nss_name_vendor.one, nss_name_vendor.two
+
+        checked_list.push(nss_name_vendor)
+        nss_list.push(nss.first)
+
+        nss.each do |nsd|
+          if (nsd.name && nsd.vendor) != (nss_name_vendor.one && nss_name_vendor.two)
+            nss_name_vendor = Pair.new(nsd.name, nsd.vendor)
+            p 'nss_name_vendor(x):', nss_name_vendor.one, nss_name_vendor.two
+            nss_list.push(nsd) unless checked_list.include?(nss_name_vendor)
           end
         end
+        puts 'nss_list:', nss_list
+      else
+          logger.error "ERROR: 'No NSDs were found'"
+          return 404
       end
+      nss = nss_list
 
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      return 404
-    end
+      else
+        # Do the query
+        nss = Ns.where(keyed_params)
+        logger.info "Catalogue: NSDs=#{nss}"
+        #puts nss.to_json
 
-    ns_json = ns_list.to_json
-    puts 'NSs: ', ns_json
+        if nss && nss.size.to_i > 0
+          logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
 
-    if request.content_type == 'application/json'
-      return 200, ns_json
-    elsif request.content_type == 'application/x-yaml'
-      ns_yml = json_to_yaml(ns_json)
-      return 200, ns_yml
+          # Paginate results
+          nss = nss.paginate(:offset => params[:offset], :limit => params[:limit])
+        end
+
+      case request.content_type
+        when 'application/json'
+          response = nss.to_json
+        when 'application/x-yaml'
+          response = json_to_yaml(nss.to_json)
+        else
+          halt 415
+      end
+      halt 200, response
+
+    else
+      logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+      halt 400, 'No NSDs were found'
     end
   end
 
-	# @method get_nss_ns_name
-	# @overload get '/catalogues/network-services/:ns_name'
-	#	Show a NS or NS list in JSON or YAML format
-	#	@param [String] ns_name NS Name
-	# Show a NS by name
-	get '/network-services/name/:name' do
+  # @method get_ns_sp_ns_id
+  # @overload get '/catalogues/network-services/:id/?'
+  #	GET one specific descriptor
+  #	@param [String] sp_ns_id NS sp ID
+  # Show a NS by internal ID (uuid)
+  get '/network-services/:id/?' do
+    unless params[:id].nil?
+      logger.debug "Catalogue: GET /network-services/#{params[:id]}"
 
-		begin
-			ns = Ns.where({"name" => params[:name]})
-			puts 'NS: ', ns.size.to_s
+      begin
+        ns = Ns.find(params[:id] )
+      rescue Mongoid::Errors::DocumentNotFound => e
+        logger.error e
+        json_error 404, "The NSD ID #{params[:id]} does not exist" unless ns
+      end
+      logger.debug "Catalogue: leaving GET /network-services/#{params[:id]}\" with NSD #{ns}"
 
-			if ns.size.to_i == 0
-				logger.error "ERROR: NSD not found"
-				return 404
-			end
+      case request.content_type
+        when 'application/json'
+          response = ns.to_json
+        when 'application/x-yaml'
+          response = json_to_yaml(ns.to_json)
+        else
+          halt 415
+      end
+      halt 200, response
 
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-		ns_json = ns.to_json
-		if request.content_type == 'application/json'
-			return 200, ns_json
-		elsif request.content_type == 'application/x-yaml'
-			ns_yml = json_to_yaml(ns_json)
-			return 200, ns_yml
-		end
-	end
-
-
-	# @method get_nsd_sp_ns_version
-	# @overload get '/catalogues/network-services/name/:ns_name/version/:version'
-	#	Show a NS list in JSON or YAML format
-	#	@param [String] ns_name NS Name
-	# Show a NS name
-	#	@param [Integer] ns_version NS version
-	# Show a NS version
-	get '/network-services/name/:name/version/:version' do
-		begin
-			ns = Ns.where({"name" =>  params[:name], "version" => params[:version]})
-
-			if ns.size.to_i == 0
-				logger.error "ERROR: NSD not found"
-				return 404
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		ns_json = ns.to_json
-		if request.content_type == 'application/json'
-			return 200, ns_json
-		elsif request.content_type == 'application/x-yaml'
-			ns_yml = json_to_yaml(ns_json)
-			return 200, ns_yml
-		end
-	end
-
-
-	# @method get_nsd_ns_last_version
-	# @overload get '/catalogues/network-services/name/:ns_name/last'
-	#	Show a NS list for last version in JSON or YAML format
-	#	@param [String] ns_name NS Name
-	# Show a NS name
-	get '/network-services/name/:name/last' do
-
-		# Search and get all items of NS by name
-		begin
-			#puts 'params', params
-			# Get paginated list
-			#ns = CatalogueModels.paginate(:page => params[:offset], :limit => params[:limit])
-
-			# Build HTTP Link Header
-			#headers['Link'] = build_http_link_name(params[:offset].to_i, params[:limit], params[:external_ns_name])
-
-			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
-			#ns = Ns.where({"nsd.name" => params[:external_ns_name]})
-			ns = Ns.where({"name" => params[:name]}).sort({"version" => -1})#.limit(1).first()
-
-			if ns.size.to_i == 0
-				logger.error "ERROR: NSD not found"
-				return 404
-
-			elsif ns == nil
-				logger.error "ERROR: NSD not found"
-				return 404
-
-			else
-        ns_list = []
-        vendor_list = []
-        ns_vendor = ns.first.vendor
-        vendor_list.push(ns_vendor)
-        #puts 'first', ns.first.ns_version
-        #last_version = ns.first.version
-        #App.all.to_a
-        ns_list.push(ns.first)
-        ns.each do |nsd|
-          if nsd.vendor != ns_vendor
-            ns_vendor = nsd.vendor
-            ns_list.push(nsd) unless vendor_list.include?(ns_vendor)
-          end
-				end
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		ns_json = ns_list.to_json
-		puts 'NS: ', ns_json
-
-		#if ns_json == 'null'
-		#	logger.error "ERROR: NSD not found"
-		#	return 404
-		#end
-		if request.content_type == 'application/json'
-			return 200, ns_json
-		elsif request.content_type == 'application/x-yaml'
-			ns_yml = json_to_yaml(ns_json)
-			return 200, ns_yml
-		end
-
-		#return 200, ns.to_json
-	end
+    end
+    logger.debug "Catalogue: leaving GET /network-services/#{params[:id]} with 'No NSD ID specified'"
+    json_error 400, 'No NSD ID specified'
+  end
 
 	# @method post_nss
 	# @overload post '/catalogues/network-services'
