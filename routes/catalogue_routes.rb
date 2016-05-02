@@ -68,49 +68,63 @@ class SonataCatalogue < Sinatra::Application
       puts 'keyed_params(2)', keyed_params
 
       nss = Ns.where((keyed_params)).sort({"version" => -1})#.limit(1).first()
+      logger.info "Catalogue: NSDs=#{nss}"
+      #nss = nss.sort({"version" => -1})
       #puts 'nss: ', nss.to_json
 
       if nss && nss.size.to_i > 0
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
 
         # Paginate results
-        nss = nss.paginate(:offset => params[:offset], :limit => params[:limit])
+        #nss = nss.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
 
         nss_list = []
         checked_list = []
 
         nss_name_vendor = Pair.new(nss.first.name, nss.first.vendor)
-        p 'nss_name_vendor:', nss_name_vendor.one, nss_name_vendor.two
+        #p 'nss_name_vendor:', [nss_name_vendor.one, nss_name_vendor.two]
 
         checked_list.push(nss_name_vendor)
         nss_list.push(nss.first)
 
         nss.each do |nsd|
-          if (nsd.name && nsd.vendor) != (nss_name_vendor.one && nss_name_vendor.two)
+          #p 'Comparison: ', [nsd.name, nsd.vendor].to_s + [nss_name_vendor.one, nss_name_vendor.two].to_s
+          if (nsd.name != nss_name_vendor.one) || (nsd.vendor != nss_name_vendor.two)
             nss_name_vendor = Pair.new(nsd.name, nsd.vendor)
-            p 'nss_name_vendor(x):', nss_name_vendor.one, nss_name_vendor.two
-            nss_list.push(nsd) unless checked_list.include?(nss_name_vendor)
+            #p 'nss_name_vendor(x):', [nss_name_vendor.one, nss_name_vendor.two]
+            #checked_list.each do |pair|
+            #  p [pair.one, nss_name_vendor.one], [pair.two, nss_name_vendor.two]
+            #  p pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two
+            end
+            nss_list.push(nsd) unless
+                checked_list.any? {|pair| pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two}
+            checked_list.push(nss_name_vendor)
           end
+
+          #puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
+        else
+            logger.error "ERROR: 'No NSDs were found'"
+            return 404
         end
-        puts 'nss_list:', nss_list
-      else
-          logger.error "ERROR: 'No NSDs were found'"
-          return 404
-      end
+        #nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
       nss = nss_list
 
+    else
+      # Do the query
+      nss = Ns.where(keyed_params)
+      logger.info "Catalogue: NSDs=#{nss}"
+      #puts nss.to_json
+      if nss && nss.size.to_i > 0
+        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
+
+        # Paginate results
+        nss = nss.paginate(:offset => params[:offset], :limit => params[:limit])
+
       else
-        # Do the query
-        nss = Ns.where(keyed_params)
-        logger.info "Catalogue: NSDs=#{nss}"
-        #puts nss.to_json
-
-        if nss && nss.size.to_i > 0
-          logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
-
-          # Paginate results
-          nss = nss.paginate(:offset => params[:offset], :limit => params[:limit])
-        end
+        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+        halt 400, 'No NSDs were found'
+      end
+    end
 
       case request.content_type
         when 'application/json'
@@ -119,13 +133,9 @@ class SonataCatalogue < Sinatra::Application
           response = json_to_yaml(nss.to_json)
         else
           halt 415
-      end
-      halt 200, response
+        end
+        halt 200, response
 
-    else
-      logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-      halt 400, 'No NSDs were found'
-    end
   end
 
   # @method get_ns_sp_ns_id
