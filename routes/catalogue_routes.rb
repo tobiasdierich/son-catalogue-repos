@@ -58,14 +58,14 @@ class SonataCatalogue < Sinatra::Application
 
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
-    puts 'keyed_params(1)', keyed_params
+    #puts 'keyed_params(1)', keyed_params
 
     # Check for special case (:version param == last)
     if keyed_params.key?(:version) && keyed_params[:version] == 'last'
       # Do query for last version -> get_nsd_ns_vendor_last_version
 
       keyed_params.delete(:version)
-      puts 'keyed_params(2)', keyed_params
+      #puts 'keyed_params(2)', keyed_params
 
       nss = Ns.where((keyed_params)).sort({"version" => -1})#.limit(1).first()
       logger.info "Catalogue: NSDs=#{nss}"
@@ -83,7 +83,6 @@ class SonataCatalogue < Sinatra::Application
 
         nss_name_vendor = Pair.new(nss.first.name, nss.first.vendor)
         #p 'nss_name_vendor:', [nss_name_vendor.one, nss_name_vendor.two]
-
         checked_list.push(nss_name_vendor)
         nss_list.push(nss.first)
 
@@ -104,7 +103,8 @@ class SonataCatalogue < Sinatra::Application
           #puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
         else
             logger.error "ERROR: 'No NSDs were found'"
-            return 404
+            logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+            halt 404, 'No NSDs were found'
         end
         #nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
       nss = nss_list
@@ -122,7 +122,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-        halt 400, 'No NSDs were found'
+        halt 404, 'No NSDs were found'
       end
     end
 
@@ -172,53 +172,40 @@ class SonataCatalogue < Sinatra::Application
 
 	# @method post_nss
 	# @overload post '/catalogues/network-services'
-	# Post a NS in in JSON or YAML format
-	# @param [YAML] NS in YAML format
-	# Post a NSD
-	# @param [JSON] NS in JSON format
-	# Post a NSD
+	# Post a NS in JSON or YAML format
 	post '/network-services' do
 		# Return if content-type is invalid
 		halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
 		# Compatibility support for YAML content-type
-		if request.content_type == 'application/x-yaml'
+    case request.content_type
+      when 'application/x-yaml'
+        # Validate YAML format
+        # When updating a NSD, the json object sent to API must contain just data inside
+        # of the nsd, without the json field nsd: before
+        ns, errors = parse_yaml(request.body.read)
+        halt 400, errors.to_json if errors
 
-			# Validate YAML format
-			ns, errors = parse_yaml(request.body.read)
-			#ns, errors = parse_yaml(request.body)
-			#puts 'NS :', ns.to_yaml
-			#puts 'errors :', errors.to_s
+        # Translate from YAML format to JSON format
+        new_ns_json = yaml_to_json(ns)
 
-			return 400, errors.to_json if errors
+        # Validate JSON format
+        new_ns, errors = parse_json(new_ns_json)
+        puts 'ns: ', new_ns.to_json
+        #puts 'new_ns id', new_ns['_id'].to_json
+        halt 400, errors.to_json if errors
 
-			# Translate from YAML format to JSON format
-			#ns_yml = ns.nsd.to_json
-			ns_json = yaml_to_json(ns)
-			#ns_json = yaml_to_json(request.body.read)
+      else
+        # Compatibility support for JSON content-type
+        # Parses and validates JSON format
+        new_ns, errors = parse_json(request.body.read)
+        halt 400, errors.to_json if errors
+    end
 
-			# Validate JSON format
-			#ns, errors = parse_json(request.body.read)
-			#ns, errors = parse_json(ns.to_json)
-			ns, errors = parse_json(ns_json)
-			puts 'ns: ', ns.to_json
-			return 400, errors.to_json if errors
-
-			# Compatibility support for JSON content-type
-		elsif request.content_type == 'application/json'
-			# Parses and validates JSON format
-			ns, errors = parse_json(request.body.read)
-			return 400, errors.to_json if errors
-		end
-
-		#logger.debug ns
 		# Validate NS
-		#return 400, 'ERROR: NS Name not found' unless ns.has_key?('name')
-		#return 400, 'ERROR: NSD not found' unless ns.has_key?('nsd')
-
-		return 400, 'ERROR: NS Name not found' unless ns.has_key?('name')
-		return 400, 'ERROR: NS Vendor not found' unless ns.has_key?('vendor')
-		return 400, 'ERROR: NS Version not found' unless ns.has_key?('version')
+    halt 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
+    halt 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
+    halt 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
 
 		# --> Validation disabled
 		# Validate NSD
@@ -227,125 +214,120 @@ class SonataCatalogue < Sinatra::Application
 		#rescue => e
 		#	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
 		#end
-		
-		#vnfExists(ns['nsd']['vnfds'])
+
 		# Check if NS already exists in the catalogue by name, vendor and version
 		begin
-			ns = Ns.find_by({"name" =>  ns['name'], "vendor" => ns['vendor'], "version" => ns['version']})
-			return 400, 'ERROR: Duplicated NS Name, Vendor and Version'
+			ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
+			halt 400, 'ERROR: Duplicated NS Name, Vendor and Version'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 		# Check if NSD has an ID (it should not) and if it already exists in the catalogue
 		begin
-			ns = Ns.find_by({"_id" =>  ns['_id']})
-			return 400, 'ERROR: Duplicated NS ID'
+			ns = Ns.find_by({"_id" =>  new_ns['_id']})
+			halt 400, 'ERROR: Duplicated NS ID'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 
 		# Save to DB
 		begin
 			# Generate the UUID for the descriptor
-			ns['_id'] = SecureRandom.uuid
-      ns['status'] = 'Inactive'
-			new_ns = Ns.create!(ns)
+      new_ns['_id'] = SecureRandom.uuid
+      new_ns['status'] = 'inactive'
+			ns = Ns.create!(new_ns)
 		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+			halt 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
 		end
 
 		puts 'New NS has been added'
     case request.content_type
-
       when 'application/json'
-        response = new_ns.to_json
+        response = ns.to_json
       when 'application/x-yaml'
-        response = json_to_yaml(new_ns.to_json)
+        response = json_to_yaml(ns.to_json)
       else
         halt 415
     end
-
     halt 201, response
+  end
 
-		#ns_json = new_ns.to_json
-		#if request.content_type == 'application/json'
-		#	halt 201, ns_json
-			#return 200, new_ns['_id'].to_json
-
-		#elsif request.content_type == 'application/x-yaml'
-		#	ns_yml = json_to_yaml(ns_json)
-		#	halt 201, ns_yml
-
-	end
-
-  # @method update_nss_version_name_version
-  # @overload put '/network-services/vendor/:vendor/name/:name/version/:version'
+  # @method update_nss
+  # @overload put '/catalogues/network-services/?'
   # Update a NS by vendor, name and version in JSON or YAML format
-  #	@param [String] NS_vendor NS vendor
-  # Update a NS vendor
-  #	@param [String] NS_name NS Name
-  # Update a NS name
-  #	@param [Integer] NS_version NS version
-  # Update a NS version
   ## Catalogue - UPDATE
-  put '/network-services/vendor/:vendor/name/:name/version/:version' do
+  put '/network-services/?' do
+    uri = Addressable::URI.new
+    uri.query_values = params
+    puts 'params', params
+    puts 'query_values', uri.query_values
+    logger.info "Catalogue: entered PUT /network-services?#{uri.query}"
+
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    puts 'keyed_params', keyed_params
+
     # Return if content-type is invalid
-    return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
     # Compatibility support for YAML content-type
-    if request.content_type == 'application/x-yaml'
-      # Validate YAML format
-      # When updating a NSD, the json object sent to API must contain just data inside
-      # of the nsd, without the json field nsd: before <- this might be resolved
-      ns, errors = parse_yaml(request.body.read)
-      return 400, errors.to_json if errors
+    case request.content_type
+      when 'application/x-yaml'
+        # Validate YAML format
+        # When updating a NSD, the json object sent to API must contain just data inside
+        # of the nsd, without the json field nsd: before
+        ns, errors = parse_yaml(request.body.read)
+        halt 400, errors.to_json if errors
 
-      # Translate from YAML format to JSON format
-      new_ns_json = yaml_to_json(ns)
+        # Translate from YAML format to JSON format
+        new_ns_json = yaml_to_json(ns)
 
-      # Validate JSON format
-      new_ns, errors = parse_json(new_ns_json)
-      puts 'ns: ', new_ns.to_json
-      puts 'new_ns id', new_ns['_id'].to_json
-      return 400, errors.to_json if errors
+        # Validate JSON format
+        new_ns, errors = parse_json(new_ns_json)
+        puts 'ns: ', new_ns.to_json
+        #puts 'new_ns id', new_ns['_id'].to_json
+        halt 400, errors.to_json if errors
 
-      # Compatibility support for JSON content-type
-    elsif request.content_type == 'application/json'
-      # Parses and validates JSON format
-      new_ns, errors = parse_json(request.body.read)
-      return 400, errors.to_json if errors
+      else
+        # Compatibility support for JSON content-type
+        # Parses and validates JSON format
+        new_ns, errors = parse_json(request.body.read)
+        halt 400, errors.to_json if errors
     end
 
-    # Validate JSON format
-    # When updating a NSD, the json object sent to API must contain just data inside
-    # of the nsd, without the json field nsd: before <- this might be resolved
-    #new_ns, errors = parse_json(request.body.read)
-    #return 400, errors.to_json if errors
-
     # Validate NS
-    # TODO: Check if same Group, Name, Version do already exists in the database
-    #halt 400, 'ERROR: NSD not found' unless ns.has_key?('vnfd')
-    return 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
-    return 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
-    return 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
+    # Check if same vendor, Name, Version do already exists in the database
+    halt 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
+    halt 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
+    halt 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
+
+    # Set headers
+    case request.content_type
+      when 'application/x-yaml'
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
+      else
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
+    end
+    headers[:params] = params unless params.empty?
 
     # Retrieve stored version
-    begin
-      ns = Ns.find_by({"name" =>  params[:name], "vendor" => params[:vendor], "version" => params[:version]})
-      puts 'NS is found'
-    rescue Mongoid::Errors::DocumentNotFound => e
-      return 400, 'This NSD does not exists'
+    unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
+      begin
+        ns = Ns.find_by({"vendor" => params[:vendor], "name" =>  params[:name], "version" => params[:version]})
+        puts 'NS is found'
+      rescue Mongoid::Errors::DocumentNotFound => e
+        json_error 404, "The NSD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
+      end
     end
     # Check if NS already exists in the catalogue by name, group and version
     begin
       ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-      return 400, 'ERROR: Duplicated NS Name, Vendor and Version'
+      halt 400, 'ERROR: Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
     # Update to new version
-    nsd = {}
     puts 'Updating...'
-    new_ns['_id'] = new_ns['vendor'].to_s + '.' + new_ns['name'].to_s + '.' + new_ns['version'].to_s	# Unique IDs per NSD entries
-    puts new_ns['_id'].to_s
+    new_ns['_id'] = SecureRandom.uuid	# Unique UUIDs per NSD entries
+    #puts new_ns['_id'].to_s
     nsd = new_ns
 
     # --> Validation disabled
@@ -360,174 +342,161 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_ns = Ns.create!(nsd)
     rescue Moped::Errors::OperationFailure => e
-      return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+      halt 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
     end
+    logger.debug "Catalogue: leaving PUT /network-services?#{uri.query}\" with NSD #{new_ns}"
 
-    ns_json = new_ns['_id'].to_json
-
-    if request.content_type == 'application/json'
-      return 200, ns_json
-
-    elsif request.content_type == 'application/x-yaml'
-      ns_yml = json_to_yaml(ns_json)
-      return 200, ns_yml
+    case request.content_type
+      when 'application/json'
+        response = new_ns.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(new_ns.to_json)
+      else
+        halt 415
     end
+    halt 200, response
   end
 
 	# @method update_nss
-	# @overload put '/catalogues/network-services/id/:sp_ns_id'
+	# @overload put '/catalogues/network-services/:id/?'
 	# Update a NS in JSON or YAML format
-	# @param [YAML] NS in YAML format
-	# Update a NS
-	# @param [JSON] NS in JSON format
-	# Update a NS
 	## Catalogue - UPDATE
-	put '/network-services/id/:id' do
-
+	put '/network-services/:id/?' do
 		# Return if content-type is invalid
 		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
-		#return 415 unless request.content_type == 'application/json'
 
-		# Compatibility support for YAML content-type
-		if request.content_type == 'application/x-yaml'
-			# Validate YAML format
-			# When updating a NSD, the json object sent to API must contain just data inside
-			# of the nsd, without the json field nsd: before <- this might be resolved
-			ns, errors = parse_yaml(request.body.read)
-			return 400, errors.to_json if errors
+    unless params[:id].nil?
+      logger.debug "Catalogue: PUT /network-services/#{params[:id]}"
 
-			# Translate from YAML format to JSON format
-			new_ns_json = yaml_to_json(ns)
+      # Transform 'string' params Hash into keys
+      keyed_params = keyed_hash(params)
+      puts 'keyed_params', keyed_params
 
-			# Validate JSON format
-			new_ns, errors = parse_json(new_ns_json)
-			puts 'ns: ', new_ns.to_json
-			puts 'new_ns id', new_ns['_id'].to_json
-			return 400, errors.to_json if errors
+      # Check for special case (:version param == last)
+      if keyed_params.key?(:status)
+        # Do update of Descriptor status -> update_ns_status
+        uri = Addressable::URI.new
+        uri.query_values = params
+        logger.info "Catalogue: entered PUT /network-services?#{uri.query}"
 
-			# Compatibility support for JSON content-type
-		elsif request.content_type == 'application/json'
-			# Parses and validates JSON format
-			new_ns, errors = parse_json(request.body.read)
-			return 400, errors.to_json if errors
-		end
+        # Validate NS
+        # Retrieve stored version
+        begin
+          puts 'Searching ' + params[:id].to_s
+          ns = Ns.find_by( { "_id" =>  params[:id] })
+          puts 'NS is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          halt 404, 'This NSD does not exists'
+        end
 
-		# When updating a NSD, the json object sent to API must contain just data inside
-		# of the nsd, without the json field nsd: before <- this might be resolved
-		#new_ns, errors = parse_json(request.body.read)
-		#return 400, errors.to_json if errors
+        #Validate new status
+        valid_status = ['active', 'inactive', 'delete']
+        if valid_status.include? keyed_params[:status]
+          # Update to new status
+          begin
+            ns.update_attributes(:status => params[:new_status])
+          rescue Moped::Errors::OperationFailure => e
+            halt 400, 'ERROR: Operation failed'
+          end
+        else
+          halt 400, "Invalid new status #{uri.query}"
+        end
 
-		# Validate NS
-		# TODO: Check if same vendor, Name, Version do already exists in the database
-		#halt 400, 'ERROR: NSD not found' unless ns.has_key?('vnfd')
-		return 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
-		return 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
-		return 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
+        # --> Validation disabled
+        # Validate NSD
+        #begin
+        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #rescue => e
+        #	logger.error e.response
+        #	return e.response.code, e.response.body
+        #end
 
-		# Retrieve stored version
-		begin
-			puts 'Searching ' + params[:id].to_s
+        halt 200, 'Status updated'
 
-			ns = Ns.find_by( { "_id" =>  params[:id] })
+      else
+		    # Compatibility support for YAML content-type
+		    case request.content_type
+          when 'application/x-yaml'
+            # Validate YAML format
+            # When updating a NSD, the json object sent to API must contain just data inside
+            # of the nsd, without the json field nsd: before
+            ns, errors = parse_yaml(request.body.read)
+            halt 400, errors.to_json if errors
 
-			puts 'NS is found'
-		rescue Mongoid::Errors::DocumentNotFound => e
-			return 400, 'This NSD does not exists'
-		end
-		# Check if NS already exists in the catalogue by name, vendor and version
-		begin
-			ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-			return 400, 'ERROR: Duplicated NS Name, Vendor and Version'
-		rescue Mongoid::Errors::DocumentNotFound => e
-		end
+            # Translate from YAML format to JSON format
+            new_ns_json = yaml_to_json(ns)
 
-		# Update to new version
-		nsd = {}
-		prng = Random.new
-		puts 'Updating...'
-		#puts 'new_ns', new_ns['id']
-		#new_id = new_ns['id'].to_i + prng.rand(1000)
-		#new_ns['id'] = new_id.to_s
-		#new_ns['id'] = new_ns['id'].to_s + prng.rand(1000).to_s # Without unique IDs
-		#new_ns['_id'] = new_ns['_id'].to_s + prng.rand(1000).to_s	# Unique IDs per NSD entries
-		new_ns['_id'] = SecureRandom.uuid
-		nsd = new_ns # TODO: Avoid having multiple 'nsd' fields containers
+            # Validate JSON format
+            new_ns, errors = parse_json(new_ns_json)
+            puts 'ns: ', new_ns.to_json
+            #puts 'new_ns id', new_ns['_id'].to_json
+            halt 400, errors.to_json if errors
 
+          else
+            # Compatibility support for JSON content-type
+            # Parses and validates JSON format
+            new_ns, errors = parse_json(request.body.read)
+            halt 400, errors.to_json if errors
+        end
 
-		# --> Validation disabled
-		# Validate NSD
-		#begin
-		#	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-		#rescue => e
-		#	logger.error e.response
-		#	return e.response.code, e.response.body
-		#end
+		    # Validate NS
+		    # Check if same vendor, Name, Version do already exists in the database
+		    halt 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
+        halt 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
+        halt 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
 
-		begin
-			new_ns = Ns.create!(nsd)
-		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
-		end
+		    # Retrieve stored version
+		    begin
+			    puts 'Searching ' + params[:id].to_s
+			    ns = Ns.find_by( { "_id" =>  params[:id] })
+			    puts 'NS is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, "The NSD ID #{params[:id]} does not exist"
+        end
 
-		ns_json = new_ns['_id'].to_json
-		if request.content_type == 'application/json'
-			return 200, ns_json
-			#return 200, new_ns['_id'].to_json
+		    # Check if NS already exists in the catalogue by name, vendor and version
+		    begin
+			    ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
+          halt 400, 'ERROR: Duplicated NS Name, Vendor and Version'
+		    rescue Mongoid::Errors::DocumentNotFound => e
+		    end
 
-		elsif request.content_type == 'application/x-yaml'
-			ns_yml = json_to_yaml(ns_json)
-			return 200, ns_yml
-		end
-		#return 200, new_ns.to_json
-  end
+		    # Update to new version
+		    #nsd = {}
+		    #prng = Random.new
+		    puts 'Updating...'
+		    new_ns['_id'] = SecureRandom.uuid
+		    nsd = new_ns
 
-  # @method update_ns_status
-  # @overload put '/catalogues/network-services/status/:new_status/id/:sp_ns_id'
-  # Update a NS status in the catalogue
-  # @param [new_status] NS status
-  # Update a NS status
-  # @param [sp_ns_id] NS id
-  # Update a NS status
-  put '/network-services/status/:new_status/id/:id' do
+		    # --> Validation disabled
+		    # Validate NSD
+		    #begin
+		    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+		    #rescue => e
+		    #	logger.error e.response
+		    #	return e.response.code, e.response.body
+		    #end
 
-    # Return if content-type is invalid
-    #return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+		    begin
+			    new_ns = Ns.create!(nsd)
+		    rescue Moped::Errors::OperationFailure => e
+			    halt 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+        end
+        logger.debug "Catalogue: leaving PUT /network-services/#{params[:id]}\" with NSD #{new_ns}"
 
-    # Validate NS
-    # Retrieve stored version
-    begin
-      puts 'Searching ' + params[:id].to_s
-      ns = Ns.find_by( { "_id" =>  params[:id] })
-      puts 'NS is found'
-    rescue Mongoid::Errors::DocumentNotFound => e
-      return 400, 'This NSD does not exists'
+        case request.content_type
+          when 'application/json'
+            response = new_ns.to_json
+          when 'application/x-yaml'
+            response = json_to_yaml(new_ns.to_json)
+          else
+            halt 415
+        end
+        halt 200, response
+      end
     end
-
-    #Validate new status
-    valid_status = ['Active', 'Inactive', 'Delete']
-    if valid_status.include? params[:new_status]
-      puts 'OK'
-    else
-      return 400, 'Invalid new status'
-    end
-
-    # Update to new status
-    begin
-      ns.update_attributes(:status => params[:new_status])
-    rescue Moped::Errors::OperationFailure => e
-      return 400, 'ERROR: Operation failed'
-    end
-
-    # --> Validation disabled
-    # Validate NSD
-    #begin
-    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-    #rescue => e
-    #	logger.error e.response
-    #	return e.response.code, e.response.body
-    #end
-
-    return 200, 'Status updated'
+    logger.debug "Catalogue: leaving PUT /network-services/#{params[:id]} with 'No NSD ID specified'"
+    json_error 400, 'No NSD ID specified'
   end
 
   # @method delete_nsd_sp_ns_id
