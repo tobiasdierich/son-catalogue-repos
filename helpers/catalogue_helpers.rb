@@ -197,6 +197,12 @@ class SonataCatalogue < Sinatra::Application
     end
   end
 
+  def json_error(code, message)
+    msg = {'error' => message}
+    logger.error msg.to_s
+    halt code, {'Content-type'=>'application/json'}, msg.to_json
+  end
+
 	# Method which lists all available interfaces
 	#
 	# @return [Array] an array of hashes containing all interfaces
