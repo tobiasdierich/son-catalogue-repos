@@ -203,10 +203,144 @@ class SonataCatalogue < Sinatra::Application
     halt code, {'Content-type'=>'application/json'}, msg.to_json
   end
 
+  # Method which lists all available interfaces
+  #
+  # @return [Array] an array of hashes containing all interfaces
+  def interfaces_list
+    [
+        {
+            'uri' => '/catalogues',
+            'method' => 'GET',
+            'purpose' => 'REST API Structure and Capability Discovery'
+        },
+        {
+            'uri' => '/catalogues/network-services',
+            'method' => 'GET',
+            'purpose' => 'List all NSs or specific NS',
+            'special' => 'Use version=last to retrieve NSs last version'
+        },
+        {
+            'uri' => '/catalogues/network-services/{id}',
+            'method' => 'GET',
+            'purpose' => 'List a specific NS by its uuid'
+        },
+        {
+            'uri' => '/catalogues/network-services',
+            'method' => 'POST',
+            'purpose' => 'Store a new NS'
+        },
+        {
+            'uri' => '/catalogues/network-services',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored NS specified by vendor, name, version'
+        },
+        {
+            'uri' => '/catalogues/network-services/{id}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored NS by its uuid',
+            'special' => 'Use status=[inactive, active, delete] to update NSD status'
+        },
+        {
+            'uri' => '/catalogues/network-services',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific NS specified by vendor, name, version'
+        },
+        {
+            'uri' => '/catalogues/network-services/{id}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific NS by its uuid'
+        },
+        {
+            'uri' => '/catalogues/vnfs',
+            'method' => 'GET',
+            'purpose' => 'List all NSs or specific VNF',
+            'special' => 'Use version=last to retrieve VNFs last version'
+        },
+        {
+            'uri' => '/catalogues/vnfs/{id}',
+            'method' => 'GET',
+            'purpose' => 'List a specific VNF by its uuid'
+        },
+        {
+            'uri' => '/catalogues/vnfs',
+            'method' => 'POST',
+            'purpose' => 'Store a new VNF'
+        },
+        {
+            'uri' => '/catalogues/vnfs',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored VNF specified by vendor, name, version'
+        },
+        {
+            'uri' => '/catalogues/vnfs/{id}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored VNF by its uuid',
+            'special' => 'Use status=[inactive, active, delete] to update VNFD status'
+        },
+        {
+            'uri' => '/catalogues/vnfs',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific VNF specified by vendor, name, version'
+        },
+        {
+            'uri' => '/catalogues/vnfs/{id}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific VNF by its uuid'
+        },
+        {
+            'uri' => '/catalogues/packages',
+            'method' => 'GET',
+            'purpose' => 'List all NSs or specific NS',
+            'special' => 'Use version=last to retrieve Packages last version'
+        },
+        {
+            'uri' => '/catalogues/packages/{id}',
+            'method' => 'GET',
+            'purpose' => 'List a specific Package by its uuid'
+        },
+        {
+            'uri' => '/catalogues/packages',
+            'method' => 'POST',
+            'purpose' => 'Store a new Package'
+        },
+        {
+            'uri' => '/catalogues/packages',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored Package specified by vendor, name, version'
+        },
+        {
+            'uri' => '/catalogues/packages/{id}',
+            'method' => 'PUT',
+            'purpose' => 'Update a stored NS by its uuid',
+            'special' => 'Use status=[inactive, active, delete] to update PD status'
+        },
+        {
+            'uri' => '/catalogues/packages',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific Package specified by vendor, name, version'
+        },
+        {
+            'uri' => '/catalogues/packages/{id}',
+            'method' => 'DELETE',
+            'purpose' => 'Delete a specific Package by its uuid'
+        },
+        {
+            'uri' => '/catalogues/zip-packages/{id}',
+            'method' => 'GET',
+            'purpose' => 'List a specific ZIP Package by its uuid'
+        },
+        {
+            'uri' => '/catalogues/zip-packages',
+            'method' => 'POST',
+            'purpose' => 'Store a new ZIP Package'
+        },
+    ]
+  end
+
 	# Method which lists all available interfaces
 	#
 	# @return [Array] an array of hashes containing all interfaces
-	def interfaces_list
+	def interfaces_list_old
 		['Some methods are under development and may not work yet! (raise NotImplementedError)',
 				{
 						'uri' => '/catalogues/',
