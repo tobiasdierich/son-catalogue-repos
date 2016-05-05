@@ -4,6 +4,8 @@ require 'json'
 
 # This Class is the Class of Sonata Ns Repository
 class SonataNsRepository < Sinatra::Application
+  @@nsr_schema = JSON.parse(JSON.dump(YAML.load(open('https://raw.githubusercontent.com/sonata-nfv/son-schema/master/service-record/nsr-schema.yml') { |f| f.read })))
+
   DEFAULT_OFFSET = '0'
   DEFAULT_LIMIT = '10'
   DEFAULT_MAX_LIMIT = '100'
@@ -78,7 +80,14 @@ class SonataNsRepository < Sinatra::Application
     return 415 unless request.content_type == 'application/json'
     # Validate JSON format
     instance, errors = parse_json(request.body.read)
-    return 401, errors.to_json if errors
+    nsr_json = instance
+    return 400, errors.to_json if errors
+    # Validation against schema
+    errors = validate_json(nsr_json, @@nsr_schema)
+
+    puts 'vnf: ', Vnfr.to_json
+    return 400, errors.to_json if errors
+
     begin
       instance = Nsr.find({ '_id' => instance['_id'] })
       return 400, 'ERROR: Duplicated NS ID'

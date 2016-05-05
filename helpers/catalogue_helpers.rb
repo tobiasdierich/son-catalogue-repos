@@ -184,6 +184,25 @@ class SonataCatalogue < Sinatra::Application
 		link
 	end
 
+	def keyed_hash(hash)
+		Hash[hash.map { |(k, v)| [k.to_sym, v] }]
+	end
+
+  class Pair
+    attr_accessor :one, :two
+
+    def initialize(one, two)
+      @one = one
+      @two = two
+    end
+  end
+
+  def json_error(code, message)
+    msg = {'error' => message}
+    logger.error msg.to_s
+    halt code, {'Content-type'=>'application/json'}, msg.to_json
+  end
+
 	# Method which lists all available interfaces
 	#
 	# @return [Array] an array of hashes containing all interfaces
