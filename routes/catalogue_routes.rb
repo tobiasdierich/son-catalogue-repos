@@ -756,9 +756,9 @@ class SonataCatalogue < Sinatra::Application
     puts 'New VNF has been added'
     case request.content_type
       when 'application/json'
-        response = ns.to_json
+        response = vnf.to_json
       when 'application/x-yaml'
-        response = json_to_yaml(ns.to_json)
+        response = json_to_yaml(vnf.to_json)
       else
         halt 415
     end
@@ -1066,379 +1066,317 @@ class SonataCatalogue < Sinatra::Application
 	############################################ PD API METHODS ############################################
 
 	# @method get_packages
-	# @overload get '/catalogues/packages'
+	# @overload get '/catalogues/packages/?'
 	#	Returns a list of all Packages
-	# List all Packages in JSON or YAML format
-	get '/packages' do
-		params[:offset] ||= 1
-		params[:limit] ||= 50
+	# -> List many descriptors
+	get '/packages/?' do
+    params['offset'] ||= DEFAULT_OFFSET
+    params['limit'] ||= DEFAULT_LIMIT
 
-		# Only accept positive numbers
-		params[:offset] = 1 if params[:offset].to_i < 1
-		params[:limit] = 2 if params[:limit].to_i < 1
+    uri = Addressable::URI.new
+    uri.query_values = params
+    puts 'params', params
+    puts 'query_values', uri.query_values
+    logger.info "Catalogue: entered GET /packages?#{uri.query}"
 
-		# Get paginated list
-		pks = Package.paginate(:page => params[:offset], :limit => params[:limit])
-		logger.debug(pks)
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    puts 'keyed_params', keyed_params
 
-		# Build HTTP Link Header
-		#headers['Link'] = build_http_link_packs(params[:offset].to_i, params[:limit])
+    # Set headers
+    case request.content_type
+      when 'application/x-yaml'
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
+      else
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
+    end
+    headers[:params] = params unless params.empty?
 
-		begin
-			pks_json = pks.to_json # to remove _id field from documents (:except => :_id)
-			#puts 'NSS: ', nss_json
-			if request.content_type == 'application/json'
-				return 200, pks_json
-			elsif request.content_type == 'application/x-yaml'
-				pks_yml = json_to_yaml(pks_json)
-				return 200, pks_yml
-			end
-		rescue
-			logger.error "Error Establishing a Database Connection"
-			return 500, "Error Establishing a Database Connection"
-		end
-	end
+    # Get rid of :offset and :limit
+    [:offset, :limit].each { |k| keyed_params.delete(k) }
+    #puts 'keyed_params(1)', keyed_params
+
+    # Check for special case (:version param == last)
+    if keyed_params.key?(:version) && keyed_params[:version] == 'last'
+      # Do query for last version -> get_nsd_ns_vendor_last_version
+
+      keyed_params.delete(:version)
+      #puts 'keyed_params(2)', keyed_params
+
+      pks = Package.where((keyed_params)).sort({"version" => -1})#.limit(1).first()
+      logger.info "Catalogue: PDs=#{pks}"
+      #pks = pks.sort({"version" => -1})
+      #puts 'pks: ', pks.to_json
+
+      if pks && pks.size.to_i > 0
+        logger.info "Catalogue: leaving GET /packages?#{uri.query} with #{pks}"
+
+        # Paginate results
+        #pks = pks.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
+
+        pks_list = []
+        checked_list = []
+
+        pks_name_vendor = Pair.new(pks.first.name, pks.first.vendor)
+        #p 'pks_name_vendor:', [pks_name_vendor.one, pks_name_vendor.two]
+        checked_list.push(pks_name_vendor)
+        pks_list.push(pks.first)
+
+        pks.each do |pd|
+          #p 'Comparison: ', [pd.name, pd.vendor].to_s + [pks_name_vendor.one, pks_name_vendor.two].to_s
+          if (pd.name != pks_name_vendor.one) || (pd.vendor != pks_name_vendor.two)
+            pks_name_vendor = Pair.new(pd.name, pd.vendor)
+          end
+          pks_list.push(pd) unless
+              checked_list.any? {|pair| pair.one == pks_name_vendor.one && pair.two == pks_name_vendor.two}
+          checked_list.push(pks_name_vendor)
+        end
+
+        #puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
+      else
+        logger.error "ERROR: 'No PDs were found'"
+        logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
+        json_error 404, "No PDs were found"
+      end
+      #pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
+      pks = pks_list
+
+    else
+      # Do the query
+      pks = Package.where(keyed_params)
+      logger.info "Catalogue: PDs=#{pks}"
+      #puts pks.to_json
+      if pks && pks.size.to_i > 0
+        logger.info "Catalogue: leaving GET /packages?#{uri.query} with #{pks}"
+
+        # Paginate results
+        pks = pks.paginate(:offset => params[:offset], :limit => params[:limit])
+
+      else
+        logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
+        json_error 404, "No PDs were found"
+      end
+    end
+
+    case request.content_type
+      when 'application/json'
+        response = pks.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(pks.to_json)
+      else
+        halt 415
+    end
+    halt 200, response
+  end
 
 	# @method get_packages_package_id
-	# @overload get '/catalogues//packages/id/:id'
-	#	Return one (or zero) Package by ID in JSON or YAML format
-	#	@param [String] package_group Package id
-	# Show a Package group
-	get '/packages/id/:id' do
-		begin
-			pks = Package.find(params[:id] )
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
+	# @overload get '/catalogues/packages:id/?'
+  #	GET one specific descriptor
+	#	@param [String] package_uuid Package id
+	# Show a Package by uuid
+	get '/packages/:id/?' do
+    unless params[:id].nil?
+      logger.debug "Catalogue: GET /packages/#{params[:id]}"
 
-		pks_json = pks.to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-		#return 200, ns.nsd.to_json
-	end
-
-	# @method get_packages_package_group
-	# @overload get '/catalogues/packages/vendor/:package_group'
-	#	Returns an array of all packages by vendor in JSON or YAML format
-	#	@param [String] package_group Package vendor
-	# Show a Package group
-	get '/packages/vendor/:package_group' do # '/catalogues/packages?vendor=:package_group'
-		begin
-			pks = Package.where({"package_group" => params[:package_group]})
-			puts 'Package: ', pks.size.to_s
-
-			if pks.size.to_i == 0
-				logger.error "ERROR: PD not found"
-				return 404
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-		pks_json = pks.to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
-
-	# @method get_packages_package_group.name
-	# @overload get '/catalogues/packages/vendor/:package_group/name/:package_name'
-	#	Returns an array of all packages by group and name in JSON or YAML format
-	#	@param [String] package_group Package vendor
-	# Show a Package group
-	#	@param [String] package_name Package Name
-	# Show a Package name
-	get '/packages/vendor/:package_group/name/:package_name' do # '/catalogues/packages?vendor=:package_group&name=:package_name'
-		begin
-			pks = Package.where({"package_group" =>  params[:package_group], "package_name" => params[:package_name]})
-
-			if pks.size.to_i == 0
-				logger.error "ERROR: PD not found"
-				return 404
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		pks_json = pks.to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
-
-	# @method get_packages_package_group.name.version
-	# @overload get '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
-	#	Return one (or zero) Package by vendor, name, version in JSON or YAML format
-	#	@param [String] package_group Package vendor
-	# Show a Package group
-	#	@param [String] package_name Package Name
-	# Show a Package name
-	#	@param [Integer] package_version Package version
-	# Show a Package version
-	get '/packages/vendor/:package_group/name/:package_name/version/:package_version' do
-		begin
-			pks = Package.find_by({"package_group" =>  params[:package_group], "package_name" =>  params[:package_name], "package_version" => params[:package_version]})
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		pks_json = pks.to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
-
-	# @method get_packages_package_vendor_last_version
-	# @overload get '/catalogues/packages/vendor/:package_group/last'
-	#	Show a Package Vendor list for last version in JSON or YAML format
-	#	@param [String] package_vendor Package Vendor
-	# Show a Package vendor
-	get '/packages/vendor/:package_group/last' do  # '/catalogues/packages?vendor=:package_group&last'
-  #get '/catalogues/packages?vendor=:package_group/last' do
-    # Search and get all package items by vendor
-		begin
-			#puts 'params', params
-
-			pks = Package.where({"package_group" => params[:package_group]}).sort({"package_version" => -1})#.limit(1).first()
-
-			if pks.size.to_i == 0
-				logger.error "ERROR: PD not found"
-				return 404
-
-			elsif pks == nil
-				logger.error "ERROR: PD not found"
-				return 404
-
-      else
-				pks_list = []
-        name_list = []
-        pk_name = pks.first.package_name
-        name_list.push(pk_name)
-        pks_list.push(pks.first)
-				pks.each do |pd|
-				  #if pd.package_name == pk_name #and pd.package_version == last_version
-          #  pks_list.push(pd)
-          #  pks.shift
-          if pd.package_name != pk_name
-            pk_name = pd.package_name
-            pks_list.push(pd) unless name_list.include?(pk_name)
-          end
-        end
+      begin
+        pks = Package.find(params[:id] )
+      rescue Mongoid::Errors::DocumentNotFound => e
+        logger.error e
+        json_error 404, "The PD ID #{params[:id]} does not exist" unless pks
       end
+      logger.debug "Catalogue: leaving GET /packages/#{params[:id]}\" with PD #{pks}"
 
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		pks_json = pks_list.to_json
-		puts 'Packages: ', pks_json
-
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
-
-	# @method get_packages_package_name
-	# @overload get '/catalogues/packages/name/:name'
-	#	Show a Package or Package list in JSON or YAML format
-	#	@param [String] package_name NS Name
-	# Show a Package by name
-	get '/packages/name/:package_name' do
-		begin
-			#ns = Ns.distinct( "nsd.version" )#.where({ "nsd.name" =>  params[:external_ns_name]})
-			pks = Package.where({"package_name" => params[:package_name]})
-			puts 'Package: ', pks.size.to_s
-
-			if pks.size.to_i == 0
-				logger.error "ERROR: NSD not found"
-				return 404
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-		pks_json = pks.to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
-
-	# @method get_packages_package_name_version
-	# @overload get '/catalogues/packages/name/:name/version/:version'
-	#	Show a Package list in JSON or YAML format
-	#	@param [String] package_name Package Name
-	# Show a Package name
-	#	@param [Integer] package_version Package version
-	# Show a Package version
-	get '/packages/name/:name/version/:version' do
-		begin
-			pks = Package.where({"package_name" =>  params[:name], "package_version" => params[:version]})
-
-			if pks.size.to_i == 0
-				logger.error "ERROR: PD not found"
-				return 404
-			end
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		pks_json = pks.to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
-
-	# @method get_packages_package_name_last_version
-	# @overload get '/catalogues/packages/name/:name/last'
-	#	Show a Package list for last version in JSON or YAML format
-	#	@param [String] package_name Package Name
-	# Show a Package name
-	get '/packages/name/:name/last' do
-		# Search and get all package items by name
-		begin
-			#puts 'params', params
-
-			pks = Package.where({"package_name" => params[:name]}).sort({"package_version" => -1})#.limit(1).first()
-
-			if pks.size.to_i == 0
-				logger.error "ERROR: PD not found"
-				return 404
-
-			elsif pks == nil
-				logger.error "ERROR: PD not found"
-				return 404
-
-      else
-        pks_list = []
-        vendor_list = []
-        pk_vendor = pks.first.package_group
-        vendor_list.push(pk_vendor)
-        pks_list.push(pks.first)
-        pks.each do |pd|
-          if pd.package_group != pk_vendor
-            pk_vendor = pd.package_group
-            pks_list.push(pd) unless vendor_list.include?(pk_vendor)
-          end
-        end
+      case request.content_type
+        when 'application/json'
+          response = pks.to_json
+        when 'application/x-yaml'
+          response = json_to_yaml(pks.to_json)
+        else
+          halt 415
       end
+      halt 200, response
 
-		rescue Mongoid::Errors::DocumentNotFound => e
-			logger.error e
-			return 404
-		end
-
-		pks_json = pks_list.to_json
-		puts 'Packages: ', pks_json
-
-		if request.content_type == 'application/json'
-			return 200, pks_json
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
+    end
+    logger.debug "Catalogue: leaving GET /packages/#{params[:id]} with 'No PD ID specified'"
+    json_error 400, "No PD ID specified"
 	end
 
 	# @method post_package
 	# @overload post '/catalogues/packages'
-	# 	Post a Package in JSON or YAML format
-	# 	@param [YAML] Package in YAML format
-	# Post a Package
-	# 	@param [JSON] Package in JSON format
-	# Post a Package
+	# Post a Package in JSON or YAML format
 	post '/packages' do
 		#A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
-		# Return if content-type is invalid
-		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
-		# Compatibility support for YAML content-type
-		if request.content_type == 'application/x-yaml'
+    # Compatibility support for YAML content-type
+    case request.content_type
+      when 'application/x-yaml'
+        # Validate YAML format
+        # When updating a PD, the json object sent to API must contain just data inside
+        # of the pd, without the json field pd: before
+        pks, errors = parse_yaml(request.body.read)
+        halt 400, errors.to_json if errors
 
-			# Validate YAML format
-			pks, errors = parse_yaml(request.body.read)
+        # Translate from YAML format to JSON format
+        new_pks_json = yaml_to_json(pks)
 
-			return 400, errors.to_json if errors
+        # Validate JSON format
+        new_pks, errors = parse_json(new_pks_json)
+        puts 'pks: ', new_pks.to_json
+        #puts 'new_pks id', new_pks['_id'].to_json
+        halt 400, errors.to_json if errors
 
-			# Translate from YAML format to JSON format
-			pks_json = yaml_to_json(pks)
+      else
+        # Compatibility support for JSON content-type
+        # Parses and validates JSON format
+        new_pks, errors = parse_json(request.body.read)
+        halt 400, errors.to_json if errors
+    end
 
-			# Validate JSON format
-			pks, errors = parse_json(pks_json)
-			#puts 'PD: ', pks.to_json
-			return 400, errors.to_json if errors
+    # Validate NS
+    json_error 400, "ERROR: Package Vendor not found" unless new_pks.has_key?('vendor')
+    json_error 400, "ERROR: Package Name not found" unless new_pks.has_key?('name')
+    json_error 400, "ERROR: Package Version not found" unless new_pks.has_key?('version')
 
-			# Compatibility support for JSON content-type
-		elsif request.content_type == 'application/json'
-			# Parses and validates JSON format
-			pks, errors = parse_json(request.body.read)
-			return 400, errors.to_json if errors
-		end
+    # --> Validation disabled
+    # Validate PD
+    #begin
+    #	RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    #rescue => e
+    #	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
+    #end
 
-		return 400, 'ERROR: Package Name not found' unless pks.has_key?('package_name')
-		return 400, 'ERROR: Package Vendor not found' unless pks.has_key?('package_group')
-		return 400, 'ERROR: Package Version not found' unless pks.has_key?('package_version')
+    # Check if NS already exists in the catalogue by name, vendor and version
+    begin
+      pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
+      json_error 400, "ERROR: Duplicated Package Name, Vendor and Version"
+    rescue Mongoid::Errors::DocumentNotFound => e
+    end
+    # Check if PD has an ID (it should not) and if it already exists in the catalogue
+    begin
+      pks = Package.find_by({"_id" =>  new_pks['_id']})
+      json_error 400, "ERROR: Duplicated Package ID"
+    rescue Mongoid::Errors::DocumentNotFound => e
+    end
 
-		# --> Validation disabled
-		# Validate PD
-		#begin
-		#	RestClient.post settings.pd_validator + '/pds', pks.to_json, :content_type => :json
-		#rescue => e
-		#	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
-		#end
+    # Save to DB
+    begin
+      # Generate the UUID for the descriptor
+      new_pks['_id'] = SecureRandom.uuid
+      new_pks['status'] = 'inactive'
+      pks = Package.create!(new_pks)
+    rescue Moped::Errors::OperationFailure => e
+      json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+    end
 
-		# Check if package already exists in the catalogue by name, vendor and version
-		begin
-			pks = Package.find_by({"package_name" =>  pks['package_name'], "package_vendor" => pks['package_vendor'], "package_version" => pks['package_version']})
-			return 400, 'ERROR: Duplicated PD Name, Vendor and Version'
-		rescue Mongoid::Errors::DocumentNotFound => e
-		end
-		# Check if PD has an ID (it should not) and if it already exists in the catalogue
-		begin
-			pks = Package.find_by({"_id" =>  pks['_id']})
-			return 400, 'ERROR: Duplicated PD ID'
-		rescue Mongoid::Errors::DocumentNotFound => e
-		end
+    puts 'New Package has been added'
+    case request.content_type
+      when 'application/json'
+        response = pks.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(pks.to_json)
+      else
+        halt 415
+    end
+    halt 201, response
+  end
 
-		# Save to DB
-		begin
-			# Generate the UUID for the descriptor
-			pks['_id'] = SecureRandom.uuid
-			new_pks = Package.create!(pks)
-		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated PD ID' if e.message.include? 'E11000'
-		end
+	# @method update_package_group_name_version
+	# @overload put '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version
+	#	Update a Package vendor, name and version in JSON or YAML format
+  ## Catalogue - UPDATE
+	put '/packages/?' do
+    uri = Addressable::URI.new
+    uri.query_values = params
+    puts 'params', params
+    puts 'query_values', uri.query_values
+    logger.info "Catalogue: entered PUT /packages?#{uri.query}"
 
-		puts 'New PD has been added'
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    puts 'keyed_params', keyed_params
+
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+    # Compatibility support for YAML content-type
+    case request.content_type
+      when 'application/x-yaml'
+        # Validate YAML format
+        # When updating a PD, the json object sent to API must contain just data inside
+        # of the pd, without the json field pd: before
+        pks, errors = parse_yaml(request.body.read)
+        halt 400, errors.to_json if errors
+
+        # Translate from YAML format to JSON format
+        new_pks_json = yaml_to_json(pks)
+
+        # Validate JSON format
+        new_pks, errors = parse_json(new_pks_json)
+        puts 'pks: ', new_pks.to_json
+        #puts 'new_pks id', new_pks['_id'].to_json
+        halt 400, errors.to_json if errors
+
+      else
+        # Compatibility support for JSON content-type
+        # Parses and validates JSON format
+        new_pks, errors = parse_json(request.body.read)
+        halt 400, errors.to_json if errors
+    end
+
+    # Validate Package
+    # Check if same vendor, Name, Version do already exists in the database
+    json_error 400, "ERROR: Package Vendor not found" unless new_pks.has_key?('vendor')
+    json_error 400, "ERROR: Package Name not found" unless new_pks.has_key?('name')
+    json_error 400, "ERROR: Package Version not found" unless new_pks.has_key?('version')
+
+    # Set headers
+    case request.content_type
+      when 'application/x-yaml'
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
+      else
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
+    end
+    headers[:params] = params unless params.empty?
+
+    # Retrieve stored version
+    unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
+      begin
+        pks = Package.find_by({"vendor" => keyed_params[:vendor], "name" =>  keyed_params[:name], "version" => keyed_params[:version]})
+        puts 'Package is found'
+      rescue Mongoid::Errors::DocumentNotFound => e
+        json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
+      end
+    end
+    # Check if PD already exists in the catalogue by name, group and version
+    begin
+      pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
+      json_error 400, "ERROR: Duplicated PD Name, Vendor and Version"
+    rescue Mongoid::Errors::DocumentNotFound => e
+    end
+
+    # Update to new version
+    puts 'Updating...'
+    new_pks['_id'] = SecureRandom.uuid	# Unique UUIDs per PD entries
+    pd = new_pks
+
+    # --> Validation disabled
+    # Validate PD
+    #begin
+    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+    #rescue => e
+    #	logger.error e.response
+    #	return e.response.code, e.response.body
+    #end
+
+    begin
+      new_pks = Package.create!(pd)
+    rescue Moped::Errors::OperationFailure => e
+      json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+    end
+    logger.debug "Catalogue: leaving PUT /packages?#{uri.query}\" with PD #{new_pks}"
+
     case request.content_type
       when 'application/json'
         response = new_pks.to_json
@@ -1447,235 +1385,206 @@ class SonataCatalogue < Sinatra::Application
       else
         halt 415
     end
-    halt 201, response
-
-		#pks_json = new_pks['_id'].to_json
-		#if request.content_type == 'application/json'
-		#	return 200, pks_json
-		#elsif request.content_type == 'application/x-yaml'
-		#	pks_yml = json_to_yaml(pks_json)
-		#	return 200, pks_yml
-		#end
-	end
-
-	# @method update_package_group_name_version
-	# @overload put '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version
-	#	Update a Package by group, name and version in JSON or YAML format
-	#	@param [String] package_group Package vendor
-	# Update a Package group
-	#	@param [String] package_name Package Name
-	# Update a Package name
-	#	@param [Integer] package_version Package version
-	# Update a Package version
-	put '/packages/vendor/:package_group/name/:package_name/version/:package_version' do
-		# Return if content-type is invalid
-		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
-
-		# Compatibility support for YAML content-type
-		if request.content_type == 'application/x-yaml'
-			# Validate YAML format
-			pks, errors = parse_yaml(request.body.read)
-			return 400, errors.to_json if errors
-
-			# Translate from YAML format to JSON format
-			new_pks_json = yaml_to_json(pks)
-
-			# Validate JSON format
-			new_pks, errors = parse_json(new_pks_json)
-			puts 'pks: ', new_pks.to_json
-			puts 'new_pks id', new_pks['_id'].to_json
-			return 400, errors.to_json if errors
-
-			# Compatibility support for JSON content-type
-		elsif request.content_type == 'application/json'
-			# Parses and validates JSON format
-			new_pks, errors = parse_json(request.body.read)
-			return 400, errors.to_json if errors
-		end
-
-		# Validate NS
-		# TODO: Check if same vendor, Name, Version do already exists in the database
-		return 400, 'ERROR: PD Vendor not found' unless new_pks.has_key?('package_group')
-		return 400, 'ERROR: PD Name not found' unless new_pks.has_key?('package_name')
-		return 400, 'ERROR: PD Version not found' unless new_pks.has_key?('package_version')
-
-		# Retrieve stored version
-		begin
-			puts 'Searching ' + params[:id].to_s
-
-			pks = Package.find_by({"package_name" =>  params[:package_name], "package_vendor" => params[:package_vendor], "package_version" => params[:package_version]})
-			#puts 'PD is found'
-
-		rescue Mongoid::Errors::DocumentNotFound => e
-			return 400, 'This PD does not exists'
-		end
-		# Check if PD already exists in the catalogue by name, vendor and version
-		begin
-			pks = Package.find_by({"package_name" =>  new_pks['package_name'], "package_vendor" => new_pks['package_vendor'], "package_version" => new_pks['package_version']})
-			return 400, 'ERROR: Duplicated Package Name, Vendor and Version'
-		rescue Mongoid::Errors::DocumentNotFound => e
-		end
-
-		# Update to new version
-		pks = {}
-		prng = Random.new
-		puts 'Updating...'
-
-		new_pks['_id'] = SecureRandom.uuid
-		pks = new_pks # Avoid having multiple PD fields containers
-
-		# --> Validation disabled
-		# Validate PD
-		#begin
-		#	RestClient.post settings.pd_validator + '/pds', pd.to_json, :content_type => :json
-		#rescue => e
-		#	logger.error e.response
-		#	return e.response.code, e.response.body
-		#end
-
-		begin
-			new_pks = Package.create!(pks)
-		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated Package ID' if e.message.include? 'E11000'
-		end
-
-		pks_json = new_pks['_id'].to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
-
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
+    halt 200, response
+  end
 
 	# @method update_package_id
-	# @overload put '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version
-	#	Update a Package by group, name and version in JSON or YAML format
-	#	@param [String] id PD ID
-	# Update a PD by ID
-	put '/packages/id/:id' do
-		# Return if content-type is invalid
-		return 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+	# @overload put '/catalogues/packages/:id/?'
+	#	Update a Package in JSON or YAML format
+  ## Catalogue - UPDATE
+	put '/packages/:id/?' do
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
-		# Compatibility support for YAML content-type
-		if request.content_type == 'application/x-yaml'
-			# Validate YAML format
-			pks, errors = parse_yaml(request.body.read)
-			return 400, errors.to_json if errors
+    unless params[:id].nil?
+      logger.debug "Catalogue: PUT /packages/#{params[:id]}"
 
-			# Translate from YAML format to JSON format
-			new_pks_json = yaml_to_json(pks)
+      # Transform 'string' params Hash into keys
+      keyed_params = keyed_hash(params)
+      puts 'keyed_params', keyed_params
 
-			# Validate JSON format
-			new_pks, errors = parse_json(new_pks_json)
-			puts 'pks: ', new_pks.to_json
-			puts 'new_pks id', new_pks['_id'].to_json
-			return 400, errors.to_json if errors
+      # Check for special case (:status param == <new_status>)
+      if keyed_params.key?(:status)
+        # Do update of Descriptor status -> update_ns_status
+        uri = Addressable::URI.new
+        uri.query_values = params
+        logger.info "Catalogue: entered PUT /network-services/#{uri.query}"
 
-			# Compatibility support for JSON content-type
-		elsif request.content_type == 'application/json'
-			# Parses and validates JSON format
-			new_pks, errors = parse_json(request.body.read)
-			return 400, errors.to_json if errors
-		end
+        # Validate Package
+        # Retrieve stored version
+        begin
+          puts 'Searching ' + params[:id].to_s
+          pks = Package.find_by( { "_id" =>  params[:id] } )
+          puts 'Package is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, "This PD does not exists"
+        end
 
-		# Validate NS
-		# TODO: Check if same vendor, Name, Version do already exists in the database
-		return 400, 'ERROR: PD Vendor not found' unless new_pks.has_key?('package_group')
-		return 400, 'ERROR: PD Name not found' unless new_pks.has_key?('package_name')
-		return 400, 'ERROR: PD Version not found' unless new_pks.has_key?('package_version')
+        #Validate new status
+        valid_status = ['active', 'inactive', 'delete']
+        if valid_status.include? keyed_params[:status]
+          # Update to new status
+          begin
+            pks.update_attributes(:status => params[:new_status])
+          rescue Moped::Errors::OperationFailure => e
+            json_error 400, "ERROR: Operation failed"
+          end
+        else
+          json_error 400, "Invalid new status #{keyed_params[:status]}"
+        end
 
-		# Retrieve stored version
-		begin
-			puts 'Searching ' + params[:id].to_s
+        # --> Validation disabled
+        # Validate PD
+        #begin
+        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #rescue => e
+        #	logger.error e.response
+        #	return e.response.code, e.response.body
+        #end
 
-			pks = Package.find_by({"_id" =>  params[:id]})
-				#puts 'PD is found'
+        halt 200, "Status updated to #{uri.query_values}"
 
-		rescue Mongoid::Errors::DocumentNotFound => e
-			return 400, 'This PD does not exists'
-		end
-		# Check if PD already exists in the catalogue by name, vendor and version
-		begin
-			pks = Package.find_by({"package_name" =>  new_pks['package_name'], "package_vendor" => new_pks['package_vendor'], "package_version" => new_pks['package_version']})
-			return 400, 'ERROR: Duplicated Package Name, Vendor and Version'
-		rescue Mongoid::Errors::DocumentNotFound => e
-		end
+      else
+        # Compatibility support for YAML content-type
+        case request.content_type
+          when 'application/x-yaml'
+            # Validate YAML format
+            # When updating a NSD, the json object sent to API must contain just data inside
+            # of the nsd, without the json field nsd: before
+            pks, errors = parse_yaml(request.body.read)
+            halt 400, errors.to_json if errors
 
-		# Update to new version
-		pks = {}
-		prng = Random.new
-		puts 'Updating...'
+            # Translate from YAML format to JSON format
+            new_ns_json = yaml_to_json(pks)
 
-		new_pks['_id'] = SecureRandom.uuid
-		pks = new_pks # Avoid having multiple PD fields containers
+            # Validate JSON format
+            new_pks, errors = parse_json(new_ns_json)
+            puts 'pks: ', new_pks.to_json
+            #puts 'new_pks id', new_pks['_id'].to_json
+            halt 400, errors.to_json if errors
 
-		# --> Validation disabled
-		# Validate PD
-		#begin
-		#	RestClient.post settings.pd_validator + '/pds', pd.to_json, :content_type => :json
-		#rescue => e
-		#	logger.error e.response
-		#	return e.response.code, e.response.body
-		#end
+          else
+            # Compatibility support for JSON content-type
+            # Parses and validates JSON format
+            new_pks, errors = parse_json(request.body.read)
+            halt 400, errors.to_json if errors
+        end
 
-		begin
-			new_pks = Package.create!(pks)
-		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated Package ID' if e.message.include? 'E11000'
-		end
+        # Validate Package
+        # Check if same vendor, Name, Version do already exists in the database
+        json_error 400, "ERROR: Package Vendor not found" unless new_pks.has_key?('vendor')
+        json_error 400, "ERROR: Package Name not found" unless new_pks.has_key?('name')
+        json_error 400, "ERROR: Package Version not found" unless new_pks.has_key?('version')
 
-		pks_json = new_pks['_id'].to_json
-		if request.content_type == 'application/json'
-			return 200, pks_json
+        # Retrieve stored version
+        begin
+          puts 'Searching ' + params[:id].to_s
+          pks = Package.find_by( { "_id" =>  params[:id] })
+          puts 'Package is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, "The PD ID #{params[:id]} does not exist"
+        end
 
-		elsif request.content_type == 'application/x-yaml'
-			pks_yml = json_to_yaml(pks_json)
-			return 200, pks_yml
-		end
-	end
+        # Check if Package already exists in the catalogue by name, vendor and version
+        begin
+          pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
+          json_error 400, "ERROR: Duplicated Package Name, Vendor and Version"
+        rescue Mongoid::Errors::DocumentNotFound => e
+        end
+
+        # Update to new version
+        puts 'Updating...'
+        new_pks['_id'] = SecureRandom.uuid
+        pd = new_pks
+
+        # --> Validation disabled
+        # Validate PD
+        #begin
+        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #rescue => e
+        #	logger.error e.response
+        #	return e.response.code, e.response.body
+        #end
+
+        begin
+          new_pks = Package.create!(pd)
+        rescue Moped::Errors::OperationFailure => e
+          json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+        end
+        logger.debug "Catalogue: leaving PUT /packages/#{params[:id]}\" with PD #{new_pks}"
+
+        case request.content_type
+          when 'application/json'
+            response = new_pks.to_json
+          when 'application/x-yaml'
+            response = json_to_yaml(new_pks.to_json)
+          else
+            halt 415
+        end
+        halt 200, response
+      end
+    end
+    logger.debug "Catalogue: leaving PUT /packages/#{params[:id]} with 'No PD ID specified'"
+    json_error 400, "No PD ID specified"
+  end
 
 	# @method delete_pd_package_group_name_version
 	# @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
-	#	Delete a PD by group, name and version in JSON or YAML format
-	#	@param [String] package_group Package vendor
-	# Delete a Package by group
-	#	@param [String] package_name Package Name
-	# Delete a Package by name
-	#	@param [Integer] package_version Package version
-	# Delete a Package by version
-	delete '/packages/vendor/:package_group/name/:package_name/version/:package_version' do
-		begin
-			pks = Package.find_by({"package_name" =>  params[:package_name], "package_vendor" => params[:package_vendor], "package_version" => params[:package_version]})
-		rescue Mongoid::Errors::DocumentNotFound => e
-			return 404,'ERROR: Operation failed'
-		end
-		pks.destroy
-		return 200, 'OK: PD removed'
-	end
+	#	Delete a PD by group, name and version
+	delete '/packages/?' do
+    uri = Addressable::URI.new
+    uri.query_values = params
+    puts 'params', params
+    puts 'query_values', uri.query_values
+    logger.info "Catalogue: entered DELETE /packages?#{uri.query}"
+
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    puts 'keyed_params', keyed_params
+
+    unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
+      begin
+        pks = Package.find_by({"vendor" => keyed_params[:vendor], "name" =>  keyed_params[:name], "version" => keyed_params[:version]})
+        puts 'Package is found'
+      rescue Mongoid::Errors::DocumentNotFound => e
+        json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
+      end
+      logger.debug "Catalogue: leaving DELETE /packages?#{uri.query}\" with PD #{pks}"
+      pks.destroy
+      halt 200, "OK: PD removed"
+    end
+    logger.debug "Catalogue: leaving DELETE /packages?#{uri.query} with 'No PD Vendor, Name, Version specified'"
+    json_error 400, "No PD Vendor, Name, Version specified"
+  end
 
 	# @method delete_pd_package_id
-	# @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
+	# @overload delete '/catalogues/packages/:id/?'
 	#	Delete a PD by its ID
-	#	@param [String] id PD ID
-	# Delete a PD
-	delete '/packages/id/:id' do
-		begin
-			pks = Package.find(params[:id] )
-		rescue Mongoid::Errors::DocumentNotFound => e
-			return 404,'ERROR: Operation failed'
-		end
-		pks.destroy
-		return 200, 'OK: PD removed'
-	end
+	#	@param [uuid] id PD ID
+	# Delete a PD by uuid
+	delete '/packages/:id/?' do
+    unless params[:id].nil?
+      logger.debug "Catalogue: DELETE /packages/#{params[:id]}"
+      begin
+        pks = Package.find(params[:id] )
+      rescue Mongoid::Errors::DocumentNotFound => e
+        logger.error e
+        json_error 404, "The PD ID #{params[:id]} does not exist" unless pks
+      end
+      logger.debug "Catalogue: leaving DELETE /packages/#{params[:id]}\" with PD #{pks}"
+      pks.destroy
+      halt 200, 'OK: PD removed'
+    end
+    logger.debug "Catalogue: leaving DELETE /packages/#{params[:id]} with 'No PD ID specified'"
+    json_error 400, "No PD ID specified"
+  end
 
 
-  ############################################ PZIP API METHODS ############################################
+  ############################################ ZIPP API METHODS ############################################
 
   # @method post_zip_package
   # @overload post '/catalogues/zip-package'
-  # 	Post a Package zip in binary-data
+  # Post a zip Package in binary-data
   post '/zip-packages' do
     # Return if content-type is invalid
     return 415 unless request.content_type == 'application/zip'
@@ -1702,7 +1611,7 @@ class SonataCatalogue < Sinatra::Application
     grid_file = grid_fs.put(file,
                             #:filename     => "package.zip",
                             :content_type => "application/zip",
-                            #:_id          => 'a-unique-id-to-use-in-lieu-of-a-random-one',
+                            :_id          => SecureRandom.uuid,
                             #:chunk_size   => 100 * 1024,
                             #:metadata     => {'description' => "taken after a game of ultimate"}
                             )
@@ -1720,14 +1629,14 @@ class SonataCatalogue < Sinatra::Application
   #	Get a zip-package
   #	@param [Integer] zip-package ID
   # Zip-package internal database identifier
-  get '/zip-packages/id/:id' do
+  get '/zip-packages/:id/?' do
     puts 'ID: ', params[:id]
     begin
       FileContainer.find_by({"grid_fs_id" => params[:id]} )
       puts 'FileContainer FOUND'
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error e
-      return 404
+      halt 404
     end
 
     grid_fs   = Mongoid::GridFs
@@ -1739,7 +1648,7 @@ class SonataCatalogue < Sinatra::Application
     #  temp.write(chunk) # streaming write
     #end
 
-    return 200, grid_file.data
+    halt 200, grid_file.data
 
   end
 

@@ -53,11 +53,11 @@ class Package
 	include Mongoid::Attributes::Dynamic
 	store_in collection: "pd"
 
-	field :package_group, type: String
-	field :package_name, type: String
-	field :package_version, type: String
+	field :vendor, type: String
+	field :name, type: String
+	field :version, type: String
 
-	validates :package_group, :package_name, :package_version, :presence => true
+	validates :vendor, :name, :version, :presence => true
 end
 
 # Temporary class model for experimenting purposes on binary data storage on database
