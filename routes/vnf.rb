@@ -149,7 +149,7 @@ class SonataVnfRepository < Sinatra::Application
 
 		puts 'vnf: ', Vnfr.to_json
 		errors = validate_json(vnf_json,@@vnfr_schema)
-		return 400, errors.to_json if errors
+		return 415, errors.to_json if errors
 
 		begin
 			instance = Vnfr.find( instance['id'] )
@@ -207,7 +207,7 @@ class SonataVnfRepository < Sinatra::Application
 		
 		puts 'validating entry: ', vnf_json
 		errors = validate_json(vnf_json,@@vnfr_schema)
-		return 400, errors.to_json if errors
+		return 415, errors.to_json if errors
 				
 		# Update to new version
 		puts 'Updating...'
