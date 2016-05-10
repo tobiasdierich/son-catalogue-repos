@@ -17,4 +17,4 @@ test:
     default:
       database: son-catalogue-repository
       hosts:
-      - 10.0.2.15:27017
+      - mongo:27017
