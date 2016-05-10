@@ -11,3 +11,10 @@ production:
       database: son-catalogue-repository
       hosts:
       - mongo:27017
+
+test:
+  sessions:
+    default:
+      database: son-catalogue-repository
+      hosts:
+      - mongo:27017

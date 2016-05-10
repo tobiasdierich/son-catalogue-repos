@@ -85,19 +85,19 @@ class SonataNsRepository < Sinatra::Application
     # Validation against schema
     errors = validate_json(nsr_json, @@nsr_schema)
 
-    puts 'vnf: ', Vnfr.to_json
-    return 400, errors.to_json if errors
+    puts 'nsr: ', Nsr.to_json
+    return 422, errors.to_json if errors
 
     begin
       instance = Nsr.find({ '_id' => instance['_id'] })
-      return 400, 'ERROR: Duplicated NS ID'
+      return 409, 'ERROR: Duplicated NS ID'
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
     begin
       instance = Nsr.create!(instance)
     rescue Moped::Errors::OperationFailure => e
-      return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+      return 409, 'ERROR: Duplicated NS ID'
     end
     return 200, instance.to_json
   end
@@ -113,6 +113,13 @@ class SonataNsRepository < Sinatra::Application
     return 400, errors.to_json if errors
     # Retrieve stored version
     new_nsr = instance
+    
+    # Validation against schema
+    errors = validate_json(nsr_json, @@nsr_schema)
+
+    puts 'nsr: ', Nsr.to_json
+    return 422, errors.to_json if errors
+
     begin
       nsr = Nsr.find_by('_id' => params[:id])
       puts 'NS is found'
@@ -128,11 +135,31 @@ class SonataNsRepository < Sinatra::Application
       # Create a record
       new_nsr = Nsr.create!(instance)
     rescue Moped::Errors::OperationFailure => e
-      return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+      return 409, 'ERROR: Duplicated NS ID'
     end
 
     nsr_json = new_nsr.to_json
     return 200, nsr_json
+    # return 200, new_ns.to_json
+  end
+
+  delete '/ns-instances/:id' do
+    # Return if content-type is invalid
+    begin
+      nsr = Nsr.find_by('_id' => params[:id])
+      puts 'NS is found'
+    rescue Mongoid::Errors::DocumentNotFound => e
+      return 400, 'This NSD does not exists'
+    end
+
+    # Delete the nsr
+    puts 'Deleting...'
+    begin
+      # Delete the network service record
+      Nsr.where('_id' => params[:id]).delete
+    end
+
+    return 200
     # return 200, new_ns.to_json
   end
 end
