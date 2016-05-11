@@ -12,6 +12,7 @@ require './main'
 
 def app
   SonataNsRepository
+  SonataVnfRepository
 end
 
 RSpec.configure do |config|

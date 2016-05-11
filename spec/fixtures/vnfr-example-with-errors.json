@@ -1,0 +1,179 @@
+{
+  "descriptor_version": "AaiU7cn.3u_YOKj9PuWBjf6BeCpd8baFcBhatAphZ10Kknl",
+  "id": "62b21f06-154e-0893-3e95-0123c541a54f",
+  "virtual_deployment_units": [
+    {
+      "id": "Lorem",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 32945631,
+          "cpu_clock_speed": "irure et",
+          "cpu_model": "ut elit"
+        },
+        "memory": {
+          "size": 18152043.120589,
+          "size_unit": "TB"
+        }
+      },
+      "number_of_instances": 25403801,
+      "monitoring_parameters": [
+        {
+          "name": "M",
+          "unit": "kbps",
+          "frequency": 10610541.309666721
+        },
+        {
+          "name": "bytQE_kchhiRZfEwwBOhquZsOJZuhNPzqqycyYHEGHuNeBjQpqEi-tcexmfDZr-nHwVXhrTInyTlmXRIGfcoLu",
+          "unit": "Tbps"
+        }
+      ],
+      "vnfc_instance": [
+        {
+          "id": "ad mollit culpa"
+        },
+        {},
+        {
+          "connection_points": [
+            {
+              "id": "aliquip",
+              "type": "interface"
+            }
+          ],
+          "vc_id": "eu aliquip in"
+        }
+      ]
+    },
+    {
+      "id": "eu",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 38199531,
+          "cpu_clock_speed": "culpa magna"
+        },
+        "memory": {
+          "size": 23975032.869133517,
+          "numa_allocation_policy": "aliquip commodo",
+          "large_pages_required": false
+        },
+        "network": {
+          "network_interface_bandwidth_unit": "bps",
+          "data_processing_acceleration_library": "Excepteur",
+          "network_interface_card_capabilities": {
+            "SR-IOV": false
+          }
+        },
+        "storage": {
+          "size": 70574207.24114929
+        }
+      },
+      "vm_image": "irure Lorem mollit",
+      "vnfc_instance": [
+        {
+          "id": "mollit aute consectetur"
+        }
+      ],
+      "monitoring_parameters": [
+        {
+          "name": "dZIkjV_QwwmwzjPLk",
+          "unit": "Gbps"
+        }
+      ]
+    },
+    {
+      "id": "magna",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 85856642,
+          "cpu_support_accelerator": "labore nisi dolore",
+          "cpu_model": "deserunt est ad"
+        },
+        "memory": {
+          "size": 68121633.57330978,
+          "large_pages_required": true,
+          "size_unit": "MB"
+        }
+      },
+      "vdu_reference": "id mollit in",
+      "number_of_instances": 79974858
+    }
+  ],
+  "parent_ns": "48bb09e1-ba17-8030-8848-23fd81a9c9e3",
+  "virtual_links": [
+    {
+      "id": "amet cillum anim sit",
+      "connectivity_type": "E-Line",
+      "connection_points_reference": [
+        "amet si"
+      ]
+    },
+    {
+      "id": "reprehenderit laborum",
+      "connectivity_type": "E-Line",
+      "connection_points_reference": [
+        "ex proident",
+        "do eu veniam commodo",
+        ""
+      ]
+    },
+    {
+      "id": "labore laborum exercitation eu",
+      "connectivity_type": "E-LAN",
+      "connection_points_reference": [
+        "nisi laborum",
+        "aliqua magna id cillum",
+        "amet v"
+      ],
+      "leaf_requirement": "et",
+      "qos": "nostrud amet occaecat",
+      "dhcp": true,
+      "external_access": true
+    },
+    {
+      "id": "nisi enim commodo et",
+      "connectivity_type": "E-LAN",
+      "connection_points_reference": [
+        "pariatur dolor officia sit",
+        "qui sed ad nisi",
+        "ea",
+        "adipisicing"
+      ],
+      "leaf_requirement": "reprehenderit in",
+      "access": false,
+      "qos": "sint",
+      "external_access": true
+    }
+  ],
+  "connection_points": [
+    {
+      "id": "consequat non Lorem ad",
+      "type": "interface"
+    }
+  ],
+  "lifecycle_events": [
+    {
+      "driver": "exercitation cillum",
+      "vnf_container": "velit et cillum"
+    },
+    {
+      "flavor_id_ref": "sunt",
+      "authentication_type": "dolore tempor"
+    },
+    {
+      "events": {
+        "scale-out": {
+          "template_file_format": "sed veniam fugiat"
+        },
+        "start": {},
+        "restart": {
+          "template_file": "et"
+        },
+        "scale-in": {
+          "command": "in tempor anim exercitation",
+          "template_file": "laboris in"
+        }
+      },
+      "authentication_username": "pariatur dolore dolor incididunt"
+    }
+  ],
+  "descriptor_reference": "0f168346-77a5-d93d-4e83-cce571f7a96d"
+}
