@@ -27,6 +27,7 @@ group :development, :test do
   # gem 'json_spec', '~>1.1.4'
   # gem 'database_cleaner'
   # gem 'mongoid-rspec', '~> 2.2.0'
+  gem 'license_finder'
 end
 
 group :doc do

@@ -90,14 +90,14 @@ class SonataNsRepository < Sinatra::Application
 
     begin
       instance = Nsr.find({ '_id' => instance['_id'] })
-      return 409, 'ERROR: Duplicated NS ID'
+      return 409, 'ERROR: Duplicated nsr UUID'
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
     begin
       instance = Nsr.create!(instance)
     rescue Moped::Errors::OperationFailure => e
-      return 409, 'ERROR: Duplicated NS ID'
+      return 409, 'ERROR: Duplicated nsr UUID'
     end
     return 200, instance.to_json
   end
@@ -122,9 +122,9 @@ class SonataNsRepository < Sinatra::Application
 
     begin
       nsr = Nsr.find_by('_id' => params[:id])
-      puts 'NS is found'
+      puts 'nsr is found'
     rescue Mongoid::Errors::DocumentNotFound => e
-      return 400, 'This NSD does not exists'
+      return 404, 'nsr not found'
     end
 
     # Update to new version
@@ -135,7 +135,7 @@ class SonataNsRepository < Sinatra::Application
       # Create a record
       new_nsr = Nsr.create!(instance)
     rescue Moped::Errors::OperationFailure => e
-      return 409, 'ERROR: Duplicated NS ID'
+      return 409, 'ERROR: Duplicated nsr UUID'
     end
 
     nsr_json = new_nsr.to_json
@@ -147,9 +147,9 @@ class SonataNsRepository < Sinatra::Application
     # Return if content-type is invalid
     begin
       nsr = Nsr.find_by('_id' => params[:id])
-      puts 'NS is found'
+      puts 'nsr is found'
     rescue Mongoid::Errors::DocumentNotFound => e
-      return 400, 'This NSD does not exists'
+      return 404, 'nsr not found'
     end
 
     # Delete the nsr
