@@ -149,11 +149,11 @@ class SonataVnfRepository < Sinatra::Application
 
 		puts 'vnf: ', Vnfr.to_json
 		errors = validate_json(vnf_json,@@vnfr_schema)
-		return 415, errors.to_json if errors
+		return 422, errors.to_json if errors
 
 		begin
 			instance = Vnfr.find( instance['id'] )
-			return 400, 'ERROR: Duplicated VNF ID'
+			return 409, 'ERROR: Duplicated VNF ID'
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 
@@ -161,7 +161,7 @@ class SonataVnfRepository < Sinatra::Application
 		begin
 			instance = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated VNF ID' if e.message.include? 'E11000'
+			return 409, 'ERROR: Duplicated VNF ID' if e.message.include? 'E11000'
 		end
 
 		puts 'New VNF has been added'
@@ -202,12 +202,12 @@ class SonataVnfRepository < Sinatra::Application
 			vnfr = Vnfr.find( instance['id'] )
 			puts 'VNF is found'
 		rescue Mongoid::Errors::DocumentNotFound => e
-			return 400, 'This VNFR does not exists'
+			return 404, 'This VNFR does not exists'
 		end
 		
 		puts 'validating entry: ', vnf_json
 		errors = validate_json(vnf_json,@@vnfr_schema)
-		return 415, errors.to_json if errors
+		return 422, errors.to_json if errors
 				
 		# Update to new version
 		puts 'Updating...'
@@ -217,7 +217,7 @@ class SonataVnfRepository < Sinatra::Application
 			#Create a record
 			new_vnfr = Vnfr.create!(instance)
 		rescue Moped::Errors::OperationFailure => e
-			return 400, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+			return 409, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
 		end
 
 		puts 'New VNF has been updated'

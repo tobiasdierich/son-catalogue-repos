@@ -10,10 +10,6 @@ WebMock.allow_net_connect!
 $: << File.expand_path('../..', __FILE__)
 require './main'
 
-def app
-  SonataNsRepository
-end
-
 RSpec.configure do |config|
   config.include Rack::Test::Methods
   config.mock_with :rspec
