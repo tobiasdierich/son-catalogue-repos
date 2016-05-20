@@ -98,3 +98,4 @@ The following lead developers are responsible for this repository and have admin
 
 - Felipe Vicens (felipevicens)
 - Daniel Guija (dang03)
+- Santiago Rodriguez 
