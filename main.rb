@@ -17,37 +17,36 @@ require_relative 'routes/init'
 require_relative 'helpers/init'
 
 configure do
-	# Configuration for logging
-	enable :logging
-	Dir.mkdir("#{settings.root}/log") unless File.exists?("#{settings.root}/log")
-	log_file = File.new("#{settings.root}/log/#{settings.environment}.log", "a+")
-	log_file.sync = true
-	use Rack::CommonLogger, log_file
+  # Configuration for logging
+  enable :logging
+  Dir.mkdir("#{settings.root}/log") unless File.exists?("#{settings.root}/log")
+  log_file = File.new("#{settings.root}/log/#{settings.environment}.log", "a+")
+  log_file.sync = true
+  use Rack::CommonLogger, log_file
 end
 
 before do
-	logger.level = Logger::DEBUG
+  logger.level = Logger::DEBUG
 end
 
 class SonataNsRepository < Sinatra::Application
-	register Sinatra::ConfigFile
-	# Load configurations
-	config_file 'config/config.yml'
-	Mongoid.load!('config/mongoid.yml')
+  register Sinatra::ConfigFile
+  # Load configurations
+  config_file 'config/config.yml'
+  Mongoid.load!('config/mongoid.yml')
 end
 
-
 class SonataVnfRepository < Sinatra::Application
-	register Sinatra::ConfigFile
-	# Load configurations
-	config_file 'config/config.yml'
-	Mongoid.load!('config/mongoid.yml')
+  register Sinatra::ConfigFile
+  # Load configurations
+  config_file 'config/config.yml'
+  Mongoid.load!('config/mongoid.yml')
 end
 
 class SonataCatalogue < Sinatra::Application
-	register Sinatra::ConfigFile
-	# Load configurations
-	config_file 'config/config.yml'
-	Mongoid.load!('config/mongoid.yml')
-	#use Rack::CommonLogger, LogStashLogger.new(host: settings.logstash_host, port: settings.logstash_port)
+  register Sinatra::ConfigFile
+  # Load configurations
+  config_file 'config/config.yml'
+  Mongoid.load!('config/mongoid.yml')
+  #use Rack::CommonLogger, LogStashLogger.new(host: settings.logstash_host, port: settings.logstash_port)
 end
