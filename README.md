@@ -58,6 +58,14 @@ curl -X GET http://localhost:4011/records/vnfr/9f18bc1b-b18d-483b-88da-a600e9255
 
 You can use mongoexpress to manage the mongo databases.
 
+### Pushing 'sonata-demo' files to Catalogues
+
+The Rakefile in root folder includes an specific task to fill the Catalogues with descriptor sample files from
+sonata-demo package. This is specially useful when starting an empty Catalogue. It can be run with a rake task:
+
+```sh
+rake init:load_samples
+```
 
 ### API Documentation
 
