@@ -64,8 +64,16 @@ The Rakefile in root folder includes an specific task to fill the Catalogues wit
 sonata-demo package. This is specially useful when starting an empty Catalogue. It can be run with a rake task:
 
 ```sh
-rake init:load_samples
+rake init:load_samples[<server>]
+
+Where <server> allows two options: 'development' or 'integration' server deployment
 ```
+An example of usage:
+
+```sh
+rake init:load_samples[integration]
+```
+
 
 ### API Documentation
 
