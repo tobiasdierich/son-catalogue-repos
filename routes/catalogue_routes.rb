@@ -1,6 +1,7 @@
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
   require 'addressable/uri'
+  #require 'will_paginate/array'
 
 	before do
 		# Gatekeepr authn. code will go here for future implementation
@@ -94,20 +95,20 @@ class SonataCatalogue < Sinatra::Application
             #checked_list.each do |pair|
             #  p [pair.one, nss_name_vendor.one], [pair.two, nss_name_vendor.two]
             #  p pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two
-            end
-            nss_list.push(nsd) unless
-                checked_list.any? {|pair| pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two}
-            checked_list.push(nss_name_vendor)
           end
-
-          #puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
-        else
-            logger.error "ERROR: 'No NSDs were found'"
-            logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-            json_error 404, "No NSDs were found"
+          nss_list.push(nsd) unless
+              checked_list.any? {|pair| pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two}
+          checked_list.push(nss_name_vendor)
         end
-        #nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
-      nss = nss_list
+        #puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
+      else
+        #logger.error "ERROR: 'No NSDs were found'"
+        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+        #json_error 404, "No NSDs were found"
+        nss_list = []
+      end
+      #nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
+      nss = apply_limit_and_offset(nss_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
@@ -122,7 +123,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-        json_error 404, "No NSDs were found"
+        #json_error 404, "No NSDs were found"
       end
     end
 
@@ -617,12 +618,13 @@ class SonataCatalogue < Sinatra::Application
         end
         #puts 'vnfs_list:', vnfs_list.each {|vnf| p vnf.name, vnf.vendor}
       else
-        logger.error "ERROR: 'No VNFDs were found'"
+        #logger.error "ERROR: 'No VNFDs were found'"
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
-        json_error 404, "No VNFDs were found"
+        #json_error 404, "No VNFDs were found"
+        vnfs_list = []
       end
       #vnfs = vnfs_list.paginate(:page => params[:offset], :per_page =>params[:limit])
-      vnfs = vnfs_list
+      vnfs = apply_limit_and_offset(vnfs_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
@@ -637,7 +639,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
-        json_error 404, "No VNFDs were found"
+        #json_error 404, "No VNFDs were found"
       end
     end
 
@@ -1134,12 +1136,13 @@ class SonataCatalogue < Sinatra::Application
 
         #puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
       else
-        logger.error "ERROR: 'No PDs were found'"
+        #logger.error "ERROR: 'No PDs were found'"
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
-        json_error 404, "No PDs were found"
+        #json_error 404, "No PDs were found"
+        pks_list = []
       end
       #pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
-      pks = pks_list
+      pks = apply_limit_and_offset(pks_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
@@ -1154,7 +1157,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
-        json_error 404, "No PDs were found"
+        #json_error 404, "No PDs were found"
       end
     end
 
