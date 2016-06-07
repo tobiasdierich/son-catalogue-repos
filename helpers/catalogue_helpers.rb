@@ -99,6 +99,12 @@ class SonataCatalogue < Sinatra::Application
 		return output_yml
 	end
 
+	def apply_limit_and_offset(input, offset= nil, limit= nil)
+    @result = input
+		@result = offset ? input.drop(offset.to_i) : @result
+		@result = limit ? @result.first(limit.to_i) : @result
+	end
+
   # Builds an HTTP link for pagination
 	#
 	# @param [Integer] offset link offset
