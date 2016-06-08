@@ -1,7 +1,6 @@
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
   require 'addressable/uri'
-  #require 'will_paginate/array'
 
 	before do
 		# Gatekeepr authn. code will go here for future implementation
@@ -1589,54 +1588,60 @@ class SonataCatalogue < Sinatra::Application
   # @overload post '/catalogues/zip-package'
   # Post a zip Package in binary-data
   post '/zip-packages' do
+    logger.debug "Catalogue: entered POST /zip-packages/"
     # Return if content-type is invalid
     return 415 unless request.content_type == 'application/zip'
+
+    #puts "headers", request
+    #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
+    att = request.env["HTTP_CONTENT_DISPOSITION"]
+    filename = att.match(/filename=(\"?)(.+)\1/)[2]
+    #puts "filename", filename
+    #JSON.pretty_generate(request.env)
 
     # Reads body data
     file, errors = request.body
     return 400, errors.to_json if errors
-
-    #Zip::Archive.open_buffer(response.body) do |ar|
-    #  ar.fopen(0) do |zf|
-    #    open(zf.name, 'wb') do |f|
-    #      f << zf.read
-    #    end
-    #  end
-    #end
 
     #return 400, 'ERROR: Package Name not found' unless pzip.has_key?('package_name')
     #return 400, 'ERROR: Package Vendor not found' unless pzip.has_key?('package_group')
     #return 400, 'ERROR: Package Version not found' unless pzip.has_key?('package_version')
 
     #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
+    # Content-Disposition: attachment; filename=FILENAME
 
     grid_fs   = Mongoid::GridFs
     grid_file = grid_fs.put(file,
-                            #:filename     => "package.zip",
+                            :filename     => filename,
                             :content_type => "application/zip",
                             :_id          => SecureRandom.uuid,
                             #:chunk_size   => 100 * 1024,
-                            #:metadata     => {'description' => "taken after a game of ultimate"}
+                            #:metadata     => {'description' => "SONATA zip package"}
                             )
 
     FileContainer.new.tap do |file_container|
+      file_container._id = SecureRandom.uuid
       file_container.grid_fs_id = grid_file.id
+      file_container.grid_fs_name = filename
       file_container.save
     end
-
+    logger.debug "Catalogue: leaving POST /zip-packages/ with #{grid_file.id}"
     halt 201, grid_file.id.to_json
   end
 
-  # @method get_package_zip_pzip_id
-  # @overload get '/catalogues/zip-packages/id/:pzip_id'
+  # @method get_zip_package_id
+  # @overload get '/catalogues/zip-packages/:id/?'
   #	Get a zip-package
   #	@param [Integer] zip-package ID
   # Zip-package internal database identifier
   get '/zip-packages/:id/?' do
-    puts 'ID: ', params[:id]
+    #Dir.chdir(File.dirname(__FILE__))
+    logger.debug "Catalogue: entered GET /zip-packages/#{params[:id]}"
+    #puts 'ID: ', params[:id]
     begin
-      FileContainer.find_by({"grid_fs_id" => params[:id]} )
-      puts 'FileContainer FOUND'
+      zipp = FileContainer.find_by({"grid_fs_id" => params[:id]} )
+      #p 'FileContainer FOUND'
+      p 'Filename: ', zipp['grid_fs_name']
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error e
       halt 404
@@ -1644,15 +1649,96 @@ class SonataCatalogue < Sinatra::Application
 
     grid_fs   = Mongoid::GridFs
     grid_file = grid_fs.get(params[:id])
-    #grid_file.data # big huge blob
 
-    #temp=Tempfile.new('package.zip', 'wb')
+    #grid_file.data # big huge blob
+    #temp=Tempfile.new("/home/osboxes/Downloads/#{zipp['grid_fs_name'].to_s}", 'wb')
     #grid_file.each do |chunk|
     #  temp.write(chunk) # streaming write
     #end
+    ## Client file recovery
+    #temp=File.new("/home/osboxes/Downloads/#{zipp['grid_fs_name']}", 'wb')
+    #temp.write(grid_file.data)
+    #temp.close
 
+    logger.debug "Catalogue: leaving GET /zip-packages/#{params[:id]}"
     halt 200, grid_file.data
+  end
 
+  # @method get_zip_package_list
+  # @overload get '/catalogues/zip-packages/?'
+  #	Returns a list of zip-packages
+  #	-> List many zip-packages
+  get '/zip-packages/?' do
+    params['offset'] ||= DEFAULT_OFFSET
+    params['limit'] ||= DEFAULT_LIMIT
+
+    uri = Addressable::URI.new
+    uri.query_values = params
+    puts 'params', params
+    puts 'query_values', uri.query_values
+    logger.info "Catalogue: entered GET /zip-packages?#{uri.query}"
+
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    puts 'keyed_params', keyed_params
+
+    # Set headers
+    case request.content_type
+      when 'application/x-yaml'
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
+      else
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
+    end
+    headers[:params] = params unless params.empty?
+
+    # Get rid of :offset and :limit
+    [:offset, :limit].each { |k| keyed_params.delete(k) }
+    #puts 'keyed_params(1)', keyed_params
+
+    # Do the query
+
+    file_list = FileContainer.where(keyed_params)
+
+    logger.info "Catalogue: leaving GET /zip-packages?#{uri.query} with #{file_list}"
+
+    # Paginate results
+    file_list = file_list.paginate(:offset => params[:offset], :limit => params[:limit])
+
+    case request.content_type
+      when 'application/json'
+        response = file_list.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(file_list.to_json)
+      else
+        halt 415
+    end
+    halt 200, response
+  end
+
+  # @method delete_zip_package_id
+  # @overload delete '/catalogues/zip-packages/:id/?'
+  #	Delete a zip-package by its ID
+  #	@param [uuid] zip-package ID
+  delete '/zip-packages/:id/?' do
+    unless params[:id].nil?
+      logger.debug "Catalogue: entered DELETE /zip-packages/#{params[:id]}"
+      begin
+        zipp = FileContainer.where( "grid_fs_id" => params[:id] )
+      rescue Mongoid::Errors::DocumentNotFound => e
+        logger.error e
+        json_error 404, "The Zip-package ID #{params[:id]} does not exist" unless zipp
+      end
+
+      # Remove files from grid
+      grid_fs   = Mongoid::GridFs
+      grid_fs.delete(params[:id])
+      zipp.destroy
+
+      logger.debug "Catalogue: leaving DELETE /zip-packages/#{params[:id]}\" with Zip-package #{zipp}"
+      halt 200, 'OK: Zip-package removed'
+    end
+    logger.debug "Catalogue: leaving DELETE /zip-packages/#{params[:id]} with 'No Zip-package ID specified'"
+    json_error 400, "No Zip-package ID specified"
   end
 
 end
