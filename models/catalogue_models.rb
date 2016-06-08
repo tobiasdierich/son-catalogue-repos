@@ -66,12 +66,13 @@ require 'mongoid/grid_fs'
 class FileContainer
   include Mongoid::Document
   include Mongoid::Timestamps
+  include Mongoid::Pagination
   store_in collection: "file_containers"
 
   field :grid_fs_id, type: String
   #field :grid_fs_vendor, type: String
-  #field :grid_fs_name, type: String
+  field :grid_fs_name, type: String
   #field :grid_fs_version, type: String
 
-  #validates :package_group, :package_name, :package_version, :presence => true
+  #validates :zipp_vendor, :zipp_name, :zipp_version, :presence => true
 end
