@@ -1645,16 +1645,17 @@ class SonataCatalogue < Sinatra::Application
     logger.debug "Catalogue: entered GET /zip-packages/#{params[:id]}"
     #puts 'ID: ', params[:id]
     begin
-      zipp = FileContainer.find_by({"grid_fs_id" => params[:id]} )
+      zipp = FileContainer.find_by({"_id" => params[:id]} )
       #p 'FileContainer FOUND'
       p 'Filename: ', zipp['grid_fs_name']
+      p 'grid_fs_id: ', zipp['grid_fs_id']
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error e
       halt 404
     end
 
     grid_fs   = Mongoid::GridFs
-    grid_file = grid_fs.get(params[:id])
+    grid_file = grid_fs.get(zipp['grid_fs_id'])
 
     #grid_file.data # big huge blob
     #temp=Tempfile.new("/home/osboxes/Downloads/#{zipp['grid_fs_name'].to_s}", 'wb')
@@ -1705,14 +1706,16 @@ class SonataCatalogue < Sinatra::Application
                             #:metadata     => {'description' => "SONATA zip package"}
                             )
 
+    zipp_id = SecureRandom.uuid
     FileContainer.new.tap do |file_container|
-      file_container._id = SecureRandom.uuid
+      file_container._id = zipp_id
       file_container.grid_fs_id = grid_file.id
       file_container.grid_fs_name = filename
       file_container.save
     end
     logger.debug "Catalogue: leaving POST /zip-packages/ with #{grid_file.id}"
-    halt 201, grid_file.id.to_json
+    #halt 201, grid_file.id.to_json
+    halt 201, zipp_id.to_json
   end
 
   # @method update_zip_package_id
@@ -1732,7 +1735,7 @@ class SonataCatalogue < Sinatra::Application
     unless params[:id].nil?
       logger.debug "Catalogue: entered DELETE /zip-packages/#{params[:id]}"
       begin
-        zipp = FileContainer.where( "grid_fs_id" => params[:id] )
+        zipp = FileContainer.find_by( "_id" => params[:id] )
       rescue Mongoid::Errors::DocumentNotFound => e
         logger.error e
         json_error 404, "The Zip-package ID #{params[:id]} does not exist" unless zipp
@@ -1740,7 +1743,7 @@ class SonataCatalogue < Sinatra::Application
 
       # Remove files from grid
       grid_fs   = Mongoid::GridFs
-      grid_fs.delete(params[:id])
+      grid_fs.delete(zipp['grid_fs_id'])
       zipp.destroy
 
       logger.debug "Catalogue: leaving DELETE /zip-packages/#{params[:id]}\" with Zip-package #{zipp}"
