@@ -1584,86 +1584,6 @@ class SonataCatalogue < Sinatra::Application
 
   ############################################ ZIPP API METHODS ############################################
 
-  # @method post_zip_package
-  # @overload post '/catalogues/zip-package'
-  # Post a zip Package in binary-data
-  post '/zip-packages' do
-    logger.debug "Catalogue: entered POST /zip-packages/"
-    # Return if content-type is invalid
-    return 415 unless request.content_type == 'application/zip'
-
-    #puts "headers", request
-    #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
-    att = request.env["HTTP_CONTENT_DISPOSITION"]
-    filename = att.match(/filename=(\"?)(.+)\1/)[2]
-    #puts "filename", filename
-    #JSON.pretty_generate(request.env)
-
-    # Reads body data
-    file, errors = request.body
-    return 400, errors.to_json if errors
-
-    #return 400, 'ERROR: Package Name not found' unless pzip.has_key?('package_name')
-    #return 400, 'ERROR: Package Vendor not found' unless pzip.has_key?('package_group')
-    #return 400, 'ERROR: Package Version not found' unless pzip.has_key?('package_version')
-
-    #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
-    # Content-Disposition: attachment; filename=FILENAME
-
-    grid_fs   = Mongoid::GridFs
-    grid_file = grid_fs.put(file,
-                            :filename     => filename,
-                            :content_type => "application/zip",
-                            :_id          => SecureRandom.uuid,
-                            #:chunk_size   => 100 * 1024,
-                            #:metadata     => {'description' => "SONATA zip package"}
-                            )
-
-    FileContainer.new.tap do |file_container|
-      file_container._id = SecureRandom.uuid
-      file_container.grid_fs_id = grid_file.id
-      file_container.grid_fs_name = filename
-      file_container.save
-    end
-    logger.debug "Catalogue: leaving POST /zip-packages/ with #{grid_file.id}"
-    halt 201, grid_file.id.to_json
-  end
-
-  # @method get_zip_package_id
-  # @overload get '/catalogues/zip-packages/:id/?'
-  #	Get a zip-package
-  #	@param [Integer] zip-package ID
-  # Zip-package internal database identifier
-  get '/zip-packages/:id/?' do
-    #Dir.chdir(File.dirname(__FILE__))
-    logger.debug "Catalogue: entered GET /zip-packages/#{params[:id]}"
-    #puts 'ID: ', params[:id]
-    begin
-      zipp = FileContainer.find_by({"grid_fs_id" => params[:id]} )
-      #p 'FileContainer FOUND'
-      p 'Filename: ', zipp['grid_fs_name']
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      halt 404
-    end
-
-    grid_fs   = Mongoid::GridFs
-    grid_file = grid_fs.get(params[:id])
-
-    #grid_file.data # big huge blob
-    #temp=Tempfile.new("/home/osboxes/Downloads/#{zipp['grid_fs_name'].to_s}", 'wb')
-    #grid_file.each do |chunk|
-    #  temp.write(chunk) # streaming write
-    #end
-    ## Client file recovery
-    #temp=File.new("/home/osboxes/Downloads/#{zipp['grid_fs_name']}", 'wb')
-    #temp.write(grid_file.data)
-    #temp.close
-
-    logger.debug "Catalogue: leaving GET /zip-packages/#{params[:id]}"
-    halt 200, grid_file.data
-  end
-
   # @method get_zip_package_list
   # @overload get '/catalogues/zip-packages/?'
   #	Returns a list of zip-packages
@@ -1713,6 +1633,95 @@ class SonataCatalogue < Sinatra::Application
         halt 415
     end
     halt 200, response
+  end
+
+  # @method get_zip_package_id
+  # @overload get '/catalogues/zip-packages/:id/?'
+  #	Get a zip-package
+  #	@param [string] zip-package ID
+  # Zip-package internal database identifier
+  get '/zip-packages/:id/?' do
+    #Dir.chdir(File.dirname(__FILE__))
+    logger.debug "Catalogue: entered GET /zip-packages/#{params[:id]}"
+    #puts 'ID: ', params[:id]
+    begin
+      zipp = FileContainer.find_by({"grid_fs_id" => params[:id]} )
+      #p 'FileContainer FOUND'
+      p 'Filename: ', zipp['grid_fs_name']
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error e
+      halt 404
+    end
+
+    grid_fs   = Mongoid::GridFs
+    grid_file = grid_fs.get(params[:id])
+
+    #grid_file.data # big huge blob
+    #temp=Tempfile.new("/home/osboxes/Downloads/#{zipp['grid_fs_name'].to_s}", 'wb')
+    #grid_file.each do |chunk|
+    #  temp.write(chunk) # streaming write
+    #end
+    ## Client file recovery
+    #temp=File.new("/home/osboxes/Downloads/#{zipp['grid_fs_name']}", 'wb')
+    #temp.write(grid_file.data)
+    #temp.close
+
+    logger.debug "Catalogue: leaving GET /zip-packages/#{params[:id]}"
+    halt 200, grid_file.data
+  end
+
+  # @method post_zip_package
+  # @overload post '/catalogues/zip-package'
+  # Post a zip Package in binary-data
+  post '/zip-packages' do
+    logger.debug "Catalogue: entered POST /zip-packages/"
+    # Return if content-type is invalid
+    return 415 unless request.content_type == 'application/zip'
+
+    #puts "headers", request
+    #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
+    att = request.env["HTTP_CONTENT_DISPOSITION"]
+    filename = att.match(/filename=(\"?)(.+)\1/)[2]
+    #puts "filename", filename
+    #JSON.pretty_generate(request.env)
+
+    # Reads body data
+    file, errors = request.body
+    return 400, errors.to_json if errors
+
+    #return 400, 'ERROR: Package Name not found' unless pzip.has_key?('package_name')
+    #return 400, 'ERROR: Package Vendor not found' unless pzip.has_key?('package_group')
+    #return 400, 'ERROR: Package Version not found' unless pzip.has_key?('package_version')
+
+    #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
+    # Content-Disposition: attachment; filename=FILENAME
+
+    grid_fs   = Mongoid::GridFs
+    grid_file = grid_fs.put(file,
+                            :filename     => filename,
+                            :content_type => "application/zip",
+                            :_id          => SecureRandom.uuid,
+                            #:chunk_size   => 100 * 1024,
+                            #:metadata     => {'description' => "SONATA zip package"}
+                            )
+
+    FileContainer.new.tap do |file_container|
+      file_container._id = SecureRandom.uuid
+      file_container.grid_fs_id = grid_file.id
+      file_container.grid_fs_name = filename
+      file_container.save
+    end
+    logger.debug "Catalogue: leaving POST /zip-packages/ with #{grid_file.id}"
+    halt 201, grid_file.id.to_json
+  end
+
+  # @method update_zip_package_id
+  # @overload put '/catalogues/zip-packages/:id/?'
+  #	Update a Zip-package in JSON or YAML format
+  ## Catalogue - UPDATE
+  put '/zip-packages/:id/?' do
+    # Work in progress
+    halt 501
   end
 
   # @method delete_zip_package_id
