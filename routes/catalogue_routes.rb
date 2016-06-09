@@ -1678,8 +1678,7 @@ class SonataCatalogue < Sinatra::Application
     logger.debug "Catalogue: entered POST /zip-packages/"
     # Return if content-type is invalid
     return 415 unless request.content_type == 'application/zip'
-
-    #puts "headers", request
+    
     #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env["HTTP_CONTENT_DISPOSITION"]
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
