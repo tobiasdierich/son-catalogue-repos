@@ -49,7 +49,7 @@ RSpec.describe SonataCatalogue do
     context 'with incorrect parameters' do
       it 'Submit an invalid vnfd' do
         headers = { 'CONTENT_TYPE' => 'application/json' }
-        post '/vnfs', vnf_descriptor, headers
+        post '/vnfs', vnf_bad_descriptor, headers
         expect(last_response.status).to eq(400)
       end
     end
