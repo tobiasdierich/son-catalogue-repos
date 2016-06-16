@@ -73,6 +73,7 @@ class FileContainer
   #field :grid_fs_vendor, type: String
   field :grid_fs_name, type: String
   #field :grid_fs_version, type: String
+  field :hash, type: String
 
   #validates :zipp_vendor, :zipp_name, :zipp_version, :presence => true
 end
