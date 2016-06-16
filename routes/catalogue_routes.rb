@@ -217,13 +217,13 @@ class SonataCatalogue < Sinatra::Application
 		# Check if NS already exists in the catalogue by name, vendor and version
 		begin
 			ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-      json_error 400, "ERROR: Duplicated NS Name, Vendor and Version"
+      json_return 200, "Duplicated NS Name, Vendor and Version"
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 		# Check if NSD has an ID (it should not) and if it already exists in the catalogue
 		begin
 			ns = Ns.find_by({"_id" =>  new_ns['_id']})
-      json_error 400, "ERROR: Duplicated NS ID"
+      json_return 200, "Duplicated NS ID"
 		rescue Mongoid::Errors::DocumentNotFound => e
 		end
 
@@ -231,10 +231,10 @@ class SonataCatalogue < Sinatra::Application
 		begin
 			# Generate the UUID for the descriptor
       new_ns['_id'] = SecureRandom.uuid
-      new_ns['status'] = 'inactive'
+      new_ns['status'] = 'active'
 			ns = Ns.create!(new_ns)
 		rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated NS ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated NS ID" if e.message.include? 'E11000'
 		end
 
 		puts 'New NS has been added'
@@ -319,7 +319,7 @@ class SonataCatalogue < Sinatra::Application
     # Check if NS already exists in the catalogue by name, group and version
     begin
       ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-      json_error 400, "ERROR: Duplicated NS Name, Vendor and Version"
+      json_return 200, "Duplicated NS Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -340,7 +340,7 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_ns = Ns.create!(nsd)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated NS ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated NS ID" if e.message.include? 'E11000'
     end
     logger.debug "Catalogue: leaving PUT /network-services?#{uri.query}\" with NSD #{new_ns}"
 
@@ -460,7 +460,7 @@ class SonataCatalogue < Sinatra::Application
 		    # Check if NS already exists in the catalogue by name, vendor and version
 		    begin
 			    ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-          json_error 400, "ERROR: Duplicated NS Name, Vendor and Version"
+          json_return 200, "Duplicated NS Name, Vendor and Version"
 		    rescue Mongoid::Errors::DocumentNotFound => e
 		    end
 
@@ -481,7 +481,7 @@ class SonataCatalogue < Sinatra::Application
 		    begin
 			    new_ns = Ns.create!(nsd)
 		    rescue Moped::Errors::OperationFailure => e
-          json_error 400, "ERROR: Duplicated NS ID" if e.message.include? 'E11000'
+          json_return 200, "Duplicated NS ID" if e.message.include? 'E11000'
         end
         logger.debug "Catalogue: leaving PUT /network-services/#{params[:id]}\" with NSD #{new_ns}"
 
@@ -739,13 +739,13 @@ class SonataCatalogue < Sinatra::Application
     # Check if VNFD already exists in the catalogue by name, vendor and version
     begin
       vnf = Vnf.find_by({"name" =>  new_vnf['name'], "vendor" => new_vnf['vendor'], "version" => new_vnf['version']})
-      json_error 400, "ERROR: Duplicated VNF Name, Vendor and Version"
+      json_return 200, "Duplicated VNF Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
     # Check if VNFD has an ID (it should not) and if it already exists in the catalogue
     begin
       vnf = Vnf.find_by({"_id" =>  new_vnf['_id']})
-      json_error 400, "ERROR: Duplicated VNF ID"
+      json_return 200, "Duplicated VNF ID"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -753,10 +753,10 @@ class SonataCatalogue < Sinatra::Application
     begin
       # Generate the UUID for the descriptor
       new_vnf['_id'] = SecureRandom.uuid
-      new_vnf['status'] = 'inactive'
+      new_vnf['status'] = 'active'
       vnf = Vnf.create!(new_vnf)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated VNF ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated VNF ID" if e.message.include? 'E11000'
     end
 
     puts 'New VNF has been added'
@@ -841,7 +841,7 @@ class SonataCatalogue < Sinatra::Application
     # Check if VNF already exists in the catalogue by name, group and version
     begin
       vnf = Vnf.find_by({"name" =>  new_vnf['name'], "vendor" => new_vnf['vendor'], "version" => new_vnf['version']})
-      json_error 400, "ERROR: Duplicated VNF Name, Vendor and Version"
+      json_return 200, "Duplicated VNF Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -862,7 +862,7 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_vnf = Vnf.create!(vnfd)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated VNF ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated VNF ID" if e.message.include? 'E11000'
     end
     logger.debug "Catalogue: leaving PUT /vnfs?#{uri.query}\" with VNFD #{new_vnf}"
 
@@ -978,7 +978,7 @@ class SonataCatalogue < Sinatra::Application
         # Check if VNF already exists in the catalogue by name, vendor and version
         begin
           vnf = Vnf.find_by({"name" =>  new_vnf['name'], "vendor" => new_vnf['vendor'], "version" => new_vnf['version']})
-          json_error 400, "ERROR: Duplicated VNF Name, Vendor and Version"
+          json_return 200, "Duplicated VNF Name, Vendor and Version"
         rescue Mongoid::Errors::DocumentNotFound => e
         end
 
@@ -999,7 +999,7 @@ class SonataCatalogue < Sinatra::Application
         begin
           new_vnf = Vnf.create!(vnfd)
         rescue Moped::Errors::OperationFailure => e
-          json_error 400, "ERROR: Duplicated VNF ID" if e.message.include? 'E11000'
+          json_return 200, "Duplicated VNF ID" if e.message.include? 'E11000'
         end
         logger.debug "Catalogue: leaving PUT /vnfs/#{params[:id]}\" with VNFD #{new_vnf}"
 
@@ -1258,13 +1258,13 @@ class SonataCatalogue < Sinatra::Application
     # Check if NS already exists in the catalogue by name, vendor and version
     begin
       pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
-      json_error 400, "ERROR: Duplicated Package Name, Vendor and Version"
+      json_return 200, "Duplicated Package Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
     # Check if PD has an ID (it should not) and if it already exists in the catalogue
     begin
       pks = Package.find_by({"_id" =>  new_pks['_id']})
-      json_error 400, "ERROR: Duplicated Package ID"
+      json_return 200, "Duplicated Package ID"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -1272,10 +1272,10 @@ class SonataCatalogue < Sinatra::Application
     begin
       # Generate the UUID for the descriptor
       new_pks['_id'] = SecureRandom.uuid
-      new_pks['status'] = 'inactive'
+      new_pks['status'] = 'active'
       pks = Package.create!(new_pks)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated Package ID" if e.message.include? 'E11000'
     end
 
     puts 'New Package has been added'
@@ -1360,7 +1360,7 @@ class SonataCatalogue < Sinatra::Application
     # Check if PD already exists in the catalogue by name, group and version
     begin
       pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
-      json_error 400, "ERROR: Duplicated PD Name, Vendor and Version"
+      json_return 200, "Duplicated PD Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -1381,7 +1381,7 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_pks = Package.create!(pd)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated Package ID" if e.message.include? 'E11000'
     end
     logger.debug "Catalogue: leaving PUT /packages?#{uri.query}\" with PD #{new_pks}"
 
@@ -1497,7 +1497,7 @@ class SonataCatalogue < Sinatra::Application
         # Check if Package already exists in the catalogue by name, vendor and version
         begin
           pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
-          json_error 400, "ERROR: Duplicated Package Name, Vendor and Version"
+          json_return 200, "Duplicated Package Name, Vendor and Version"
         rescue Mongoid::Errors::DocumentNotFound => e
         end
 
@@ -1518,7 +1518,7 @@ class SonataCatalogue < Sinatra::Application
         begin
           new_pks = Package.create!(pd)
         rescue Moped::Errors::OperationFailure => e
-          json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+          json_return 200, "Duplicated Package ID" if e.message.include? 'E11000'
         end
         logger.debug "Catalogue: leaving PUT /packages/#{params[:id]}\" with PD #{new_pks}"
 
@@ -1589,13 +1589,13 @@ class SonataCatalogue < Sinatra::Application
   end
 
 
-  ############################################ ZIPP API METHODS ############################################
+  ############################################ SONP API METHODS ############################################
 
-  # @method get_zip_package_list
-  # @overload get '/catalogues/zip-packages/?'
-  #	Returns a list of zip-packages
-  #	-> List many zip-packages
-  get '/zip-packages/?' do
+  # @method get_son_package_list
+  # @overload get '/catalogues/son-packages/?'
+  #	Returns a list of son-packages
+  #	-> List many son-packages
+  get '/son-packages/?' do
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
@@ -1603,7 +1603,7 @@ class SonataCatalogue < Sinatra::Application
     uri.query_values = params
     puts 'params', params
     puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered GET /zip-packages?#{uri.query}"
+    logger.info "Catalogue: entered GET /son-packages?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -1626,7 +1626,7 @@ class SonataCatalogue < Sinatra::Application
 
     file_list = FileContainer.where(keyed_params)
 
-    logger.info "Catalogue: leaving GET /zip-packages?#{uri.query} with #{file_list}"
+    logger.info "Catalogue: leaving GET /son-packages?#{uri.query} with #{file_list}"
 
     # Paginate results
     file_list = file_list.paginate(:offset => params[:offset], :limit => params[:limit])
@@ -1642,47 +1642,47 @@ class SonataCatalogue < Sinatra::Application
     halt 200, response
   end
 
-  # @method get_zip_package_id
-  # @overload get '/catalogues/zip-packages/:id/?'
-  #	Get a zip-package
-  #	@param [string] zip-package ID
-  # Zip-package internal database identifier
-  get '/zip-packages/:id/?' do
+  # @method get_son_package_id
+  # @overload get '/catalogues/sonp-packages/:id/?'
+  #	Get a son-package
+  #	@param [string] son-package ID
+  # son-package internal database identifier
+  get '/son-packages/:id/?' do
     #Dir.chdir(File.dirname(__FILE__))
-    logger.debug "Catalogue: entered GET /zip-packages/#{params[:id]}"
+    logger.debug "Catalogue: entered GET /son-packages/#{params[:id]}"
     #puts 'ID: ', params[:id]
     begin
-      zipp = FileContainer.find_by({"_id" => params[:id]} )
+      sonp = FileContainer.find_by({"_id" => params[:id]} )
       #p 'FileContainer FOUND'
-      p 'Filename: ', zipp['grid_fs_name']
-      p 'grid_fs_id: ', zipp['grid_fs_id']
+      p 'Filename: ', sonp['grid_fs_name']
+      p 'grid_fs_id: ', sonp['grid_fs_id']
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error e
       halt 404
     end
 
     grid_fs   = Mongoid::GridFs
-    grid_file = grid_fs.get(zipp['grid_fs_id'])
+    grid_file = grid_fs.get(sonp['grid_fs_id'])
 
     #grid_file.data # big huge blob
-    #temp=Tempfile.new("/home/osboxes/Downloads/#{zipp['grid_fs_name'].to_s}", 'wb')
+    #temp=Tempfile.new("/home/osboxes/Downloads/#{sonp['grid_fs_name'].to_s}", 'wb')
     #grid_file.each do |chunk|
     #  temp.write(chunk) # streaming write
     #end
     ## Client file recovery
-    #temp=File.new("/home/osboxes/Downloads/#{zipp['grid_fs_name']}", 'wb')
+    #temp=File.new("/home/osboxes/Downloads/#{sonp['grid_fs_name']}", 'wb')
     #temp.write(grid_file.data)
     #temp.close
 
-    logger.debug "Catalogue: leaving GET /zip-packages/#{params[:id]}"
+    logger.debug "Catalogue: leaving GET /son-packages/#{params[:id]}"
     halt 200, grid_file.data
   end
 
-  # @method post_zip_package
-  # @overload post '/catalogues/zip-package'
-  # Post a zip Package in binary-data
-  post '/zip-packages' do
-    logger.debug "Catalogue: entered POST /zip-packages/"
+  # @method post_son_package
+  # @overload post '/catalogues/son-package'
+  # Post a son Package in binary-data
+  post '/son-packages' do
+    logger.debug "Catalogue: entered POST /son-packages/"
     # Return if content-type is invalid
     return 415 unless request.content_type == 'application/zip'
 
@@ -1696,9 +1696,14 @@ class SonataCatalogue < Sinatra::Application
     file, errors = request.body
     return 400, errors.to_json if errors
 
-    #return 400, 'ERROR: Package Name not found' unless pzip.has_key?('package_name')
-    #return 400, 'ERROR: Package Vendor not found' unless pzip.has_key?('package_group')
-    #return 400, 'ERROR: Package Version not found' unless pzip.has_key?('package_version')
+    ### Implemented here the MD5 checksum for the file
+    #p "TEST", file.string
+    #file_hash = checksum file.string
+    #p "FILE HASH is: ", file_hash
+
+    #return 400, 'ERROR: Package Name not found' unless sonp.has_key?('package_name')
+    #return 400, 'ERROR: Package Vendor not found' unless sonp.has_key?('package_group')
+    #return 400, 'ERROR: Package Version not found' unless sonp.has_key?('package_version')
 
     #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
     # Content-Disposition: attachment; filename=FILENAME
@@ -1708,55 +1713,57 @@ class SonataCatalogue < Sinatra::Application
                             :filename     => filename,
                             :content_type => "application/zip",
                             :_id          => SecureRandom.uuid,
+                            #:file_hash   => file_hash,
                             #:chunk_size   => 100 * 1024,
                             #:metadata     => {'description' => "SONATA zip package"}
                             )
 
-    zipp_id = SecureRandom.uuid
+    sonp_id = SecureRandom.uuid
     FileContainer.new.tap do |file_container|
-      file_container._id = zipp_id
+      file_container._id = sonp_id
       file_container.grid_fs_id = grid_file.id
       file_container.grid_fs_name = filename
+      file_container.hash = grid_file.md5
       file_container.save
     end
-    logger.debug "Catalogue: leaving POST /zip-packages/ with #{grid_file.id}"
+    logger.debug "Catalogue: leaving POST /son-packages/ with #{grid_file.id}"
     #halt 201, grid_file.id.to_json
-    halt 201, zipp_id.to_json
+    halt 201, sonp_id.to_json
   end
 
-  # @method update_zip_package_id
-  # @overload put '/catalogues/zip-packages/:id/?'
-  #	Update a Zip-package in JSON or YAML format
+  # @method update_son_package_id
+  # @overload put '/catalogues/son-packages/:id/?'
+  #	Update a son-package in JSON or YAML format
   ## Catalogue - UPDATE
-  put '/zip-packages/:id/?' do
+  put '/son-packages/:id/?' do
     # Work in progress
     halt 501
   end
 
-  # @method delete_zip_package_id
-  # @overload delete '/catalogues/zip-packages/:id/?'
-  #	Delete a zip-package by its ID
-  #	@param [uuid] zip-package ID
-  delete '/zip-packages/:id/?' do
+  # @method delete_son_package_id
+  # @overload delete '/catalogues/son-packages/:id/?'
+  #	Delete a son-package by its ID
+  #	@param [uuid] son-package ID
+  delete '/son-packages/:id/?' do
     unless params[:id].nil?
-      logger.debug "Catalogue: entered DELETE /zip-packages/#{params[:id]}"
+      logger.debug "Catalogue: entered DELETE /son-packages/#{params[:id]}"
       begin
-        zipp = FileContainer.find_by( "_id" => params[:id] )
+        sonp = FileContainer.find_by( "_id" => params[:id] )
       rescue Mongoid::Errors::DocumentNotFound => e
         logger.error e
-        json_error 404, "The Zip-package ID #{params[:id]} does not exist" unless zipp
+        json_error 404, "The son-package ID #{params[:id]} does not exist" unless sonp
       end
 
       # Remove files from grid
       grid_fs   = Mongoid::GridFs
-      grid_fs.delete(zipp['grid_fs_id'])
-      zipp.destroy
+      grid_fs.delete(sonp['grid_fs_id'])
+      sonp.destroy
 
-      logger.debug "Catalogue: leaving DELETE /zip-packages/#{params[:id]}\" with Zip-package #{zipp}"
-      halt 200, 'OK: Zip-package removed'
+      logger.debug "Catalogue: leaving DELETE /son-packages/#{params[:id]}\" with son-package #{sonp}"
+      halt 200, 'OK: son-package removed'
     end
-    logger.debug "Catalogue: leaving DELETE /zip-packages/#{params[:id]} with 'No Zip-package ID specified'"
-    json_error 400, "No Zip-package ID specified"
+    logger.debug "Catalogue: leaving DELETE /son-packages/#{params[:id]} with 'No son-package ID specified'"
+    json_error 400, "No son-package ID specified"
   end
 
 end
