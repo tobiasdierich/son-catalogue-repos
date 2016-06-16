@@ -371,7 +371,9 @@ class SonataCatalogue < Sinatra::Application
       puts 'keyed_params', keyed_params
 
       # Check for special case (:status param == <new_status>)
+      p "Special case detected= new_status"
       if keyed_params.key?(:status)
+        p "Detected key :status"
         # Do update of Descriptor status -> update_ns_status
         uri = Addressable::URI.new
         uri.query_values = params
@@ -388,11 +390,14 @@ class SonataCatalogue < Sinatra::Application
         end
 
         #Validate new status
+        p "Validating new status(keyed_params): ", keyed_params[:status]
+        #p "Validating new status(params): ", params[:new_status]
         valid_status = ['active', 'inactive', 'delete']
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            ns.update_attributes(:status => params[:new_status])
+            #ns.update_attributes(:status => params[:new_status])
+            ns.update_attributes(:status => keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, "ERROR: Operation failed"
           end
@@ -909,7 +914,8 @@ class SonataCatalogue < Sinatra::Application
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            vnf.update_attributes(:status => params[:new_status])
+            #vnf.update_attributes(:status => params[:new_status])
+            vnf.update_attributes(:status => keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, "ERROR: Operation failed"
           end
@@ -1427,7 +1433,8 @@ class SonataCatalogue < Sinatra::Application
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            pks.update_attributes(:status => params[:new_status])
+            #pks.update_attributes(:status => params[:new_status])
+            pks.update_attributes(:status => keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, "ERROR: Operation failed"
           end
@@ -1678,7 +1685,7 @@ class SonataCatalogue < Sinatra::Application
     logger.debug "Catalogue: entered POST /zip-packages/"
     # Return if content-type is invalid
     return 415 unless request.content_type == 'application/zip'
-    
+
     #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env["HTTP_CONTENT_DISPOSITION"]
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
