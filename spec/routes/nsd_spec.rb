@@ -41,7 +41,7 @@ RSpec.describe SonataCatalogue do
       it 'Submit a duplicated nsd' do
         headers = { 'CONTENT_TYPE' => 'application/json' }
         post '/network-services', ns_descriptor, headers
-        expect(last_response.status).to eq(400)
+        expect(last_response.status).to eq(200)
       end
     end
   end
