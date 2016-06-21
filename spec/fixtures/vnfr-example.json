@@ -1,180 +1,199 @@
 {
-  "descriptor_version": "AaiU7cn.3u_YOKj9PuWBjf6BeCpd8baFcBhatAphZ10Kknl",
-  "id": "62b21f06-154e-0893-3e95-0123c541a54f",
-  "status": "degraded operation",
+  "descriptor_version": "0FcaFAJqKak--oy5m8i33-56i6JrvtPH8R",
+  "id": "9e3d3b42-6372-2250-969d-53ae91bb5cfc",
+  "status": "offline",
   "virtual_deployment_units": [
     {
-      "id": "Lorem",
+      "id": "anim incididunt est sit",
       "resource_requirements": {
         "cpu": {
-          "vcpus": 32945631,
-          "cpu_clock_speed": "irure et",
-          "cpu_model": "ut elit"
+          "vcpus": 87614283,
+          "cpu_model": "veniam",
+          "cpu_support_accelerator": "Duis ea"
         },
         "memory": {
-          "size": 18152043.120589,
-          "size_unit": "TB"
+          "size": 88811678.90124677,
+          "numa_allocation_policy": "ullamco nulla aliqua cupidatat"
         }
       },
-      "number_of_instances": 25403801,
-      "monitoring_parameters": [
-        {
-          "name": "M",
-          "unit": "kbps",
-          "frequency": 10610541.309666721
-        },
-        {
-          "name": "bytQE_kchhiRZfEwwBOhquZsOJZuhNPzqqycyYHEGHuNeBjQpqEi-tcexmfDZr-nHwVXhrTInyTlmXRIGfcoLu",
-          "unit": "Tbps"
-        }
-      ],
       "vnfc_instance": [
-        {
-          "id": "ad mollit culpa"
-        },
         {},
         {
           "connection_points": [
             {
-              "id": "aliquip",
-              "type": "interface"
+              "id": "ea minim",
+              "type": {}
+            },
+            {
+              "id": "aliquip nisi",
+              "type": {
+                "netmask": "nostrud minim"
+              }
+            },
+            {
+              "id": "aliqua labore laborum",
+              "type": {
+                "netmask": "nisi incididunt enim pariatur"
+              }
             }
-          ],
-          "vc_id": "eu aliquip in"
+          ]
+        },
+        {
+          "vc_id": "adipisicing Ut laborum consequat",
+          "id": "in nisi"
+        },
+        {
+          "vc_id": "ipsum",
+          "vim_id": "deser"
         }
-      ]
+      ],
+      "number_of_instances": 73681541
     },
     {
-      "id": "eu",
+      "id": "tempor Duis qui do",
       "resource_requirements": {
         "cpu": {
-          "vcpus": 38199531,
-          "cpu_clock_speed": "culpa magna"
+          "vcpus": 43050767
         },
         "memory": {
-          "size": 23975032.869133517,
-          "numa_allocation_policy": "aliquip commodo",
-          "large_pages_required": false
-        },
-        "network": {
-          "network_interface_bandwidth_unit": "bps",
-          "data_processing_acceleration_library": "Excepteur",
-          "network_interface_card_capabilities": {
-            "SR-IOV": false
-          }
+          "size": 94081860.07935287
         },
         "storage": {
-          "size": 70574207.24114929
+          "size": 9105483.077627752,
+          "size_unit": "MB"
+        },
+        "network": {
+          "data_processing_acceleration_library": "ex consequat",
+          "network_interface_card_capabilities": {
+            "mirroring": false
+          },
+          "network_interface_bandwidth_unit": "Gbps"
+        },
+        "vswitch_capabilities": {},
+        "pcie": {
+          "device_pass_through": false
         }
       },
-      "vm_image": "irure Lorem mollit",
-      "vnfc_instance": [
-        {
-          "id": "mollit aute consectetur"
-        }
-      ],
-      "monitoring_parameters": [
-        {
-          "name": "dZIkjV_QwwmwzjPLk",
-          "unit": "Gbps"
-        }
-      ]
+      "number_of_instances": 75018133
     },
     {
-      "id": "magna",
+      "id": "ut in veniam",
       "resource_requirements": {
         "cpu": {
-          "vcpus": 85856642,
-          "cpu_support_accelerator": "labore nisi dolore",
-          "cpu_model": "deserunt est ad"
+          "vcpus": 50203075
         },
         "memory": {
-          "size": 68121633.57330978,
-          "large_pages_required": true,
-          "size_unit": "MB"
+          "size": 84537986.29708818,
+          "size_unit": "MiB"
+        },
+        "hypervisor_parameters": {
+          "type": "dolor tempor"
+        },
+        "pcie": {},
+        "storage": {
+          "size": 9277567.91917589,
+          "size_unit": "B"
         }
-      },
-      "vdu_reference": "id mollit in",
-      "number_of_instances": 79974858
+      }
+    },
+    {
+      "id": "nisi laborum",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 48434294,
+          "cpu_clock_speed": "cupidatat magna ea",
+          "cpu_support_accelerator": "commodo Excepteur"
+        },
+        "memory": {
+          "size": 53308490.99612409,
+          "large_pages_required": false,
+          "numa_allocation_policy": "nulla"
+        }
+      }
     }
   ],
-  "parent_ns": "48bb09e1-ba17-8030-8848-23fd81a9c9e3",
   "virtual_links": [
     {
-      "id": "amet cillum anim sit",
+      "id": "Lorem dolore eu sed",
       "connectivity_type": "E-Line",
       "connection_points_reference": [
-        "amet si"
+        "labore minim"
       ]
     },
     {
-      "id": "reprehenderit laborum",
-      "connectivity_type": "E-Line",
+      "id": "pariatur exercitation null",
+      "connectivity_type": "E-Tree",
       "connection_points_reference": [
-        "ex proident",
-        "do eu veniam commodo",
-        ""
+        "consequat ipsum irure"
+      ],
+      "root_requirement": "dolor ipsum mollit ex",
+      "qos": "Ut magna in",
+      "dhcp": false,
+      "leaf_requirement": "id"
+    },
+    {
+      "id": "sunt dolor magna deserunt",
+      "connectivity_type": "E-LAN",
+      "connection_points_reference": [
+        "sunt consectetur magna irure"
       ]
+    }
+  ],
+  "lifecycle_events": [
+    {},
+    {
+      "authentication_username": "dolore",
+      "authentication_type": "culpa nisi",
+      "vnf_container": "Excepteur cupidatat",
+      "driver": "pariatur",
+      "authentication": "",
+      "flavor_id_ref": "nulla id exercitation"
     },
     {
-      "id": "labore laborum exercitation eu",
-      "connectivity_type": "E-LAN",
-      "connection_points_reference": [
-        "nisi laborum",
-        "aliqua magna id cillum",
-        "amet v"
-      ],
-      "leaf_requirement": "et",
-      "qos": "nostrud amet occaecat",
-      "dhcp": true,
-      "external_access": true
+      "authentication": "occaecat",
+      "vnf_container": "incididunt est moll",
+      "flavor_id_ref": "amet nisi fugiat",
+      "authentication_type": "ad aute sint nostrud"
+    }
+  ],
+  "descriptor_reference": "12733130-3433-ae6d-44bf-72b639cd7437",
+  "vnf_address": [
+    {
+      "address": "consequat"
     },
     {
-      "id": "nisi enim commodo et",
-      "connectivity_type": "E-LAN",
-      "connection_points_reference": [
-        "pariatur dolor officia sit",
-        "qui sed ad nisi",
-        "ea",
-        "adipisicing"
-      ],
-      "leaf_requirement": "reprehenderit in",
-      "access": false,
-      "qos": "sint",
-      "external_access": true
+      "address": "dolor fugiat irure sunt"
+    },
+    {
+      "address": "cillum"
     }
   ],
   "connection_points": [
     {
-      "id": "consequat non Lorem ad",
-      "type": "interface"
-    }
-  ],
-  "lifecycle_events": [
-    {
-      "driver": "exercitation cillum",
-      "vnf_container": "velit et cillum"
+      "id": "sed",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
     },
     {
-      "flavor_id_ref": "sunt",
-      "authentication_type": "dolore tempor"
+      "id": "Excepteur anim",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
     },
     {
-      "events": {
-        "scale-out": {
-          "template_file_format": "sed veniam fugiat"
-        },
-        "start": {},
-        "restart": {
-          "template_file": "et"
-        },
-        "scale-in": {
-          "command": "in tempor anim exercitation",
-          "template_file": "laboris in"
-        }
-      },
-      "authentication_username": "pariatur dolore dolor incididunt"
+      "id": "proident esse nisi",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
+    },
+    {
+      "id": "et occaecat sed ut",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
     }
   ],
-  "descriptor_reference": "0f168346-77a5-d93d-4e83-cce571f7a96d"
+  "parent_ns": "a43626e9-7e39-e94b-5d59-690dce95d298",
+  "version": "171325088403401200849299218898311299360627365024377573783264598"
 }
