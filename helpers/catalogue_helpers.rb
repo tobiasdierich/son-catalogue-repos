@@ -4,6 +4,7 @@ class SonataCatalogue < Sinatra::Application
 
   require 'json'
   require 'yaml'
+  require 'digest/md5'
 
 	# Read config settings from config file
 	#
@@ -188,7 +189,12 @@ class SonataCatalogue < Sinatra::Application
 			end
 		end
 		link
-	end
+  end
+
+  def checksum contents
+    result = Digest::MD5.hexdigest contents #File.read
+    result
+  end
 
 	def keyed_hash(hash)
 		Hash[hash.map { |(k, v)| [k.to_sym, v] }]
@@ -206,6 +212,12 @@ class SonataCatalogue < Sinatra::Application
   def json_error(code, message)
     msg = {'error' => message}
     logger.error msg.to_s
+    halt code, {'Content-type'=>'application/json'}, msg.to_json
+  end
+
+  def json_return(code, message)
+    msg = {'OK' => message}
+    logger.info msg.to_s
     halt code, {'Content-type'=>'application/json'}, msg.to_json
   end
 

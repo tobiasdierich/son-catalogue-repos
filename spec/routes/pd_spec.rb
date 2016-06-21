@@ -39,7 +39,7 @@ RSpec.describe SonataCatalogue do
       it 'Submit a duplicated pd' do
         headers = { 'CONTENT_TYPE' => 'application/json' }
         post '/packages', package_descriptor, headers
-        expect(last_response.status).to eq(400)
+        expect(last_response.status).to eq(200)
       end
     end
   end
