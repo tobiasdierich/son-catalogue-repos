@@ -1,97 +1,199 @@
 {
-  "descriptor_version": "_oO4hLJgW",
-  "id": "e950a7e9-816a-569f-ade0-6136cca510ad",
-  "status": "degraded operation",
+  "descriptor_version": "0FcaFAJqKak--oy5m8i33-56i6JrvtPH8R",
+  "id": "9e3d3b42-6372-2250-969d-53ae91bb5cfc",
+  "status": "offline",
   "virtual_deployment_units": [
     {
-      "id": "est ex Excepteur L",
+      "id": "anim incididunt est sit",
       "resource_requirements": {
         "cpu": {
-          "vcpus": 40021047,
-          "cpu_support_accelerator": "reprehenderit do"
+          "vcpus": 87614283,
+          "cpu_model": "veniam",
+          "cpu_support_accelerator": "Duis ea"
         },
         "memory": {
-          "size": 71041298.53248926,
-          "large_pages_required": false,
-          "numa_allocation_policy": "deserunt nostrud dolor"
-        },
-        "pcie": {
-          "SR-IOV": true
-        },
-        "storage": {
-          "size": 86437473.10947907,
-          "size_unit": {
-            "description": "The unit the host storage is measured in. Default is MB (Megabyte).",
-            "default": "MB"
-          }
-        }
-      },
-      "monitoring_parameters": [
-        {
-          "name": "WySSyErhuuIDcxbBDijpyEUApdMZyRtyNtkqkPdZTRxMgRzCRgloCYH-iuVmAgNWASEwINXwvQcKIRlI-EuvN",
-          "unit": {
-            "description": "The unit used to monitor (or represent) the parameter."
-          },
-          "frequency_unit": "GHz"
-        }
-      ]
-    },
-    {
-      "id": "Duis mollit laborum esse",
-      "resource_requirements": {
-        "cpu": {
-          "vcpus": 18418578
-        },
-        "memory": {
-          "size": 68793578.07793371,
-          "size_unit": "GiB",
-          "numa_allocation_policy": ""
-        },
-        "storage": {
-          "size": 63959878.73035518,
-          "persistence": false
+          "size": 88811678.90124677,
+          "numa_allocation_policy": "ullamco nulla aliqua cupidatat"
         }
       },
       "vnfc_instance": [
         {},
-        {},
         {
-          "vc_id": "fugiat veniam"
+          "connection_points": [
+            {
+              "id": "ea minim",
+              "type": {}
+            },
+            {
+              "id": "aliquip nisi",
+              "type": {
+                "netmask": "nostrud minim"
+              }
+            },
+            {
+              "id": "aliqua labore laborum",
+              "type": {
+                "netmask": "nisi incididunt enim pariatur"
+              }
+            }
+          ]
+        },
+        {
+          "vc_id": "adipisicing Ut laborum consequat",
+          "id": "in nisi"
+        },
+        {
+          "vc_id": "ipsum",
+          "vim_id": "deser"
         }
       ],
-      "number_of_instances": 79034977,
-      "vdu_reference": "cillum Lorem"
-    }
-  ],
-  "version": "0812476132999175033253935107112724326340",
-  "lifecycle_events": [
-    {
-      "events": {},
-      "authentication_type": "dolor magna do veniam"
+      "number_of_instances": 73681541
     },
     {
-      "driver": "et eu commodo",
-      "authentication_username": "ullamco"
+      "id": "tempor Duis qui do",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 43050767
+        },
+        "memory": {
+          "size": 94081860.07935287
+        },
+        "storage": {
+          "size": 9105483.077627752,
+          "size_unit": "MB"
+        },
+        "network": {
+          "data_processing_acceleration_library": "ex consequat",
+          "network_interface_card_capabilities": {
+            "mirroring": false
+          },
+          "network_interface_bandwidth_unit": "Gbps"
+        },
+        "vswitch_capabilities": {},
+        "pcie": {
+          "device_pass_through": false
+        }
+      },
+      "number_of_instances": 75018133
+    },
+    {
+      "id": "ut in veniam",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 50203075
+        },
+        "memory": {
+          "size": 84537986.29708818,
+          "size_unit": "MiB"
+        },
+        "hypervisor_parameters": {
+          "type": "dolor tempor"
+        },
+        "pcie": {},
+        "storage": {
+          "size": 9277567.91917589,
+          "size_unit": "B"
+        }
+      }
+    },
+    {
+      "id": "nisi laborum",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 48434294,
+          "cpu_clock_speed": "cupidatat magna ea",
+          "cpu_support_accelerator": "commodo Excepteur"
+        },
+        "memory": {
+          "size": 53308490.99612409,
+          "large_pages_required": false,
+          "numa_allocation_policy": "nulla"
+        }
+      }
     }
   ],
+  "virtual_links": [
+    {
+      "id": "Lorem dolore eu sed",
+      "connectivity_type": "E-Line",
+      "connection_points_reference": [
+        "labore minim"
+      ]
+    },
+    {
+      "id": "pariatur exercitation null",
+      "connectivity_type": "E-Tree",
+      "connection_points_reference": [
+        "consequat ipsum irure"
+      ],
+      "root_requirement": "dolor ipsum mollit ex",
+      "qos": "Ut magna in",
+      "dhcp": false,
+      "leaf_requirement": "id"
+    },
+    {
+      "id": "sunt dolor magna deserunt",
+      "connectivity_type": "E-LAN",
+      "connection_points_reference": [
+        "sunt consectetur magna irure"
+      ]
+    }
+  ],
+  "lifecycle_events": [
+    {},
+    {
+      "authentication_username": "dolore",
+      "authentication_type": "culpa nisi",
+      "vnf_container": "Excepteur cupidatat",
+      "driver": "pariatur",
+      "authentication": "",
+      "flavor_id_ref": "nulla id exercitation"
+    },
+    {
+      "authentication": "occaecat",
+      "vnf_container": "incididunt est moll",
+      "flavor_id_ref": "amet nisi fugiat",
+      "authentication_type": "ad aute sint nostrud"
+    }
+  ],
+  "descriptor_reference": "12733130-3433-ae6d-44bf-72b639cd7437",
   "vnf_address": [
     {
-      "address": "ex"
+      "address": "consequat"
     },
     {
-      "address": "ut anim"
+      "address": "dolor fugiat irure sunt"
     },
     {
-      "address": "commodo fugiat voluptate"
-    },
-    {
-      "address": "ullamco minim"
+      "address": "cillum"
     }
   ],
   "connection_points": [
     {
-      "id": "aute n",
-      "type": {}
+      "id": "sed",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
+    },
+    {
+      "id": "Excepteur anim",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
+    },
+    {
+      "id": "proident esse nisi",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
+    },
+    {
+      "id": "et occaecat sed ut",
+      "type": {
+        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
+      }
     }
-  ]
+  ],
+  "parent_ns": "a43626e9-7e39-e94b-5d59-690dce95d298",
+  "version": "171325088403401200849299218898311299360627365024377573783264598"
 }
