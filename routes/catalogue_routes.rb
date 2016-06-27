@@ -2,37 +2,37 @@
 class SonataCatalogue < Sinatra::Application
   require 'addressable/uri'
 
-	before do
-		# Gatekeepr authn. code will go here for future implementation
-		# --> Gatekeeper authn. disabled
-		#if request.path_info == '/gk_credentials'
-		#	return
-		#end
-		if settings.environment == 'development'
-			return
-		end
-		#authorized?
+  before do
+    # Gatekeepr authn. code will go here for future implementation
+    # --> Gatekeeper authn. disabled
+    #if request.path_info == '/gk_credentials'
+    #	return
+    #end
+    if settings.environment == 'development'
+      return
+    end
+    #authorized?
   end
 
   DEFAULT_OFFSET = "0"
   DEFAULT_LIMIT = "10"
   DEFAULT_MAX_LIMIT = "100"
 
-	# @method get_root
-	# @overload get '/catalogues/'
-	# Get all available interfaces
-	# -> Get all interfaces
-	get '/' do
-    	headers "Content-Type" => "text/plain; charset=utf8"
-		halt 200, interfaces_list.to_yaml
-	end
+  # @method get_root
+  # @overload get '/catalogues/'
+  # Get all available interfaces
+  # -> Get all interfaces
+  get '/' do
+      headers "Content-Type" => "text/plain; charset=utf8"
+    halt 200, interfaces_list.to_yaml
+  end
 
-	############################################ NSD API METHODS ############################################
+  ############################################ NSD API METHODS ############################################
 
-	# @method get_nss
-	# @overload get '/catalogues/network-services/?'
-	#	Returns a list of NSs
-	# -> List many descriptors
+  # @method get_nss
+  # @overload get '/catalogues/network-services/?'
+  #	Returns a list of NSs
+  # -> List many descriptors
   get '/network-services/?' do
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
@@ -94,20 +94,20 @@ class SonataCatalogue < Sinatra::Application
             #checked_list.each do |pair|
             #  p [pair.one, nss_name_vendor.one], [pair.two, nss_name_vendor.two]
             #  p pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two
-            end
-            nss_list.push(nsd) unless
-                checked_list.any? {|pair| pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two}
-            checked_list.push(nss_name_vendor)
           end
-
-          #puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
-        else
-            logger.error "ERROR: 'No NSDs were found'"
-            logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-            json_error 404, "No NSDs were found"
+          nss_list.push(nsd) unless
+              checked_list.any? {|pair| pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two}
+          checked_list.push(nss_name_vendor)
         end
-        #nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
-      nss = nss_list
+        #puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
+      else
+        #logger.error "ERROR: 'No NSDs were found'"
+        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+        #json_error 404, "No NSDs were found"
+        nss_list = []
+      end
+      #nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
+      nss = apply_limit_and_offset(nss_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
@@ -122,7 +122,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-        json_error 404, "No NSDs were found"
+        #json_error 404, "No NSDs were found"
       end
     end
 
@@ -169,14 +169,14 @@ class SonataCatalogue < Sinatra::Application
     json_error 400, "No NSD ID specified"
   end
 
-	# @method post_nss
-	# @overload post '/catalogues/network-services'
-	# Post a NS in JSON or YAML format
-	post '/network-services' do
-		# Return if content-type is invalid
-		halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+  # @method post_nss
+  # @overload post '/catalogues/network-services'
+  # Post a NS in JSON or YAML format
+  post '/network-services' do
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
-		# Compatibility support for YAML content-type
+    # Compatibility support for YAML content-type
     case request.content_type
       when 'application/x-yaml'
         # Validate YAML format
@@ -201,43 +201,43 @@ class SonataCatalogue < Sinatra::Application
         halt 400, errors.to_json if errors
     end
 
-		# Validate NS
+    # Validate NS
     json_error 400, "ERROR: NS Vendor not found" unless new_ns.has_key?('vendor')
     json_error 400, "ERROR: NS Name not found" unless new_ns.has_key?('name')
     json_error 400, "ERROR: NS Version not found" unless new_ns.has_key?('version')
 
-		# --> Validation disabled
-		# Validate NSD
-		#begin
-		#	RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
-		#rescue => e
-		#	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
-		#end
+    # --> Validation disabled
+    # Validate NSD
+    #begin
+    #	RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    #rescue => e
+    #	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
+    #end
 
-		# Check if NS already exists in the catalogue by name, vendor and version
-		begin
-			ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-      json_error 400, "ERROR: Duplicated NS Name, Vendor and Version"
-		rescue Mongoid::Errors::DocumentNotFound => e
-		end
-		# Check if NSD has an ID (it should not) and if it already exists in the catalogue
-		begin
-			ns = Ns.find_by({"_id" =>  new_ns['_id']})
-      json_error 400, "ERROR: Duplicated NS ID"
-		rescue Mongoid::Errors::DocumentNotFound => e
-		end
+    # Check if NS already exists in the catalogue by name, vendor and version
+    begin
+      ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
+      json_return 200, "Duplicated NS Name, Vendor and Version"
+    rescue Mongoid::Errors::DocumentNotFound => e
+    end
+    # Check if NSD has an ID (it should not) and if it already exists in the catalogue
+    begin
+      ns = Ns.find_by({"_id" =>  new_ns['_id']})
+      json_return 200, "Duplicated NS ID"
+    rescue Mongoid::Errors::DocumentNotFound => e
+    end
 
-		# Save to DB
-		begin
-			# Generate the UUID for the descriptor
+    # Save to DB
+    begin
+      # Generate the UUID for the descriptor
       new_ns['_id'] = SecureRandom.uuid
-      new_ns['status'] = 'inactive'
-			ns = Ns.create!(new_ns)
-		rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated NS ID" if e.message.include? 'E11000'
-		end
+      new_ns['status'] = 'active'
+      ns = Ns.create!(new_ns)
+    rescue Moped::Errors::OperationFailure => e
+      json_return 200, "Duplicated NS ID" if e.message.include? 'E11000'
+    end
 
-		puts 'New NS has been added'
+    puts 'New NS has been added'
     case request.content_type
       when 'application/json'
         response = ns.to_json
@@ -319,7 +319,7 @@ class SonataCatalogue < Sinatra::Application
     # Check if NS already exists in the catalogue by name, group and version
     begin
       ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-      json_error 400, "ERROR: Duplicated NS Name, Vendor and Version"
+      json_return 200, "Duplicated NS Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -340,7 +340,7 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_ns = Ns.create!(nsd)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated NS ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated NS ID" if e.message.include? 'E11000'
     end
     logger.debug "Catalogue: leaving PUT /network-services?#{uri.query}\" with NSD #{new_ns}"
 
@@ -355,13 +355,13 @@ class SonataCatalogue < Sinatra::Application
     halt 200, response
   end
 
-	# @method update_nss_id
-	# @overload put '/catalogues/network-services/:id/?'
-	# Update a NS in JSON or YAML format
-	## Catalogue - UPDATE
-	put '/network-services/:id/?' do
-		# Return if content-type is invalid
-		halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+  # @method update_nss_id
+  # @overload put '/catalogues/network-services/:id/?'
+  # Update a NS in JSON or YAML format
+  ## Catalogue - UPDATE
+  put '/network-services/:id/?' do
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
     unless params[:id].nil?
       logger.debug "Catalogue: PUT /network-services/#{params[:id]}"
@@ -371,7 +371,9 @@ class SonataCatalogue < Sinatra::Application
       puts 'keyed_params', keyed_params
 
       # Check for special case (:status param == <new_status>)
+      p "Special case detected= new_status"
       if keyed_params.key?(:status)
+        p "Detected key :status"
         # Do update of Descriptor status -> update_ns_status
         uri = Addressable::URI.new
         uri.query_values = params
@@ -388,11 +390,14 @@ class SonataCatalogue < Sinatra::Application
         end
 
         #Validate new status
+        p "Validating new status(keyed_params): ", keyed_params[:status]
+        #p "Validating new status(params): ", params[:new_status]
         valid_status = ['active', 'inactive', 'delete']
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            ns.update_attributes(:status => params[:new_status])
+            #ns.update_attributes(:status => params[:new_status])
+            ns.update_attributes(:status => keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, "ERROR: Operation failed"
           end
@@ -412,8 +417,8 @@ class SonataCatalogue < Sinatra::Application
         halt 200, "Status updated to #{uri.query_values}"
 
       else
-		    # Compatibility support for YAML content-type
-		    case request.content_type
+        # Compatibility support for YAML content-type
+        case request.content_type
           when 'application/x-yaml'
             # Validate YAML format
             # When updating a NSD, the json object sent to API must contain just data inside
@@ -437,46 +442,46 @@ class SonataCatalogue < Sinatra::Application
             halt 400, errors.to_json if errors
         end
 
-		    # Validate NS
-		    # Check if same vendor, Name, Version do already exists in the database
+        # Validate NS
+        # Check if same vendor, Name, Version do already exists in the database
         json_error 400, "ERROR: NS Vendor not found" unless new_ns.has_key?('vendor')
         json_error 400, "ERROR: NS Name not found" unless new_ns.has_key?('name')
         json_error 400, "ERROR: NS Version not found" unless new_ns.has_key?('version')
 
-		    # Retrieve stored version
-		    begin
-			    puts 'Searching ' + params[:id].to_s
-			    ns = Ns.find_by( { "_id" =>  params[:id] })
-			    puts 'NS is found'
+        # Retrieve stored version
+        begin
+          puts 'Searching ' + params[:id].to_s
+          ns = Ns.find_by( { "_id" =>  params[:id] })
+          puts 'NS is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, "The NSD ID #{params[:id]} does not exist"
         end
 
-		    # Check if NS already exists in the catalogue by name, vendor and version
-		    begin
-			    ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
-          json_error 400, "ERROR: Duplicated NS Name, Vendor and Version"
-		    rescue Mongoid::Errors::DocumentNotFound => e
-		    end
+        # Check if NS already exists in the catalogue by name, vendor and version
+        begin
+          ns = Ns.find_by({"name" =>  new_ns['name'], "vendor" => new_ns['vendor'], "version" => new_ns['version']})
+          json_return 200, "Duplicated NS Name, Vendor and Version"
+        rescue Mongoid::Errors::DocumentNotFound => e
+        end
 
-		    # Update to new version
-		    puts 'Updating...'
-		    new_ns['_id'] = SecureRandom.uuid
-		    nsd = new_ns
+        # Update to new version
+        puts 'Updating...'
+        new_ns['_id'] = SecureRandom.uuid
+        nsd = new_ns
 
-		    # --> Validation disabled
-		    # Validate NSD
-		    #begin
-		    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-		    #rescue => e
-		    #	logger.error e.response
-		    #	return e.response.code, e.response.body
-		    #end
+        # --> Validation disabled
+        # Validate NSD
+        #begin
+        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #rescue => e
+        #	logger.error e.response
+        #	return e.response.code, e.response.body
+        #end
 
-		    begin
-			    new_ns = Ns.create!(nsd)
-		    rescue Moped::Errors::OperationFailure => e
-          json_error 400, "ERROR: Duplicated NS ID" if e.message.include? 'E11000'
+        begin
+          new_ns = Ns.create!(nsd)
+        rescue Moped::Errors::OperationFailure => e
+          json_return 200, "Duplicated NS ID" if e.message.include? 'E11000'
         end
         logger.debug "Catalogue: leaving PUT /network-services/#{params[:id]}\" with NSD #{new_ns}"
 
@@ -524,12 +529,12 @@ class SonataCatalogue < Sinatra::Application
     json_error 400, "No NSD Vendor, Name, Version specified"
   end
 
-	# @method delete_nsd_sp_ns_id
-	# @overload delete '/catalogues/network-service/:id/?'
-	#	Delete a NS by its ID
-	#	@param [uuid] sp_ns_id NS sp ID
-	# Delete a NS by uuid
-	delete '/network-services/:id/?' do
+  # @method delete_nsd_sp_ns_id
+  # @overload delete '/catalogues/network-service/:id/?'
+  #	Delete a NS by its ID
+  #	@param [uuid] sp_ns_id NS sp ID
+  # Delete a NS by uuid
+  delete '/network-services/:id/?' do
     unless params[:id].nil?
       logger.debug "Catalogue: DELETE /network-services/#{params[:id]}"
       begin
@@ -544,10 +549,10 @@ class SonataCatalogue < Sinatra::Application
     end
     logger.debug "Catalogue: leaving DELETE /network-services/#{params[:id]} with 'No NSD ID specified'"
     json_error 400, "No NSD ID specified"
-	end
+  end
 
 
-	############################################ VNFD API METHODS ############################################
+  ############################################ VNFD API METHODS ############################################
 
   # @method get_vnfs
   # @overload get '/catalogues/vnfs/?'
@@ -617,12 +622,13 @@ class SonataCatalogue < Sinatra::Application
         end
         #puts 'vnfs_list:', vnfs_list.each {|vnf| p vnf.name, vnf.vendor}
       else
-        logger.error "ERROR: 'No VNFDs were found'"
+        #logger.error "ERROR: 'No VNFDs were found'"
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
-        json_error 404, "No VNFDs were found"
+        #json_error 404, "No VNFDs were found"
+        vnfs_list = []
       end
       #vnfs = vnfs_list.paginate(:page => params[:offset], :per_page =>params[:limit])
-      vnfs = vnfs_list
+      vnfs = apply_limit_and_offset(vnfs_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
@@ -637,7 +643,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
-        json_error 404, "No VNFDs were found"
+        #json_error 404, "No VNFDs were found"
       end
     end
 
@@ -684,11 +690,11 @@ class SonataCatalogue < Sinatra::Application
     json_error 400, "No VNFD ID specified"
   end
 
-	# @method post_vnfs
-	# @overload post '/catalogues/vnfs'
-	# Post a VNF in JSON or YAML format
+  # @method post_vnfs
+  # @overload post '/catalogues/vnfs'
+  # Post a VNF in JSON or YAML format
 
-	post '/vnfs' do
+  post '/vnfs' do
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -733,13 +739,13 @@ class SonataCatalogue < Sinatra::Application
     # Check if VNFD already exists in the catalogue by name, vendor and version
     begin
       vnf = Vnf.find_by({"name" =>  new_vnf['name'], "vendor" => new_vnf['vendor'], "version" => new_vnf['version']})
-      json_error 400, "ERROR: Duplicated VNF Name, Vendor and Version"
+      json_return 200, "Duplicated VNF Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
     # Check if VNFD has an ID (it should not) and if it already exists in the catalogue
     begin
       vnf = Vnf.find_by({"_id" =>  new_vnf['_id']})
-      json_error 400, "ERROR: Duplicated VNF ID"
+      json_return 200, "Duplicated VNF ID"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -747,10 +753,10 @@ class SonataCatalogue < Sinatra::Application
     begin
       # Generate the UUID for the descriptor
       new_vnf['_id'] = SecureRandom.uuid
-      new_vnf['status'] = 'inactive'
+      new_vnf['status'] = 'active'
       vnf = Vnf.create!(new_vnf)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated VNF ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated VNF ID" if e.message.include? 'E11000'
     end
 
     puts 'New VNF has been added'
@@ -835,7 +841,7 @@ class SonataCatalogue < Sinatra::Application
     # Check if VNF already exists in the catalogue by name, group and version
     begin
       vnf = Vnf.find_by({"name" =>  new_vnf['name'], "vendor" => new_vnf['vendor'], "version" => new_vnf['version']})
-      json_error 400, "ERROR: Duplicated VNF Name, Vendor and Version"
+      json_return 200, "Duplicated VNF Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -856,7 +862,7 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_vnf = Vnf.create!(vnfd)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated VNF ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated VNF ID" if e.message.include? 'E11000'
     end
     logger.debug "Catalogue: leaving PUT /vnfs?#{uri.query}\" with VNFD #{new_vnf}"
 
@@ -871,11 +877,11 @@ class SonataCatalogue < Sinatra::Application
     halt 200, response
   end
 
-	# @method update_vnfs_id
-	# @overload put '/catalogues/vnfs/:id/?'
-	#	Update a VNF by its ID in JSON or YAML format
+  # @method update_vnfs_id
+  # @overload put '/catalogues/vnfs/:id/?'
+  #	Update a VNF by its ID in JSON or YAML format
   ## Catalogue - UPDATE
-	put '/vnfs/:id/?' do
+  put '/vnfs/:id/?' do
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -908,7 +914,8 @@ class SonataCatalogue < Sinatra::Application
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            vnf.update_attributes(:status => params[:new_status])
+            #vnf.update_attributes(:status => params[:new_status])
+            vnf.update_attributes(:status => keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, "ERROR: Operation failed"
           end
@@ -971,7 +978,7 @@ class SonataCatalogue < Sinatra::Application
         # Check if VNF already exists in the catalogue by name, vendor and version
         begin
           vnf = Vnf.find_by({"name" =>  new_vnf['name'], "vendor" => new_vnf['vendor'], "version" => new_vnf['version']})
-          json_error 400, "ERROR: Duplicated VNF Name, Vendor and Version"
+          json_return 200, "Duplicated VNF Name, Vendor and Version"
         rescue Mongoid::Errors::DocumentNotFound => e
         end
 
@@ -992,7 +999,7 @@ class SonataCatalogue < Sinatra::Application
         begin
           new_vnf = Vnf.create!(vnfd)
         rescue Moped::Errors::OperationFailure => e
-          json_error 400, "ERROR: Duplicated VNF ID" if e.message.include? 'E11000'
+          json_return 200, "Duplicated VNF ID" if e.message.include? 'E11000'
         end
         logger.debug "Catalogue: leaving PUT /vnfs/#{params[:id]}\" with VNFD #{new_vnf}"
 
@@ -1040,12 +1047,12 @@ class SonataCatalogue < Sinatra::Application
     json_error 400, "No VNFD Vendor, Name, Version specified"
   end
 
-	# @method delete_vnfd_sp_vnf_id
-	# @overload delete '/catalogues/vnfs/:id/?'
-	#	Delete a VNF by its ID
-	#	@param [uuid] id VNF ID
-	# Delete a VNF by uuid
-	delete '/vnfs/:id/?' do
+  # @method delete_vnfd_sp_vnf_id
+  # @overload delete '/catalogues/vnfs/:id/?'
+  #	Delete a VNF by its ID
+  #	@param [uuid] id VNF ID
+  # Delete a VNF by uuid
+  delete '/vnfs/:id/?' do
     unless params[:id].nil?
       logger.debug "Catalogue: DELETE /vnfs/#{params[:id]}"
       begin
@@ -1060,16 +1067,16 @@ class SonataCatalogue < Sinatra::Application
     end
     logger.debug "Catalogue: leaving DELETE /vnfs/#{params[:id]} with 'No VNFD ID specified'"
     json_error 400, "No VNFD ID specified"
-	end
+  end
 
 
-	############################################ PD API METHODS ############################################
+  ############################################ PD API METHODS ############################################
 
-	# @method get_packages
-	# @overload get '/catalogues/packages/?'
-	#	Returns a list of all Packages
-	# -> List many descriptors
-	get '/packages/?' do
+  # @method get_packages
+  # @overload get '/catalogues/packages/?'
+  #	Returns a list of all Packages
+  # -> List many descriptors
+  get '/packages/?' do
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
@@ -1134,12 +1141,13 @@ class SonataCatalogue < Sinatra::Application
 
         #puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
       else
-        logger.error "ERROR: 'No PDs were found'"
+        #logger.error "ERROR: 'No PDs were found'"
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
-        json_error 404, "No PDs were found"
+        #json_error 404, "No PDs were found"
+        pks_list = []
       end
       #pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
-      pks = pks_list
+      pks = apply_limit_and_offset(pks_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
@@ -1154,7 +1162,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
-        json_error 404, "No PDs were found"
+        #json_error 404, "No PDs were found"
       end
     end
 
@@ -1169,12 +1177,12 @@ class SonataCatalogue < Sinatra::Application
     halt 200, response
   end
 
-	# @method get_packages_package_id
-	# @overload get '/catalogues/packages:id/?'
+  # @method get_packages_package_id
+  # @overload get '/catalogues/packages:id/?'
   #	GET one specific descriptor
-	#	@param [String] package_uuid Package id
-	# Show a Package by uuid
-	get '/packages/:id/?' do
+  #	@param [String] package_uuid Package id
+  # Show a Package by uuid
+  get '/packages/:id/?' do
     unless params[:id].nil?
       logger.debug "Catalogue: GET /packages/#{params[:id]}"
 
@@ -1199,13 +1207,13 @@ class SonataCatalogue < Sinatra::Application
     end
     logger.debug "Catalogue: leaving GET /packages/#{params[:id]} with 'No PD ID specified'"
     json_error 400, "No PD ID specified"
-	end
+  end
 
-	# @method post_package
-	# @overload post '/catalogues/packages'
-	# Post a Package in JSON or YAML format
-	post '/packages' do
-		#A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
+  # @method post_package
+  # @overload post '/catalogues/packages'
+  # Post a Package in JSON or YAML format
+  post '/packages' do
+    #A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -1250,13 +1258,13 @@ class SonataCatalogue < Sinatra::Application
     # Check if NS already exists in the catalogue by name, vendor and version
     begin
       pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
-      json_error 400, "ERROR: Duplicated Package Name, Vendor and Version"
+      json_return 200, "Duplicated Package Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
     # Check if PD has an ID (it should not) and if it already exists in the catalogue
     begin
       pks = Package.find_by({"_id" =>  new_pks['_id']})
-      json_error 400, "ERROR: Duplicated Package ID"
+      json_return 200, "Duplicated Package ID"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -1264,10 +1272,10 @@ class SonataCatalogue < Sinatra::Application
     begin
       # Generate the UUID for the descriptor
       new_pks['_id'] = SecureRandom.uuid
-      new_pks['status'] = 'inactive'
+      new_pks['status'] = 'active'
       pks = Package.create!(new_pks)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated Package ID" if e.message.include? 'E11000'
     end
 
     puts 'New Package has been added'
@@ -1282,11 +1290,11 @@ class SonataCatalogue < Sinatra::Application
     halt 201, response
   end
 
-	# @method update_package_group_name_version
-	# @overload put '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version
-	#	Update a Package vendor, name and version in JSON or YAML format
+  # @method update_package_group_name_version
+  # @overload put '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version
+  #	Update a Package vendor, name and version in JSON or YAML format
   ## Catalogue - UPDATE
-	put '/packages/?' do
+  put '/packages/?' do
     uri = Addressable::URI.new
     uri.query_values = params
     puts 'params', params
@@ -1352,7 +1360,7 @@ class SonataCatalogue < Sinatra::Application
     # Check if PD already exists in the catalogue by name, group and version
     begin
       pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
-      json_error 400, "ERROR: Duplicated PD Name, Vendor and Version"
+      json_return 200, "Duplicated PD Name, Vendor and Version"
     rescue Mongoid::Errors::DocumentNotFound => e
     end
 
@@ -1373,7 +1381,7 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_pks = Package.create!(pd)
     rescue Moped::Errors::OperationFailure => e
-      json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+      json_return 200, "Duplicated Package ID" if e.message.include? 'E11000'
     end
     logger.debug "Catalogue: leaving PUT /packages?#{uri.query}\" with PD #{new_pks}"
 
@@ -1388,11 +1396,11 @@ class SonataCatalogue < Sinatra::Application
     halt 200, response
   end
 
-	# @method update_package_id
-	# @overload put '/catalogues/packages/:id/?'
-	#	Update a Package in JSON or YAML format
+  # @method update_package_id
+  # @overload put '/catalogues/packages/:id/?'
+  #	Update a Package in JSON or YAML format
   ## Catalogue - UPDATE
-	put '/packages/:id/?' do
+  put '/packages/:id/?' do
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -1425,7 +1433,8 @@ class SonataCatalogue < Sinatra::Application
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            pks.update_attributes(:status => params[:new_status])
+            #pks.update_attributes(:status => params[:new_status])
+            pks.update_attributes(:status => keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, "ERROR: Operation failed"
           end
@@ -1488,7 +1497,7 @@ class SonataCatalogue < Sinatra::Application
         # Check if Package already exists in the catalogue by name, vendor and version
         begin
           pks = Package.find_by({"name" =>  new_pks['name'], "vendor" => new_pks['vendor'], "version" => new_pks['version']})
-          json_error 400, "ERROR: Duplicated Package Name, Vendor and Version"
+          json_return 200, "Duplicated Package Name, Vendor and Version"
         rescue Mongoid::Errors::DocumentNotFound => e
         end
 
@@ -1509,7 +1518,7 @@ class SonataCatalogue < Sinatra::Application
         begin
           new_pks = Package.create!(pd)
         rescue Moped::Errors::OperationFailure => e
-          json_error 400, "ERROR: Duplicated Package ID" if e.message.include? 'E11000'
+          json_return 200, "Duplicated Package ID" if e.message.include? 'E11000'
         end
         logger.debug "Catalogue: leaving PUT /packages/#{params[:id]}\" with PD #{new_pks}"
 
@@ -1528,10 +1537,10 @@ class SonataCatalogue < Sinatra::Application
     json_error 400, "No PD ID specified"
   end
 
-	# @method delete_pd_package_group_name_version
-	# @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
-	#	Delete a PD by group, name and version
-	delete '/packages/?' do
+  # @method delete_pd_package_group_name_version
+  # @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
+  #	Delete a PD by group, name and version
+  delete '/packages/?' do
     uri = Addressable::URI.new
     uri.query_values = params
     puts 'params', params
@@ -1557,12 +1566,12 @@ class SonataCatalogue < Sinatra::Application
     json_error 400, "No PD Vendor, Name, Version specified"
   end
 
-	# @method delete_pd_package_id
-	# @overload delete '/catalogues/packages/:id/?'
-	#	Delete a PD by its ID
-	#	@param [uuid] id PD ID
-	# Delete a PD by uuid
-	delete '/packages/:id/?' do
+  # @method delete_pd_package_id
+  # @overload delete '/catalogues/packages/:id/?'
+  #	Delete a PD by its ID
+  #	@param [uuid] id PD ID
+  # Delete a PD by uuid
+  delete '/packages/:id/?' do
     unless params[:id].nil?
       logger.debug "Catalogue: DELETE /packages/#{params[:id]}"
       begin
@@ -1580,76 +1589,181 @@ class SonataCatalogue < Sinatra::Application
   end
 
 
-  ############################################ ZIPP API METHODS ############################################
+  ############################################ SONP API METHODS ############################################
 
-  # @method post_zip_package
-  # @overload post '/catalogues/zip-package'
-  # Post a zip Package in binary-data
-  post '/zip-packages' do
-    # Return if content-type is invalid
-    return 415 unless request.content_type == 'application/zip'
+  # @method get_son_package_list
+  # @overload get '/catalogues/son-packages/?'
+  #	Returns a list of son-packages
+  #	-> List many son-packages
+  get '/son-packages/?' do
+    params['offset'] ||= DEFAULT_OFFSET
+    params['limit'] ||= DEFAULT_LIMIT
 
-    # Reads body data
-    file, errors = request.body
-    return 400, errors.to_json if errors
+    uri = Addressable::URI.new
+    uri.query_values = params
+    puts 'params', params
+    puts 'query_values', uri.query_values
+    logger.info "Catalogue: entered GET /son-packages?#{uri.query}"
 
-    #Zip::Archive.open_buffer(response.body) do |ar|
-    #  ar.fopen(0) do |zf|
-    #    open(zf.name, 'wb') do |f|
-    #      f << zf.read
-    #    end
-    #  end
-    #end
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    puts 'keyed_params', keyed_params
 
-    #return 400, 'ERROR: Package Name not found' unless pzip.has_key?('package_name')
-    #return 400, 'ERROR: Package Vendor not found' unless pzip.has_key?('package_group')
-    #return 400, 'ERROR: Package Version not found' unless pzip.has_key?('package_version')
-
-    #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
-
-    grid_fs   = Mongoid::GridFs
-    grid_file = grid_fs.put(file,
-                            #:filename     => "package.zip",
-                            :content_type => "application/zip",
-                            :_id          => SecureRandom.uuid,
-                            #:chunk_size   => 100 * 1024,
-                            #:metadata     => {'description' => "taken after a game of ultimate"}
-                            )
-
-    FileContainer.new.tap do |file_container|
-      file_container.grid_fs_id = grid_file.id
-      file_container.save
+    # Set headers
+    case request.content_type
+      when 'application/x-yaml'
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
+      else
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
+    headers[:params] = params unless params.empty?
 
-    halt 201, grid_file.id.to_json
+    # Get rid of :offset and :limit
+    [:offset, :limit].each { |k| keyed_params.delete(k) }
+    #puts 'keyed_params(1)', keyed_params
+
+    # Do the query
+
+    file_list = FileContainer.where(keyed_params)
+
+    logger.info "Catalogue: leaving GET /son-packages?#{uri.query} with #{file_list}"
+
+    # Paginate results
+    file_list = file_list.paginate(:offset => params[:offset], :limit => params[:limit])
+
+    case request.content_type
+      when 'application/json'
+        response = file_list.to_json
+      when 'application/x-yaml'
+        response = json_to_yaml(file_list.to_json)
+      else
+        halt 415
+    end
+    halt 200, response
   end
 
-  # @method get_package_zip_pzip_id
-  # @overload get '/catalogues/zip-packages/id/:pzip_id'
-  #	Get a zip-package
-  #	@param [Integer] zip-package ID
-  # Zip-package internal database identifier
-  get '/zip-packages/:id/?' do
-    puts 'ID: ', params[:id]
+  # @method get_son_package_id
+  # @overload get '/catalogues/sonp-packages/:id/?'
+  #	Get a son-package
+  #	@param [string] son-package ID
+  # son-package internal database identifier
+  get '/son-packages/:id/?' do
+    #Dir.chdir(File.dirname(__FILE__))
+    logger.debug "Catalogue: entered GET /son-packages/#{params[:id]}"
+    #puts 'ID: ', params[:id]
     begin
-      FileContainer.find_by({"grid_fs_id" => params[:id]} )
-      puts 'FileContainer FOUND'
+      sonp = FileContainer.find_by({"_id" => params[:id]} )
+      #p 'FileContainer FOUND'
+      p 'Filename: ', sonp['grid_fs_name']
+      p 'grid_fs_id: ', sonp['grid_fs_id']
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error e
       halt 404
     end
 
     grid_fs   = Mongoid::GridFs
-    grid_file = grid_fs.get(params[:id])
-    #grid_file.data # big huge blob
+    grid_file = grid_fs.get(sonp['grid_fs_id'])
 
-    #temp=Tempfile.new('package.zip', 'wb')
+    #grid_file.data # big huge blob
+    #temp=Tempfile.new("/home/osboxes/Downloads/#{sonp['grid_fs_name'].to_s}", 'wb')
     #grid_file.each do |chunk|
     #  temp.write(chunk) # streaming write
     #end
+    ## Client file recovery
+    #temp=File.new("/home/osboxes/Downloads/#{sonp['grid_fs_name']}", 'wb')
+    #temp.write(grid_file.data)
+    #temp.close
 
+    logger.debug "Catalogue: leaving GET /son-packages/#{params[:id]}"
     halt 200, grid_file.data
+  end
 
+  # @method post_son_package
+  # @overload post '/catalogues/son-package'
+  # Post a son Package in binary-data
+  post '/son-packages' do
+    logger.debug "Catalogue: entered POST /son-packages/"
+    # Return if content-type is invalid
+    return 415 unless request.content_type == 'application/zip'
+
+    #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
+    att = request.env["HTTP_CONTENT_DISPOSITION"]
+    filename = att.match(/filename=(\"?)(.+)\1/)[2]
+    #puts "filename", filename
+    #JSON.pretty_generate(request.env)
+
+    # Reads body data
+    file, errors = request.body
+    return 400, errors.to_json if errors
+
+    ### Implemented here the MD5 checksum for the file
+    #p "TEST", file.string
+    #file_hash = checksum file.string
+    #p "FILE HASH is: ", file_hash
+
+    #return 400, 'ERROR: Package Name not found' unless sonp.has_key?('package_name')
+    #return 400, 'ERROR: Package Vendor not found' unless sonp.has_key?('package_group')
+    #return 400, 'ERROR: Package Version not found' unless sonp.has_key?('package_version')
+
+    #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
+    # Content-Disposition: attachment; filename=FILENAME
+
+    grid_fs   = Mongoid::GridFs
+    grid_file = grid_fs.put(file,
+                            :filename     => filename,
+                            :content_type => "application/zip",
+                            :_id          => SecureRandom.uuid,
+                            #:file_hash   => file_hash,
+                            #:chunk_size   => 100 * 1024,
+                            #:metadata     => {'description' => "SONATA zip package"}
+                            )
+
+    sonp_id = SecureRandom.uuid
+    FileContainer.new.tap do |file_container|
+      file_container._id = sonp_id
+      file_container.grid_fs_id = grid_file.id
+      file_container.grid_fs_name = filename
+      file_container.hash = grid_file.md5
+      file_container.save
+    end
+    logger.debug "Catalogue: leaving POST /son-packages/ with #{grid_file.id}"
+    #halt 201, grid_file.id.to_json
+    halt 201, sonp_id.to_json
+  end
+
+  # @method update_son_package_id
+  # @overload put '/catalogues/son-packages/:id/?'
+  #	Update a son-package in JSON or YAML format
+  ## Catalogue - UPDATE
+  put '/son-packages/:id/?' do
+    # Work in progress
+    halt 501
+  end
+
+  # @method delete_son_package_id
+  # @overload delete '/catalogues/son-packages/:id/?'
+  #	Delete a son-package by its ID
+  #	@param [uuid] son-package ID
+  delete '/son-packages/:id/?' do
+    unless params[:id].nil?
+      logger.debug "Catalogue: entered DELETE /son-packages/#{params[:id]}"
+      begin
+        sonp = FileContainer.find_by( "_id" => params[:id] )
+      rescue Mongoid::Errors::DocumentNotFound => e
+        logger.error e
+        json_error 404, "The son-package ID #{params[:id]} does not exist" unless sonp
+      end
+
+      # Remove files from grid
+      grid_fs   = Mongoid::GridFs
+      grid_fs.delete(sonp['grid_fs_id'])
+      sonp.destroy
+
+      logger.debug "Catalogue: leaving DELETE /son-packages/#{params[:id]}\" with son-package #{sonp}"
+      halt 200, 'OK: son-package removed'
+    end
+    logger.debug "Catalogue: leaving DELETE /son-packages/#{params[:id]} with 'No son-package ID specified'"
+    json_error 400, "No son-package ID specified"
   end
 
 end
