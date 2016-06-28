@@ -77,7 +77,7 @@ virtual_links:
   - id: "tcpdump-2-output"
     connectivity_type: "E-Line"
     connection_points_reference:
-      - "vnf_firewall:output"
+      - "vnf_tcpdump:output"
       - "ns:output"
 
 ##
