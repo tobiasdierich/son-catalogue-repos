@@ -35,7 +35,7 @@ end
 namespace :init do
   require 'fileutils'
   desc "Fill Catalogues with default sonata-demo package contents"
-  task :load_samples, :server do |t, args|
+  task :load_samples, :server do |_t, args|
     case args[:server]
       when "development"
         server = "sp.int"
