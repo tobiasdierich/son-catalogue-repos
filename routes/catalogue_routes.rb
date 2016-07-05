@@ -232,12 +232,14 @@ class SonataCatalogue < Sinatra::Application
       ns = Ns.find_by({'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version']})
       json_return 200, 'Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
     # Check if NSD has an ID (it should not) and if it already exists in the catalogue
     begin
       ns = Ns.find_by({'_id' => new_ns['_id']})
       json_return 200, 'Duplicated NS ID'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
 
     # Save to DB
@@ -340,6 +342,7 @@ class SonataCatalogue < Sinatra::Application
       ns = Ns.find_by({'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version']})
       json_return 200, 'Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
 
     # Update to new version
@@ -481,6 +484,7 @@ class SonataCatalogue < Sinatra::Application
           ns = Ns.find_by({'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version']})
           json_return 200, 'Duplicated NS Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
+          # Continue
         end
 
         # Update to new version
@@ -761,12 +765,14 @@ class SonataCatalogue < Sinatra::Application
       vnf = Vnf.find_by({'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version']})
       json_return 200, 'Duplicated VNF Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
     # Check if VNFD has an ID (it should not) and if it already exists in the catalogue
     begin
       vnf = Vnf.find_by({'_id' => new_vnf['_id']})
       json_return 200, 'Duplicated VNF ID'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
 
     # Save to DB
@@ -869,6 +875,7 @@ class SonataCatalogue < Sinatra::Application
       vnf = Vnf.find_by({'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version']})
       json_return 200, 'Duplicated VNF Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
 
     # Update to new version
@@ -1006,6 +1013,7 @@ class SonataCatalogue < Sinatra::Application
           vnf = Vnf.find_by({'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version']})
           json_return 200, 'Duplicated VNF Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
+          # Continue
         end
 
         # Update to new version
@@ -1287,12 +1295,14 @@ class SonataCatalogue < Sinatra::Application
       pks = Package.find_by({'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version']})
       json_return 200, 'Duplicated Package Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
     # Check if PD has an ID (it should not) and if it already exists in the catalogue
     begin
       pks = Package.find_by({'_id' => new_pks['_id']})
       json_return 200, 'Duplicated Package ID'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
 
     # Save to DB
@@ -1395,6 +1405,7 @@ class SonataCatalogue < Sinatra::Application
       pks = Package.find_by({'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version']})
       json_return 200, 'Duplicated PD Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
 
     # Update to new version
@@ -1533,6 +1544,7 @@ class SonataCatalogue < Sinatra::Application
                                  'version' => new_pks['version']})
           json_return 200, 'Duplicated Package Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
+          # Continue
         end
 
         # Update to new version
@@ -1719,7 +1731,7 @@ class SonataCatalogue < Sinatra::Application
   post '/son-packages' do
     logger.debug 'Catalogue: entered POST /son-packages/'
     # Return if content-type is invalid
-    return 415 unless request.content_type == 'application/zip'
+    halt 415 unless request.content_type == 'application/zip'
 
     #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env['HTTP_CONTENT_DISPOSITION']
@@ -1729,7 +1741,7 @@ class SonataCatalogue < Sinatra::Application
 
     # Reads body data
     file, errors = request.body
-    return 400, errors.to_json if errors
+    halt 400, errors.to_json if errors
 
     ### Implemented here the MD5 checksum for the file
     #p "TEST", file.string
@@ -1743,6 +1755,7 @@ class SonataCatalogue < Sinatra::Application
       sonpkg = FileContainer.find_by({'grid_fs_name' => filename})
       json_return 200, 'Duplicated son-package Filename'
     rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
     end
 
     # Save to DB
