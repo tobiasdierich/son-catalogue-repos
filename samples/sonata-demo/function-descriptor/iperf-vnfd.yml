@@ -67,8 +67,8 @@ virtual_links:
 ##
 connection_points:
   - id: "vnf:mgmt"
-    type: "interface"
+    type: "interfaces"
   - id: "vnf:input"
-    type: "interface"
+    type: "interfaces"
   - id: "vnf:output"
-    type: "interface"
+    type: "interfaces"
