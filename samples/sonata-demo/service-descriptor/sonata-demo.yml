@@ -25,15 +25,15 @@ network_functions:
   - vnf_id: "vnf_firewall"
     vnf_vendor: "eu.sonata-nfv"
     vnf_name: "firewall-vnf"
-    vnf_version: "0.1"
+    vnf_version: "0.2"
   - vnf_id: "vnf_iperf"
     vnf_vendor: "eu.sonata-nfv"
     vnf_name: "iperf-vnf"
-    vnf_version: "0.1"
+    vnf_version: "0.2"
   - vnf_id: "vnf_tcpdump"
     vnf_vendor: "eu.sonata-nfv"
     vnf_name: "tcpdump-vnf"
-    vnf_version: "0.1"
+    vnf_version: "0.2"
 
 ##
 ## The NS connection points to the
@@ -68,16 +68,16 @@ virtual_links:
     connectivity_type: "E-Line"
     connection_points_reference:
       - "vnf_iperf:output"
-      - "vns_firewall:input"
+      - "vnf_firewall:input"
   - id: "firewall-2-tcpdump"
     connectivity_type: "E-Line"
     connection_points_reference:
-      - "vns_firewall:output"
+      - "vnf_firewall:output"
       - "vnf_tcpdump:input"
   - id: "tcpdump-2-output"
     connectivity_type: "E-Line"
     connection_points_reference:
-      - "vnf_firewall:output"
+      - "vnf_tcpdump:output"
       - "ns:output"
 
 ##
