@@ -22,7 +22,7 @@ class SonataCatalogue < Sinatra::Application
     # --> Gatekeeper authn. disabled
 
     if settings.environment == 'development'
-      return
+      p 'Development settings'
     end
     #authorized?
   end
@@ -40,7 +40,7 @@ class SonataCatalogue < Sinatra::Application
     halt 200, interfaces_list.to_yaml
   end
 
-  ############################################ NSD API METHODS ############################################
+  ### NSD API METHODS ###
 
   # @method get_nss
   # @overload get '/catalogues/network-services/?'
@@ -131,7 +131,7 @@ class SonataCatalogue < Sinatra::Application
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
 
         # Paginate results
-        nss = nss.paginate(:offset => params[:offset], :limit => params[:limit])
+        nss = nss.paginate(offset: params[:offset], limit: params[:limit])
 
       else
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
@@ -414,12 +414,12 @@ class SonataCatalogue < Sinatra::Application
         #Validate new status
         p 'Validating new status(keyed_params): ', keyed_params[:status]
         #p "Validating new status(params): ", params[:new_status]
-        valid_status = ['active', 'inactive', 'delete']
+        valid_status = %w(active inactive delete)
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
             #ns.update_attributes(:status => params[:new_status])
-            ns.update_attributes(:status => keyed_params[:status])
+            ns.update_attributes(status: keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, 'ERROR: Operation failed'
           end
@@ -576,7 +576,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
 
-  ############################################ VNFD API METHODS ############################################
+  ### VNFD API METHODS ###
 
   # @method get_vnfs
   # @overload get '/catalogues/vnfs/?'
@@ -663,7 +663,7 @@ class SonataCatalogue < Sinatra::Application
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with #{vnfs}"
 
         # Paginate results
-        vnfs = vnfs.paginate(:offset => params[:offset], :limit => params[:limit])
+        vnfs = vnfs.paginate(offset: params[:offset], limit: params[:limit])
 
       else
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
@@ -943,12 +943,12 @@ class SonataCatalogue < Sinatra::Application
         end
 
         #Validate new status
-        valid_status = ['active', 'inactive', 'delete']
+        valid_status = %w(active inactive delete)
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
             #vnf.update_attributes(:status => params[:new_status])
-            vnf.update_attributes(:status => keyed_params[:status])
+            vnf.update_attributes(status: keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, 'ERROR: Operation failed'
           end
@@ -1105,7 +1105,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
 
-  ############################################ PD API METHODS ############################################
+  ### PD API METHODS ###
 
   # @method get_packages
   # @overload get '/catalogues/packages/?'
@@ -1193,7 +1193,7 @@ class SonataCatalogue < Sinatra::Application
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with #{pks}"
 
         # Paginate results
-        pks = pks.paginate(:offset => params[:offset], :limit => params[:limit])
+        pks = pks.paginate(offset: params[:offset], limit: params[:limit])
 
       else
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
@@ -1415,12 +1415,12 @@ class SonataCatalogue < Sinatra::Application
 
     # --> Validation disabled
     # Validate PD
-    #begin
+    # begin
     #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-    #rescue => e
+    # rescue => e
     #	logger.error e.response
     #	return e.response.code, e.response.body
-    #end
+    # end
 
     begin
       new_pks = Package.create!(pd)
@@ -1472,13 +1472,13 @@ class SonataCatalogue < Sinatra::Application
           json_error 404, 'This PD does not exists'
         end
 
-        #Validate new status
-        valid_status = ['active', 'inactive', 'delete']
+        # Validate new status
+        valid_status = %w(active inactive delete)
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
             #pks.update_attributes(:status => params[:new_status])
-            pks.update_attributes(:status => keyed_params[:status])
+            pks.update_attributes(status: keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, 'ERROR: Operation failed'
           end
@@ -1488,7 +1488,7 @@ class SonataCatalogue < Sinatra::Application
 
         # --> Validation disabled
         # Validate PD
-        #begin
+        # begin
         #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
         #rescue => e
         #	logger.error e.response
@@ -1636,7 +1636,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
 
-  ############################################ SONP API METHODS ############################################
+  ### SONP API METHODS ###
 
   # @method get_son_package_list
   # @overload get '/catalogues/son-packages/?'
@@ -1676,7 +1676,7 @@ class SonataCatalogue < Sinatra::Application
     logger.info "Catalogue: leaving GET /son-packages?#{uri.query} with #{file_list}"
 
     # Paginate results
-    file_list = file_list.paginate(:offset => params[:offset], :limit => params[:limit])
+    file_list = file_list.paginate(offset: params[:offset], limit: params[:limit])
 
     case request.content_type
       when 'application/json'
@@ -1768,9 +1768,9 @@ class SonataCatalogue < Sinatra::Application
 
     grid_fs = Mongoid::GridFs
     grid_file = grid_fs.put(file,
-                            :filename => filename,
-                            :content_type => 'application/zip',
-                            :_id => SecureRandom.uuid,
+                            filename: filename,
+                            content_type: 'application/zip',
+                            _id: SecureRandom.uuid,
     #:file_hash   => file_hash,
     #:chunk_size   => 100 * 1024,
     #:metadata     => {'description' => "SONATA zip package"}
