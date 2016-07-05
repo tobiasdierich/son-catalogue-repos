@@ -26,8 +26,6 @@ RSpec.describe SonataCatalogue do
     @app ||= SonataCatalogue
   end
 
-  $nsd_id
-
   describe 'GET \'/\'' do
     before do
       stub_request(:get, 'localhost:5000').to_return(status: 200)
