@@ -20,9 +20,6 @@ class SonataCatalogue < Sinatra::Application
   before do
     # Gatekeeper authn. code will go here for future implementation
     # --> Gatekeeper authn. disabled
-    #if request.path_info == '/gk_credentials'
-    #	return
-    #end
     if settings.environment == 'development'
       return
     end
