@@ -20,7 +20,7 @@ configure do
   # Configuration for logging
   enable :logging
   Dir.mkdir("#{settings.root}/log") unless File.exist?("#{settings.root}/log")
-  log_file = File.new("#{settings.root}/log/#{settings.environment}.log", "a+")
+  log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
   log_file.sync = true
   use Rack::CommonLogger, log_file
 end
@@ -29,6 +29,7 @@ before do
   logger.level = Logger::DEBUG
 end
 
+# Configurations for Services Repository
 class SonataNsRepository < Sinatra::Application
   register Sinatra::ConfigFile
   # Load configurations
@@ -36,6 +37,7 @@ class SonataNsRepository < Sinatra::Application
   Mongoid.load!('config/mongoid.yml')
 end
 
+# Configurations for Functions Repository
 class SonataVnfRepository < Sinatra::Application
   register Sinatra::ConfigFile
   # Load configurations
@@ -43,10 +45,12 @@ class SonataVnfRepository < Sinatra::Application
   Mongoid.load!('config/mongoid.yml')
 end
 
+# Configurations for Catalogues
 class SonataCatalogue < Sinatra::Application
   register Sinatra::ConfigFile
   # Load configurations
   config_file 'config/config.yml'
   Mongoid.load!('config/mongoid.yml')
-  #use Rack::CommonLogger, LogStashLogger.new(host: settings.logstash_host, port: settings.logstash_port)
+  # use Rack::CommonLogger,
+  # LogStashLogger.new(host: settings.logstash_host, port: settings.logstash_port)
 end

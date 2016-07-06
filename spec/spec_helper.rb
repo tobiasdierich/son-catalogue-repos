@@ -7,7 +7,7 @@ ENV['RACK_ENV'] ||= 'test'
 
 WebMock.allow_net_connect!
 
-$: << File.expand_path('../..', __FILE__)
+$LOAD_PATH << File.expand_path('../..', __FILE__)
 require './main'
 
 RSpec.configure do |config|
