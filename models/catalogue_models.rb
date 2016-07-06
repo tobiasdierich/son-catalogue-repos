@@ -26,6 +26,7 @@ module BSON
   end
 end
 
+# Sonata class for Catalogue Services
 class Ns
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -38,10 +39,10 @@ class Ns
   field :version, type: String
 
 
-  validates :vendor, :name, :version, :presence => true
-
+  validates :vendor, :name, :version, presence: true
 end
 
+# Sonata class for Catalogue Functions
 class Vnf
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -55,9 +56,10 @@ class Vnf
   field :version, type: String
   # field :vnf_manager, type: String # <- Not applicable yet
 
-  validates :vendor, :name, :version, :presence => true
+  validates :vendor, :name, :version, presence: true
 end
 
+# Sonata class for Catalogue Packages
 class Package
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -70,12 +72,13 @@ class Package
   field :name, type: String
   field :version, type: String
 
-  validates :vendor, :name, :version, :presence => true
+  validates :vendor, :name, :version, presence: true
 end
 
 # Class model for binary data storage on database
 require 'mongoid/grid_fs'
 
+# Sonata class for Catalogue son-packages
 class FileContainer
   include Mongoid::Document
   include Mongoid::Timestamps
