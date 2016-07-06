@@ -52,13 +52,13 @@ class SonataCatalogue < Sinatra::Application
 
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered GET /network-services?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Set headers
     case request.content_type
