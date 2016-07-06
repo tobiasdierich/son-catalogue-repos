@@ -38,7 +38,6 @@ class Ns
   field :name, type: String
   field :version, type: String
 
-
   validates :vendor, :name, :version, presence: true
 end
 

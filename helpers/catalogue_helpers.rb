@@ -34,7 +34,6 @@ class SonataCatalogue < Sinatra::Application
     return config['address'], config['port']
   end
 
-
   # Checks if a JSON message is valid
   # @param [JSON] message some JSON message
   # @return [Hash, nil] if the parsed message is a valid JSON
@@ -87,8 +86,8 @@ class SonataCatalogue < Sinatra::Application
       logger.error 'Error parsing from YAML to JSON'
     end
 
-    puts 'Parsing DONE', output_json
-    return output_json
+    #puts 'Parsing DONE', output_json
+    output_json
   end
 
   # Translates a message from JSON to YAML
@@ -105,7 +104,7 @@ class SonataCatalogue < Sinatra::Application
       logger.error 'Error parsing from JSON to YAML'
     end
 
-    return output_yml
+    output_yml
   end
 
   def apply_limit_and_offset(input, offset= nil, limit= nil)
@@ -155,7 +154,6 @@ class SonataCatalogue < Sinatra::Application
     next_offset = offset + 1
     next_vnfs = Vnf.paginate(:page => next_offset, :limit => limit)
 
-    # TODO: link host and port should be configurable (load form config file)
     address, port = read_config
 
     link << '<' + address.to_s + ':' + port.to_s + '/catalogues/vnfs?offset=' + next_offset.to_s + '&limit=' +
@@ -167,7 +165,6 @@ class SonataCatalogue < Sinatra::Application
       previous_vnfs = Vnf.paginate(:page => previous_offset, :limit => limit)
       unless previous_vnfs.empty?
         link << ', ' unless next_vnfs.empty?
-        # TODO: link host and port should be configurable (load form config file)
         link << '<' + address.to_s + ':' + port.to_s + '/catalogues/vnfs?offset=' + previous_offset.to_s +
             '&limit=' + limit.to_s + '>; rel="last"'
       end
