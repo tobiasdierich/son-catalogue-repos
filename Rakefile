@@ -86,6 +86,6 @@ namespace :init do
     sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ tcpdump_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
     sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ nsd_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/network-services"
     sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ pd_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/packages"
-	sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ vnfr_random_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/records/vnfr/vnf-instances"
+	  sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ vnfr_random_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/records/vnfr/vnf-instances"
   end
 end

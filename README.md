@@ -10,7 +10,7 @@ To contribute to the development of the SONATA editor, you may use the very same
 Ruby gems used (for more details see Gemfile):
 
 * [Sinatra](http://www.sinatrarb.com/) - Ruby framework
-* [To resolve](to resolve) - Web server
+* [puma](http://puma.io/) - Web server
 * [json](https://github.com/flori/json) - JSON specification
 * [sinatra-contrib](https://github.com/sinatra/sinatra-contrib) - Sinatra extensions
 * [rake](http://rake.rubyforge.org/) - Ruby build program with capabilities similar to make
@@ -135,7 +135,7 @@ The following lead developers are responsible for this repository and have admin
 
 * Felipe Vicens (felipevicens)
 * Daniel Guija (dang03)
-* Santiago Rodriguez
+* Santiago Rodriguez (srodriguezOPT)
 
 #### Feedback-Channel
 
