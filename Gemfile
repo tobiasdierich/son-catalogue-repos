@@ -31,7 +31,7 @@ gem 'addressable'
 gem 'rake'
 gem 'sinatra', '~> 1.4.3', require: 'sinatra/base'
 gem 'sinatra-contrib', '~> 1.4.1', require: false
-gem 'puma'
+gem 'thin', '~>1.6'
 gem 'json', '~>1.8'
 # gem 'nokogiri', '~>1.6'
 gem 'json-schema', '~>2.5'
