@@ -73,7 +73,7 @@ namespace :init do
         puts 'Invalid argument'
         halt
     end
-    
+
     firewall_sample = 'samples/sonata-demo/function-descriptor/firewall-vnfd.yml'
     iperf_sample = 'samples/sonata-demo/function-descriptor/iperf-vnfd.yml'
     tcpdump_sample = 'samples/sonata-demo/function-descriptor/tcpdump-vnfd.yml'
