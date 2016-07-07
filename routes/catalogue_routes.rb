@@ -1,17 +1,29 @@
 ##
-## Copyright 2015-2017 i2CAT Foundation
+## Copyright (c) 2015 SONATA-NFV
+## ALL RIGHTS RESERVED.
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
 ## You may obtain a copy of the License at
 ##
-##   http://www.apache.org/licenses/LICENSE-2.0
+##     http://www.apache.org/licenses/LICENSE-2.0
 ##
 ## Unless required by applicable law or agreed to in writing, software
 ## distributed under the License is distributed on an "AS IS" BASIS,
 ## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
+##
+## Neither the name of the SONATA-NFV [, ANY ADDITIONAL AFFILIATION]
+## nor the names of its contributors may be used to endorse or promote
+## products derived from this software without specific prior written
+## permission.
+##
+## This work has been performed in the framework of the SONATA project,
+## funded by the European Commission under Grant number 671517 through
+## the Horizon 2020 and 5G-PPP programmes. The authors would like to
+## acknowledge the contributions of their colleagues of the SONATA
+## partner consortium (www.sonata-nfv.eu).
 
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
@@ -63,9 +75,9 @@ class SonataCatalogue < Sinatra::Application
     # Set headers
     case request.content_type
       when 'application/x-yaml'
-        headers = {'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml'}
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        headers = {'Accept' => 'application/json', 'Content-Type' => 'application/json'}
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
 
@@ -80,7 +92,7 @@ class SonataCatalogue < Sinatra::Application
       keyed_params.delete(:version)
       #puts 'keyed_params(2)', keyed_params
 
-      nss = Ns.where((keyed_params)).sort({'version' => -1}) #.limit(1).first()
+      nss = Ns.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: NSDs=#{nss}"
       #nss = nss.sort({"version" => -1})
       #puts 'nss: ', nss.to_json
@@ -139,6 +151,7 @@ class SonataCatalogue < Sinatra::Application
       end
     end
 
+    response = ''
     case request.content_type
       when 'application/json'
         response = nss.to_json
@@ -167,6 +180,7 @@ class SonataCatalogue < Sinatra::Application
       end
       logger.debug "Catalogue: leaving GET /network-services/#{params[:id]}\" with NSD #{ns}"
 
+      response = ''
       case request.content_type
         when 'application/json'
           response = ns.to_json
@@ -229,14 +243,14 @@ class SonataCatalogue < Sinatra::Application
 
     # Check if NS already exists in the catalogue by name, vendor and version
     begin
-      ns = Ns.find_by({'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version']})
+      ns = Ns.find_by({ 'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version'] })
       json_return 200, 'Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
     end
     # Check if NSD has an ID (it should not) and if it already exists in the catalogue
     begin
-      ns = Ns.find_by({'_id' => new_ns['_id']})
+      ns = Ns.find_by({ '_id' => new_ns['_id'] })
       json_return 200, 'Duplicated NS ID'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -253,6 +267,7 @@ class SonataCatalogue < Sinatra::Application
     end
 
     puts 'New NS has been added'
+    response = ''
     case request.content_type
       when 'application/json'
         response = ns.to_json
@@ -319,9 +334,9 @@ class SonataCatalogue < Sinatra::Application
     # Set headers
     case request.content_type
       when 'application/x-yaml'
-        headers = {'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml'}
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        headers = {'Accept' => 'application/json', 'Content-Type' => 'application/json'}
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
 
@@ -330,8 +345,8 @@ class SonataCatalogue < Sinatra::Application
       json_error 400, 'Update Vendor, Name and Version parameters are null'
     else
       begin
-        ns = Ns.find_by({'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                         'version' => keyed_params[:version]})
+        ns = Ns.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
+                         'version' => keyed_params[:version] })
         puts 'NS is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The NSD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
@@ -339,7 +354,7 @@ class SonataCatalogue < Sinatra::Application
     end
     # Check if NS already exists in the catalogue by name, group and version
     begin
-      ns = Ns.find_by({'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version']})
+      ns = Ns.find_by({ 'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version'] })
       json_return 200, 'Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -366,6 +381,7 @@ class SonataCatalogue < Sinatra::Application
     end
     logger.debug "Catalogue: leaving PUT /network-services?#{uri.query}\" with NSD #{new_ns}"
 
+    response = ''
     case request.content_type
       when 'application/json'
         response = new_ns.to_json
@@ -405,7 +421,7 @@ class SonataCatalogue < Sinatra::Application
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          ns = Ns.find_by({'_id' => params[:id]})
+          ns = Ns.find_by({ '_id' => params[:id] })
           puts 'NS is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, 'This NSD does not exists'
@@ -473,7 +489,7 @@ class SonataCatalogue < Sinatra::Application
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          ns = Ns.find_by({'_id' => params[:id]})
+          ns = Ns.find_by({ '_id' => params[:id] })
           puts 'NS is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, "The NSD ID #{params[:id]} does not exist"
@@ -481,7 +497,7 @@ class SonataCatalogue < Sinatra::Application
 
         # Check if NS already exists in the catalogue by name, vendor and version
         begin
-          ns = Ns.find_by({'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version']})
+          ns = Ns.find_by({ 'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version'] })
           json_return 200, 'Duplicated NS Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
           # Continue
@@ -508,6 +524,7 @@ class SonataCatalogue < Sinatra::Application
         end
         logger.debug "Catalogue: leaving PUT /network-services/#{params[:id]}\" with NSD #{new_ns}"
 
+        response = ''
         case request.content_type
           when 'application/json'
             response = new_ns.to_json
@@ -539,8 +556,8 @@ class SonataCatalogue < Sinatra::Application
 
     unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
       begin
-        ns = Ns.find_by({'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                         'version' => keyed_params[:version]})
+        ns = Ns.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
+                         'version' => keyed_params[:version]} )
         puts 'NS is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The NSD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
@@ -599,9 +616,9 @@ class SonataCatalogue < Sinatra::Application
     # Set headers
     case request.content_type
       when 'application/x-yaml'
-        headers = {'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml'}
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        headers = {'Accept' => 'application/json', 'Content-Type' => 'application/json'}
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
 
@@ -616,7 +633,7 @@ class SonataCatalogue < Sinatra::Application
       keyed_params.delete(:version)
       #puts 'keyed_params(2)', keyed_params
 
-      vnfs = Vnf.where((keyed_params)).sort({'version' => -1}) #.limit(1).first()
+      vnfs = Vnf.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: VNFDs=#{vnfs}"
       #vnfs = vnfs.sort({"version" => -1})
       #puts 'vnfs: ', vnfs.to_json
@@ -671,6 +688,7 @@ class SonataCatalogue < Sinatra::Application
       end
     end
 
+    response = ''
     case request.content_type
       when 'application/json'
         response = vnfs.to_json
@@ -699,6 +717,7 @@ class SonataCatalogue < Sinatra::Application
       end
       logger.debug "Catalogue: leaving GET /vnfs/#{params[:id]}\" with VNFD #{vnf}"
 
+      response = ''
       case request.content_type
         when 'application/json'
           response = vnf.to_json
@@ -762,14 +781,14 @@ class SonataCatalogue < Sinatra::Application
 
     # Check if VNFD already exists in the catalogue by name, vendor and version
     begin
-      vnf = Vnf.find_by({'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version']})
+      vnf = Vnf.find_by({ 'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version'] })
       json_return 200, 'Duplicated VNF Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
     end
     # Check if VNFD has an ID (it should not) and if it already exists in the catalogue
     begin
-      vnf = Vnf.find_by({'_id' => new_vnf['_id']})
+      vnf = Vnf.find_by({ '_id' => new_vnf['_id'] })
       json_return 200, 'Duplicated VNF ID'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -786,6 +805,7 @@ class SonataCatalogue < Sinatra::Application
     end
 
     puts 'New VNF has been added'
+    response = ''
     case request.content_type
       when 'application/json'
         response = vnf.to_json
@@ -852,9 +872,9 @@ class SonataCatalogue < Sinatra::Application
     # Set headers
     case request.content_type
       when 'application/x-yaml'
-        headers = {'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml'}
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        headers = {'Accept' => 'application/json', 'Content-Type' => 'application/json'}
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
 
@@ -863,8 +883,8 @@ class SonataCatalogue < Sinatra::Application
       json_error 400, 'Update Vendor, Name and Version parameters are null'
     else
       begin
-        vnf = Vnf.find_by({'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                           'version' => keyed_params[:version]})
+        vnf = Vnf.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
+                           'version' => keyed_params[:version] })
         puts 'VNF is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The VNFD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
@@ -872,7 +892,7 @@ class SonataCatalogue < Sinatra::Application
     end
     # Check if VNF already exists in the catalogue by name, group and version
     begin
-      vnf = Vnf.find_by({'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version']})
+      vnf = Vnf.find_by({ 'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version'] })
       json_return 200, 'Duplicated VNF Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -899,6 +919,7 @@ class SonataCatalogue < Sinatra::Application
     end
     logger.debug "Catalogue: leaving PUT /vnfs?#{uri.query}\" with VNFD #{new_vnf}"
 
+    response = ''
     case request.content_type
       when 'application/json'
         response = new_vnf.to_json
@@ -936,7 +957,7 @@ class SonataCatalogue < Sinatra::Application
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          vnf = Vnf.find_by({'_id' => params[:id]})
+          vnf = Vnf.find_by({ '_id' => params[:id] })
           puts 'VNF is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, 'This VNFD does not exists'
@@ -1002,7 +1023,7 @@ class SonataCatalogue < Sinatra::Application
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          vnf = Vnf.find_by({'_id' => params[:id]})
+          vnf = Vnf.find_by({ '_id' => params[:id] })
           puts 'VNF is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, "The VNFD ID #{params[:id]} does not exist"
@@ -1010,7 +1031,7 @@ class SonataCatalogue < Sinatra::Application
 
         # Check if VNF already exists in the catalogue by name, vendor and version
         begin
-          vnf = Vnf.find_by({'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version']})
+          vnf = Vnf.find_by({ 'name' => new_vnf['name'], 'vendor' => new_vnf['vendor'], 'version' => new_vnf['version'] })
           json_return 200, 'Duplicated VNF Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
           # Continue
@@ -1037,6 +1058,7 @@ class SonataCatalogue < Sinatra::Application
         end
         logger.debug "Catalogue: leaving PUT /vnfs/#{params[:id]}\" with VNFD #{new_vnf}"
 
+        response = ''
         case request.content_type
           when 'application/json'
             response = new_vnf.to_json
@@ -1068,8 +1090,8 @@ class SonataCatalogue < Sinatra::Application
 
     unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
       begin
-        vnf = Vnf.find_by({'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                           'version' => keyed_params[:version]})
+        vnf = Vnf.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
+                           'version' => keyed_params[:version] })
         puts 'VNF is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The VNFD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
@@ -1128,9 +1150,9 @@ class SonataCatalogue < Sinatra::Application
     # Set headers
     case request.content_type
       when 'application/x-yaml'
-        headers = {'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml'}
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        headers = {'Accept' => 'application/json', 'Content-Type' => 'application/json'}
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
 
@@ -1145,7 +1167,7 @@ class SonataCatalogue < Sinatra::Application
       keyed_params.delete(:version)
       #puts 'keyed_params(2)', keyed_params
 
-      pks = Package.where((keyed_params)).sort({'version' => -1}) #.limit(1).first()
+      pks = Package.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: PDs=#{pks}"
       #pks = pks.sort({"version" => -1})
       #puts 'pks: ', pks.to_json
@@ -1201,6 +1223,7 @@ class SonataCatalogue < Sinatra::Application
       end
     end
 
+    response = ''
     case request.content_type
       when 'application/json'
         response = pks.to_json
@@ -1229,6 +1252,7 @@ class SonataCatalogue < Sinatra::Application
       end
       logger.debug "Catalogue: leaving GET /packages/#{params[:id]}\" with PD #{pks}"
 
+      response = ''
       case request.content_type
         when 'application/json'
           response = pks.to_json
@@ -1292,14 +1316,14 @@ class SonataCatalogue < Sinatra::Application
 
     # Check if PD already exists in the catalogue by name, vendor and version
     begin
-      pks = Package.find_by({'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version']})
+      pks = Package.find_by({ 'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version'] })
       json_return 200, 'Duplicated Package Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
     end
     # Check if PD has an ID (it should not) and if it already exists in the catalogue
     begin
-      pks = Package.find_by({'_id' => new_pks['_id']})
+      pks = Package.find_by({ '_id' => new_pks['_id'] })
       json_return 200, 'Duplicated Package ID'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -1316,6 +1340,7 @@ class SonataCatalogue < Sinatra::Application
     end
 
     puts 'New Package has been added'
+    response = ''
     case request.content_type
       when 'application/json'
         response = pks.to_json
@@ -1382,9 +1407,9 @@ class SonataCatalogue < Sinatra::Application
     # Set headers
     case request.content_type
       when 'application/x-yaml'
-        headers = {'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml'}
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        headers = {'Accept' => 'application/json', 'Content-Type' => 'application/json'}
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
 
@@ -1393,8 +1418,8 @@ class SonataCatalogue < Sinatra::Application
       json_error 400, 'Update Vendor, Name and Version parameters are null'
     else
       begin
-        pks = Package.find_by({'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                               'version' => keyed_params[:version]})
+        pks = Package.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
+                               'version' => keyed_params[:version] })
         puts 'Package is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
@@ -1402,7 +1427,7 @@ class SonataCatalogue < Sinatra::Application
     end
     # Check if PD already exists in the catalogue by name, group and version
     begin
-      pks = Package.find_by({'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version']})
+      pks = Package.find_by({ 'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version'] })
       json_return 200, 'Duplicated PD Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -1429,6 +1454,7 @@ class SonataCatalogue < Sinatra::Application
     end
     logger.debug "Catalogue: leaving PUT /packages?#{uri.query}\" with PD #{new_pks}"
 
+    response = ''
     case request.content_type
       when 'application/json'
         response = new_pks.to_json
@@ -1466,7 +1492,7 @@ class SonataCatalogue < Sinatra::Application
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          pks = Package.find_by({'_id' => params[:id]})
+          pks = Package.find_by({ '_id' => params[:id] })
           puts 'Package is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, 'This PD does not exists'
@@ -1532,7 +1558,7 @@ class SonataCatalogue < Sinatra::Application
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          pks = Package.find_by({'_id' => params[:id]})
+          pks = Package.find_by({ '_id' => params[:id] })
           puts 'Package is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, "The PD ID #{params[:id]} does not exist"
@@ -1540,8 +1566,8 @@ class SonataCatalogue < Sinatra::Application
 
         # Check if Package already exists in the catalogue by name, vendor and version
         begin
-          pks = Package.find_by({'name' => new_pks['name'], 'vendor' => new_pks['vendor'],
-                                 'version' => new_pks['version']})
+          pks = Package.find_by({ 'name' => new_pks['name'], 'vendor' => new_pks['vendor'],
+                                 'version' => new_pks['version'] })
           json_return 200, 'Duplicated Package Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
           # Continue
@@ -1568,6 +1594,7 @@ class SonataCatalogue < Sinatra::Application
         end
         logger.debug "Catalogue: leaving PUT /packages/#{params[:id]}\" with PD #{new_pks}"
 
+        response = ''
         case request.content_type
           when 'application/json'
             response = new_pks.to_json
@@ -1599,8 +1626,8 @@ class SonataCatalogue < Sinatra::Application
 
     unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
       begin
-        pks = Package.find_by({'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                               'version' => keyed_params[:version]})
+        pks = Package.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
+                               'version' => keyed_params[:version] })
         puts 'Package is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
@@ -1659,9 +1686,9 @@ class SonataCatalogue < Sinatra::Application
     # Set headers
     case request.content_type
       when 'application/x-yaml'
-        headers = {'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml'}
+        headers = { 'Accept' => 'application/x-yaml', 'Content-Type' => 'application/x-yaml' }
       else
-        headers = {'Accept' => 'application/json', 'Content-Type' => 'application/json'}
+        headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
 
@@ -1678,6 +1705,7 @@ class SonataCatalogue < Sinatra::Application
     # Paginate results
     file_list = file_list.paginate(offset: params[:offset], limit: params[:limit])
 
+    response = ''
     case request.content_type
       when 'application/json'
         response = file_list.to_json
@@ -1699,7 +1727,7 @@ class SonataCatalogue < Sinatra::Application
     logger.debug "Catalogue: entered GET /son-packages/#{params[:id]}"
     #puts 'ID: ', params[:id]
     begin
-      sonp = FileContainer.find_by({'_id' => params[:id]})
+      sonp = FileContainer.find_by({ '_id' => params[:id] })
       #p 'FileContainer FOUND'
       p 'Filename: ', sonp['grid_fs_name']
       p 'grid_fs_id: ', sonp['grid_fs_id']
@@ -1752,7 +1780,7 @@ class SonataCatalogue < Sinatra::Application
     # -> grid_fs_name
     # Check if son-package already exists in the catalogue by filename (grid-fs-name identifier)
     begin
-      sonpkg = FileContainer.find_by({'grid_fs_name' => filename})
+      sonpkg = FileContainer.find_by({ 'grid_fs_name' => filename })
       json_return 200, 'Duplicated son-package Filename'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
