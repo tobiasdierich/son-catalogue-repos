@@ -32,6 +32,25 @@ virtual_deployment_units:
       storage:
         size: 10
         size_unit: "GB"
+    monitoring_parameters:
+      - name: "vm_cpu_perc"
+        unit: "Percentage"
+      - name: "vm_mem_perc"
+        unit: "Percentage"
+      - name: "vm_disk_usage_perc"
+        unit: "Percentage"  
+      - name: "vm_net_rx_pps"
+        unit: "Pktps"
+      - name: "vm_net_tx_pps"
+        unit: "Pktps"  
+      - name: "vm_net_rx_Bps"
+        unit: "Bps"
+      - name: "vm_net_tx_Bps"
+        unit: "Bps"
+      - name: "vm_net_rx_MB"
+        unit: "MB"
+      - name: "vm_net_tx_MB"
+        unit: "MB"
     connection_points:
       - id: "vdu01:cp01"
         type: "interface"
@@ -72,3 +91,41 @@ connection_points:
     type: "interface"
   - id: "vnf:output"
     type: "interface"
+
+##
+## The monitoring rules that react
+## to the monitoring parameters
+##
+monitoring_rules:
+  - name: "mon:rule:vm_cpu_perc"
+    description: "Trigger event if CPU load is above 70 percent."
+    duration: 10
+    duration_unit: "s"
+    condition: "vdu01:vm_cpu_perc > 70"
+    notification:
+      - name: "notification01"
+        type: "rabbitmq_message"
+  - name: "mon:rule:vm_mem_perc"
+    description: "Trigger event if memory consumption is above 80 percent."
+    duration: 10
+    duration_unit: "s"
+    condition: "vdu01:vm_mem_perc > 80"
+    notification:
+      - name: "notification02"
+        type: "rabbitmq_message"
+  - name: "mon:rule:vm_net_rx_pps"
+    description: "Trigger event if reception rate exceeds 10000 pkts per sec."
+    duration: 10
+    duration_unit: "s"
+    condition: "vdu01:vm_net_rx_pps > 10000"
+    notification:
+      - name: "notification03"
+        type: "rabbitmq_message"
+  - name: "mon:rule:vm_net_tx_pps"
+    description: "Trigger event if transmission rate exceeds 10000 pkts per sec."
+    duration: 10
+    duration_unit: "s"
+    condition: "vdu01:vm_net_tx_pps > 10000"
+    notification:
+      - name: "notification04"
+        type: "rabbitmq_message"
