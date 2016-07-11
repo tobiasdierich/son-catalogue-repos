@@ -36,7 +36,7 @@ class SonataCatalogue < Sinatra::Application
     if settings.environment == 'development'
       p 'Development settings'
     end
-    #authorized?
+    # authorized?
   end
 
   DEFAULT_OFFSET = '0'
@@ -83,40 +83,40 @@ class SonataCatalogue < Sinatra::Application
 
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
-    #puts 'keyed_params(1)', keyed_params
+    # puts 'keyed_params(1)', keyed_params
 
     # Check for special case (:version param == last)
     if keyed_params.key?(:version) && keyed_params[:version] == 'last'
       # Do query for last version -> get_nsd_ns_vendor_last_version
 
       keyed_params.delete(:version)
-      #puts 'keyed_params(2)', keyed_params
+      # puts 'keyed_params(2)', keyed_params
 
       nss = Ns.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: NSDs=#{nss}"
-      #nss = nss.sort({"version" => -1})
-      #puts 'nss: ', nss.to_json
+      # nss = nss.sort({"version" => -1})
+      # puts 'nss: ', nss.to_json
 
       if nss && nss.size.to_i > 0
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
 
         # Paginate results
-        #nss = nss.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
+        # nss = nss.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
 
         nss_list = []
         checked_list = []
 
         nss_name_vendor = Pair.new(nss.first.name, nss.first.vendor)
-        #p 'nss_name_vendor:', [nss_name_vendor.one, nss_name_vendor.two]
+        # p 'nss_name_vendor:', [nss_name_vendor.one, nss_name_vendor.two]
         checked_list.push(nss_name_vendor)
         nss_list.push(nss.first)
 
         nss.each do |nsd|
-          #p 'Comparison: ', [nsd.name, nsd.vendor].to_s + [nss_name_vendor.one, nss_name_vendor.two].to_s
+          # p 'Comparison: ', [nsd.name, nsd.vendor].to_s + [nss_name_vendor.one, nss_name_vendor.two].to_s
           if (nsd.name != nss_name_vendor.one) || (nsd.vendor != nss_name_vendor.two)
             nss_name_vendor = Pair.new(nsd.name, nsd.vendor)
-            #p 'nss_name_vendor(x):', [nss_name_vendor.one, nss_name_vendor.two]
-            #checked_list.each do |pair|
+            # p 'nss_name_vendor(x):', [nss_name_vendor.one, nss_name_vendor.two]
+            # checked_list.each do |pair|
             #  p [pair.one, nss_name_vendor.one], [pair.two, nss_name_vendor.two]
             #  p pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two
           end
@@ -124,21 +124,21 @@ class SonataCatalogue < Sinatra::Application
               pair.two == nss_name_vendor.two }
           checked_list.push(nss_name_vendor)
         end
-        #puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
+        # puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
       else
-        #logger.error "ERROR: 'No NSDs were found'"
+        # logger.error "ERROR: 'No NSDs were found'"
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-        #json_error 404, "No NSDs were found"
+        # json_error 404, "No NSDs were found"
         nss_list = []
       end
-      #nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
+      # nss = nss_list.paginate(:page => params[:offset], :per_page =>params[:limit])
       nss = apply_limit_and_offset(nss_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
       nss = Ns.where(keyed_params)
       logger.info "Catalogue: NSDs=#{nss}"
-      #puts nss.to_json
+      # puts nss.to_json
       if nss && nss.size.to_i > 0
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
 
@@ -147,7 +147,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
-        #json_error 404, "No NSDs were found"
+        # json_error 404, "No NSDs were found"
       end
     end
 
@@ -217,8 +217,8 @@ class SonataCatalogue < Sinatra::Application
 
         # Validate JSON format
         new_ns, errors = parse_json(new_ns_json)
-        puts 'ns: ', new_ns.to_json
-        #puts 'new_ns id', new_ns['_id'].to_json
+        # puts 'ns: ', new_ns.to_json
+        # puts 'new_ns id', new_ns['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -235,11 +235,11 @@ class SonataCatalogue < Sinatra::Application
 
     # --> Validation disabled
     # Validate NSD
-    #begin
-    #	RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
-    #rescue => e
-    #	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unreachable."
-    #end
+    # begin
+    #	  RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    # rescue => e
+    #	  halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unreachable."
+    # end
 
     # Check if NS already exists in the catalogue by name, vendor and version
     begin
@@ -286,13 +286,13 @@ class SonataCatalogue < Sinatra::Application
   put '/network-services/?' do
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered PUT /network-services?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
@@ -314,8 +314,8 @@ class SonataCatalogue < Sinatra::Application
 
         # Validate JSON format
         new_ns, errors = parse_json(new_ns_json)
-        puts 'ns: ', new_ns.to_json
-        #puts 'new_ns id', new_ns['_id'].to_json
+        # puts 'ns: ', new_ns.to_json
+        # puts 'new_ns id', new_ns['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -367,12 +367,12 @@ class SonataCatalogue < Sinatra::Application
 
     # --> Validation disabled
     # Validate NSD
-    #begin
-    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-    #rescue => e
-    #	logger.error e.response
+    # begin
+    #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+    # rescue => e
+    #	  logger.error e.response
     #	return e.response.code, e.response.body
-    #end
+    # end
 
     begin
       new_ns = Ns.create!(nsd)
@@ -406,7 +406,7 @@ class SonataCatalogue < Sinatra::Application
 
       # Transform 'string' params Hash into keys
       keyed_params = keyed_hash(params)
-      puts 'keyed_params', keyed_params
+      # puts 'keyed_params', keyed_params
 
       # Check for special case (:status param == <new_status>)
       p 'Special case detected= new_status'
@@ -427,14 +427,14 @@ class SonataCatalogue < Sinatra::Application
           json_error 404, 'This NSD does not exists'
         end
 
-        #Validate new status
+        # Validate new status
         p 'Validating new status(keyed_params): ', keyed_params[:status]
-        #p "Validating new status(params): ", params[:new_status]
+        # p "Validating new status(params): ", params[:new_status]
         valid_status = %w(active inactive delete)
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            #ns.update_attributes(:status => params[:new_status])
+            # ns.update_attributes(:status => params[:new_status])
             ns.update_attributes(status: keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, 'ERROR: Operation failed'
@@ -445,12 +445,12 @@ class SonataCatalogue < Sinatra::Application
 
         # --> Validation disabled
         # Validate NSD
-        #begin
-        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-        #rescue => e
-        #	logger.error e.response
-        #	return e.response.code, e.response.body
-        #end
+        # begin
+        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        # rescue => e
+        #	  logger.error e.response
+        #	  return e.response.code, e.response.body
+        # end
 
         halt 200, "Status updated to #{uri.query_values}"
 
@@ -469,8 +469,8 @@ class SonataCatalogue < Sinatra::Application
 
             # Validate JSON format
             new_ns, errors = parse_json(new_ns_json)
-            puts 'ns: ', new_ns.to_json
-            #puts 'new_ns id', new_ns['_id'].to_json
+            # puts 'ns: ', new_ns.to_json
+            # puts 'new_ns id', new_ns['_id'].to_json
             halt 400, errors.to_json if errors
 
           else
@@ -510,12 +510,12 @@ class SonataCatalogue < Sinatra::Application
 
         # --> Validation disabled
         # Validate NSD
-        #begin
-        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-        #rescue => e
-        #	logger.error e.response
-        #	return e.response.code, e.response.body
-        #end
+        # begin
+        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        # rescue => e
+        #	  logger.error e.response
+        #	  return e.response.code, e.response.body
+        # end
 
         begin
           new_ns = Ns.create!(nsd)
@@ -546,13 +546,13 @@ class SonataCatalogue < Sinatra::Application
   delete '/network-services/?' do
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered DELETE /network-services?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
       begin
@@ -605,13 +605,13 @@ class SonataCatalogue < Sinatra::Application
 
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered GET /vnfs?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Set headers
     case request.content_type
@@ -624,36 +624,36 @@ class SonataCatalogue < Sinatra::Application
 
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
-    #puts 'keyed_params(1)', keyed_params
+    # puts 'keyed_params(1)', keyed_params
 
     # Check for special case (:version param == last)
     if keyed_params.key?(:version) && keyed_params[:version] == 'last'
       # Do query for last version -> get_nsd_ns_vendor_last_version
 
       keyed_params.delete(:version)
-      #puts 'keyed_params(2)', keyed_params
+      # puts 'keyed_params(2)', keyed_params
 
       vnfs = Vnf.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: VNFDs=#{vnfs}"
-      #vnfs = vnfs.sort({"version" => -1})
-      #puts 'vnfs: ', vnfs.to_json
+      # vnfs = vnfs.sort({"version" => -1})
+      # puts 'vnfs: ', vnfs.to_json
 
       if vnfs && vnfs.size.to_i > 0
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with #{vnfs}"
 
         # Paginate results
-        #vnfs = vnfs.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
+        # vnfs = vnfs.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
 
         vnfs_list = []
         checked_list = []
 
         vnfs_name_vendor = Pair.new(vnfs.first.name, vnfs.first.vendor)
-        #p 'vnfs_name_vendor:', [vnfs_name_vendor.one, vnfs_name_vendor.two]
+        # p 'vnfs_name_vendor:', [vnfs_name_vendor.one, vnfs_name_vendor.two]
         checked_list.push(vnfs_name_vendor)
         vnfs_list.push(vnfs.first)
 
         vnfs.each do |vnfd|
-          #p 'Comparison: ', [vnfd.name, vnfd.vendor].to_s + [vnfs_name_vendor.one, vnfs_name_vendor.two].to_s
+          # p 'Comparison: ', [vnfd.name, vnfd.vendor].to_s + [vnfs_name_vendor.one, vnfs_name_vendor.two].to_s
           if (vnfd.name != vnfs_name_vendor.one) || (vnfd.vendor != vnfs_name_vendor.two)
             vnfs_name_vendor = Pair.new(vnfd.name, vnfd.vendor)
           end
@@ -661,21 +661,21 @@ class SonataCatalogue < Sinatra::Application
               pair.two == vnfs_name_vendor.two }
           checked_list.push(vnfs_name_vendor)
         end
-        #puts 'vnfs_list:', vnfs_list.each {|vnf| p vnf.name, vnf.vendor}
+        # puts 'vnfs_list:', vnfs_list.each {|vnf| p vnf.name, vnf.vendor}
       else
-        #logger.error "ERROR: 'No VNFDs were found'"
+        # logger.error "ERROR: 'No VNFDs were found'"
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
-        #json_error 404, "No VNFDs were found"
+        # json_error 404, "No VNFDs were found"
         vnfs_list = []
       end
-      #vnfs = vnfs_list.paginate(:page => params[:offset], :per_page =>params[:limit])
+      # vnfs = vnfs_list.paginate(:page => params[:offset], :per_page =>params[:limit])
       vnfs = apply_limit_and_offset(vnfs_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
       vnfs = Vnf.where(keyed_params)
       logger.info "Catalogue: VNFDs=#{vnfs}"
-      #puts vnfs.to_json
+      # puts vnfs.to_json
       if vnfs && vnfs.size.to_i > 0
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with #{vnfs}"
 
@@ -684,7 +684,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
-        #json_error 404, "No VNFDs were found"
+        # json_error 404, "No VNFDs were found"
       end
     end
 
@@ -755,8 +755,8 @@ class SonataCatalogue < Sinatra::Application
 
         # Validate JSON format
         new_vnf, errors = parse_json(new_vnf_json)
-        puts 'vnf: ', new_vnf.to_json
-        #puts 'new_vnf id', new_vnf['_id'].to_json
+        # puts 'vnf: ', new_vnf.to_json
+        # puts 'new_vnf id', new_vnf['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -773,11 +773,11 @@ class SonataCatalogue < Sinatra::Application
 
     # --> Validation disabled
     # Validate VNFD
-    #begin
-    #	RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
-    #rescue => e
-    #	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
-    #end
+    # begin
+    #	  RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    # rescue => e
+    #	  halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
+    # end
 
     # Check if VNFD already exists in the catalogue by name, vendor and version
     begin
@@ -824,13 +824,13 @@ class SonataCatalogue < Sinatra::Application
   put '/vnfs/?' do
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered PUT /vnfs?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
@@ -852,8 +852,8 @@ class SonataCatalogue < Sinatra::Application
 
         # Validate JSON format
         new_vnf, errors = parse_json(new_vnf_json)
-        puts 'vnf: ', new_vnf.to_json
-        #puts 'new_vnf id', new_vnf['_id'].to_json
+        # puts 'vnf: ', new_vnf.to_json
+        # puts 'new_vnf id', new_vnf['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -944,7 +944,7 @@ class SonataCatalogue < Sinatra::Application
 
       # Transform 'string' params Hash into keys
       keyed_params = keyed_hash(params)
-      puts 'keyed_params', keyed_params
+      # puts 'keyed_params', keyed_params
 
       # Check for special case (:status param == <new_status>)
       if keyed_params.key?(:status)
@@ -1003,8 +1003,8 @@ class SonataCatalogue < Sinatra::Application
 
             # Validate JSON format
             new_vnf, errors = parse_json(new_vnf_json)
-            puts 'vnf: ', new_ns.to_json
-            #puts 'new_vnf id', new_vnf['_id'].to_json
+            # puts 'vnf: ', new_ns.to_json
+            # puts 'new_vnf id', new_vnf['_id'].to_json
             halt 400, errors.to_json if errors
 
           else
@@ -1080,13 +1080,13 @@ class SonataCatalogue < Sinatra::Application
   delete '/vnfs/?' do
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered DELETE /vnfs?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
       begin
@@ -1139,13 +1139,13 @@ class SonataCatalogue < Sinatra::Application
 
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered GET /packages?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Set headers
     case request.content_type
@@ -1158,36 +1158,36 @@ class SonataCatalogue < Sinatra::Application
 
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
-    #puts 'keyed_params(1)', keyed_params
+    # puts 'keyed_params(1)', keyed_params
 
     # Check for special case (:version param == last)
     if keyed_params.key?(:version) && keyed_params[:version] == 'last'
       # Do query for last version -> get_nsd_ns_vendor_last_version
 
       keyed_params.delete(:version)
-      #puts 'keyed_params(2)', keyed_params
+      # puts 'keyed_params(2)', keyed_params
 
       pks = Package.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: PDs=#{pks}"
-      #pks = pks.sort({"version" => -1})
-      #puts 'pks: ', pks.to_json
+      # pks = pks.sort({"version" => -1})
+      # puts 'pks: ', pks.to_json
 
       if pks && pks.size.to_i > 0
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with #{pks}"
 
         # Paginate results
-        #pks = pks.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
+        # pks = pks.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
 
         pks_list = []
         checked_list = []
 
         pks_name_vendor = Pair.new(pks.first.name, pks.first.vendor)
-        #p 'pks_name_vendor:', [pks_name_vendor.one, pks_name_vendor.two]
+        # p 'pks_name_vendor:', [pks_name_vendor.one, pks_name_vendor.two]
         checked_list.push(pks_name_vendor)
         pks_list.push(pks.first)
 
         pks.each do |pd|
-          #p 'Comparison: ', [pd.name, pd.vendor].to_s + [pks_name_vendor.one, pks_name_vendor.two].to_s
+          # p 'Comparison: ', [pd.name, pd.vendor].to_s + [pks_name_vendor.one, pks_name_vendor.two].to_s
           if (pd.name != pks_name_vendor.one) || (pd.vendor != pks_name_vendor.two)
             pks_name_vendor = Pair.new(pd.name, pd.vendor)
           end
@@ -1196,21 +1196,21 @@ class SonataCatalogue < Sinatra::Application
           checked_list.push(pks_name_vendor)
         end
 
-        #puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
+        # puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
       else
-        #logger.error "ERROR: 'No PDs were found'"
+        # logger.error "ERROR: 'No PDs were found'"
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
-        #json_error 404, "No PDs were found"
+        # json_error 404, "No PDs were found"
         pks_list = []
       end
-      #pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
+      # pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
       pks = apply_limit_and_offset(pks_list, offset=params[:offset], limit=params[:limit])
 
     else
       # Do the query
       pks = Package.where(keyed_params)
       logger.info "Catalogue: PDs=#{pks}"
-      #puts pks.to_json
+      # puts pks.to_json
       if pks && pks.size.to_i > 0
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with #{pks}"
 
@@ -1219,7 +1219,7 @@ class SonataCatalogue < Sinatra::Application
 
       else
         logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
-        #json_error 404, "No PDs were found"
+        # json_error 404, "No PDs were found"
       end
     end
 
@@ -1272,7 +1272,7 @@ class SonataCatalogue < Sinatra::Application
   # @overload post '/catalogues/packages'
   # Post a Package in JSON or YAML format
   post '/packages' do
-    #A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
+    # A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -1290,8 +1290,8 @@ class SonataCatalogue < Sinatra::Application
 
         # Validate JSON format
         new_pks, errors = parse_json(new_pks_json)
-        puts 'pks: ', new_pks.to_json
-        #puts 'new_pks id', new_pks['_id'].to_json
+        # puts 'pks: ', new_pks.to_json
+        # puts 'new_pks id', new_pks['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -1308,11 +1308,11 @@ class SonataCatalogue < Sinatra::Application
 
     # --> Validation disabled
     # Validate PD
-    #begin
-    #	RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
-    #rescue => e
-    #	halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
-    #end
+    # begin
+    #	  RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    # rescue => e
+    #	  halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
+    # end
 
     # Check if PD already exists in the catalogue by name, vendor and version
     begin
@@ -1359,13 +1359,13 @@ class SonataCatalogue < Sinatra::Application
   put '/packages/?' do
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered PUT /packages?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
@@ -1387,8 +1387,8 @@ class SonataCatalogue < Sinatra::Application
 
         # Validate JSON format
         new_pks, errors = parse_json(new_pks_json)
-        puts 'pks: ', new_pks.to_json
-        #puts 'new_pks id', new_pks['_id'].to_json
+        # puts 'pks: ', new_pks.to_json
+        # puts 'new_pks id', new_pks['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -1479,7 +1479,7 @@ class SonataCatalogue < Sinatra::Application
 
       # Transform 'string' params Hash into keys
       keyed_params = keyed_hash(params)
-      puts 'keyed_params', keyed_params
+      # puts 'keyed_params', keyed_params
 
       # Check for special case (:status param == <new_status>)
       if keyed_params.key?(:status)
@@ -1503,7 +1503,7 @@ class SonataCatalogue < Sinatra::Application
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            #pks.update_attributes(:status => params[:new_status])
+            # pks.update_attributes(:status => params[:new_status])
             pks.update_attributes(status: keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, 'ERROR: Operation failed'
@@ -1515,10 +1515,10 @@ class SonataCatalogue < Sinatra::Application
         # --> Validation disabled
         # Validate PD
         # begin
-        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-        #rescue => e
-        #	logger.error e.response
-        #	return e.response.code, e.response.body
+        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        # rescue => e
+        #	  logger.error e.response
+        #	  return e.response.code, e.response.body
         #end
 
         halt 200, "Status updated to #{uri.query_values}"
@@ -1538,8 +1538,8 @@ class SonataCatalogue < Sinatra::Application
 
             # Validate JSON format
             new_pks, errors = parse_json(new_ns_json)
-            puts 'pks: ', new_pks.to_json
-            #puts 'new_pks id', new_pks['_id'].to_json
+            # puts 'pks: ', new_pks.to_json
+            # puts 'new_pks id', new_pks['_id'].to_json
             halt 400, errors.to_json if errors
 
           else
@@ -1580,12 +1580,12 @@ class SonataCatalogue < Sinatra::Application
 
         # --> Validation disabled
         # Validate PD
-        #begin
-        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
-        #rescue => e
-        #	logger.error e.response
-        #	return e.response.code, e.response.body
-        #end
+        # begin
+        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        # rescue => e
+        #	  logger.error e.response
+        #	  return e.response.code, e.response.body
+        # end
 
         begin
           new_pks = Package.create!(pd)
@@ -1616,13 +1616,13 @@ class SonataCatalogue < Sinatra::Application
   delete '/packages/?' do
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered DELETE /packages?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
       begin
@@ -1675,13 +1675,13 @@ class SonataCatalogue < Sinatra::Application
 
     uri = Addressable::URI.new
     uri.query_values = params
-    puts 'params', params
-    puts 'query_values', uri.query_values
+    # puts 'params', params
+    # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered GET /son-packages?#{uri.query}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    puts 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Set headers
     case request.content_type
@@ -1694,7 +1694,7 @@ class SonataCatalogue < Sinatra::Application
 
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
-    #puts 'keyed_params(1)', keyed_params
+    # puts 'keyed_params(1)', keyed_params
 
     # Do the query
 
@@ -1723,12 +1723,12 @@ class SonataCatalogue < Sinatra::Application
   #	@param [string] son-package ID
   # son-package internal database identifier
   get '/son-packages/:id/?' do
-    #Dir.chdir(File.dirname(__FILE__))
+    # Dir.chdir(File.dirname(__FILE__))
     logger.debug "Catalogue: entered GET /son-packages/#{params[:id]}"
-    #puts 'ID: ', params[:id]
+    # puts 'ID: ', params[:id]
     begin
       sonp = FileContainer.find_by({ '_id' => params[:id] })
-      #p 'FileContainer FOUND'
+      # p 'FileContainer FOUND'
       p 'Filename: ', sonp['grid_fs_name']
       p 'grid_fs_id: ', sonp['grid_fs_id']
     rescue Mongoid::Errors::DocumentNotFound => e
@@ -1739,15 +1739,15 @@ class SonataCatalogue < Sinatra::Application
     grid_fs = Mongoid::GridFs
     grid_file = grid_fs.get(sonp['grid_fs_id'])
 
-    #grid_file.data # big huge blob
-    #temp=Tempfile.new("/home/osboxes/Downloads/#{sonp['grid_fs_name'].to_s}", 'wb')
-    #grid_file.each do |chunk|
+    # grid_file.data # big huge blob
+    # temp=Tempfile.new("../#{sonp['grid_fs_name'].to_s}", 'wb')
+    # grid_file.each do |chunk|
     #  temp.write(chunk) # streaming write
-    #end
+    # end
     ## Client file recovery
-    #temp=File.new("/home/osboxes/Downloads/#{sonp['grid_fs_name']}", 'wb')
-    #temp.write(grid_file.data)
-    #temp.close
+    # temp=File.new("../#{sonp['grid_fs_name']}", 'wb')
+    # temp.write(grid_file.data)
+    # temp.close
 
     logger.debug "Catalogue: leaving GET /son-packages/#{params[:id]}"
     halt 200, grid_file.data
@@ -1761,20 +1761,20 @@ class SonataCatalogue < Sinatra::Application
     # Return if content-type is invalid
     halt 415 unless request.content_type == 'application/zip'
 
-    #puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
+    # puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env['HTTP_CONTENT_DISPOSITION']
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
-    #puts "filename", filename
-    #JSON.pretty_generate(request.env)
+    # puts "filename", filename
+    # JSON.pretty_generate(request.env)
 
     # Reads body data
     file, errors = request.body
     halt 400, errors.to_json if errors
 
     ### Implemented here the MD5 checksum for the file
-    #p "TEST", file.string
-    #file_hash = checksum file.string
-    #p "FILE HASH is: ", file_hash
+    # p "TEST", file.string
+    # file_hash = checksum file.string
+    # p "FILE HASH is: ", file_hash
 
     # Check duplicates
     # -> grid_fs_name
@@ -1787,11 +1787,11 @@ class SonataCatalogue < Sinatra::Application
     end
 
     # Save to DB
-    #return 400, 'ERROR: Package Name not found' unless sonp.has_key?('package_name')
-    #return 400, 'ERROR: Package Vendor not found' unless sonp.has_key?('package_group')
-    #return 400, 'ERROR: Package Version not found' unless sonp.has_key?('package_version')
+    # return 400, 'ERROR: Package Name not found' unless sonp.has_key?('package_name')
+    # return 400, 'ERROR: Package Vendor not found' unless sonp.has_key?('package_group')
+    # return 400, 'ERROR: Package Version not found' unless sonp.has_key?('package_version')
 
-    #file = File.open('/home/osboxes/sonata/son-catalogue-repos/samples/package_example.zip')
+    # file = File.open('../package_example.zip')
     # Content-Disposition: attachment; filename=FILENAME
 
     grid_fs = Mongoid::GridFs
@@ -1799,9 +1799,9 @@ class SonataCatalogue < Sinatra::Application
                             filename: filename,
                             content_type: 'application/zip',
                             _id: SecureRandom.uuid,
-    #:file_hash   => file_hash,
-    #:chunk_size   => 100 * 1024,
-    #:metadata     => {'description' => "SONATA zip package"}
+    # :file_hash   => file_hash,
+    # :chunk_size   => 100 * 1024,
+    # :metadata     => {'description' => "SONATA zip package"}
     )
 
     sonp_id = SecureRandom.uuid
@@ -1813,7 +1813,7 @@ class SonataCatalogue < Sinatra::Application
       file_container.save
     end
     logger.debug "Catalogue: leaving POST /son-packages/ with #{grid_file.id}"
-    #halt 201, grid_file.id.to_json
+    # halt 201, grid_file.id.to_json
     halt 201, sonp_id.to_json
   end
 
