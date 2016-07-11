@@ -39,14 +39,10 @@ virtual_deployment_units:
         unit: "Percentage"
       - name: "vm_disk_usage_perc"
         unit: "Percentage"  
-      - name: "vm_net_rx_pps"
-        unit: "Pktps"
-      - name: "vm_net_tx_pps"
-        unit: "Pktps"  
       - name: "vm_net_rx_Bps"
-        unit: "Bps"
+        unit: "kbps"
       - name: "vm_net_tx_Bps"
-        unit: "Bps"
+        unit: "kbps"
       - name: "vm_net_rx_MB"
         unit: "MB"
       - name: "vm_net_tx_MB"
@@ -91,7 +87,6 @@ connection_points:
     type: "interface"
   - id: "vnf:output"
     type: "interface"
-
 ##
 ## The monitoring rules that react
 ## to the monitoring parameters
@@ -113,19 +108,19 @@ monitoring_rules:
     notification:
       - name: "notification02"
         type: "rabbitmq_message"
-  - name: "mon:rule:vm_net_rx_pps"
+  - name: "mon:rule:vm_net_rx_Bps"
     description: "Trigger event if reception rate exceeds 10000 pkts per sec."
     duration: 10
     duration_unit: "s"
-    condition: "vdu01:vm_net_rx_pps > 10000"
+    condition: "vdu01:vm_net_rx_Bps > 10000"
     notification:
       - name: "notification03"
         type: "rabbitmq_message"
-  - name: "mon:rule:vm_net_tx_pps"
+  - name: "mon:rule:vm_net_tx_Bps"
     description: "Trigger event if transmission rate exceeds 10000 pkts per sec."
     duration: 10
     duration_unit: "s"
-    condition: "vdu01:vm_net_tx_pps > 10000"
+    condition: "vdu01:vm_net_tx_Bps > 10000"
     notification:
       - name: "notification04"
         type: "rabbitmq_message"
