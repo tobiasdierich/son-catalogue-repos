@@ -20,7 +20,7 @@ description: >
 ##
 virtual_deployment_units:
   - id: "vdu01"
-    vm_image: "vnf-probe"
+    vm_image: "ubu1404"
     vm_image_format: "docker"
     resource_requirements:
       cpu:
