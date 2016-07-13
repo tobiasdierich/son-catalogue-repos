@@ -44,7 +44,7 @@ A connection to a MongoDB is required, this code has been run using MongoDB vers
 Root folder provides a script "installation_mongodb.sh" to install and set up a local MongoDB, or you can use mongoexpress to manage the remote mongo databases.
 
 ## Usage
-The following shows how to start the API server:
+The following shows how to start the API server for the Catalogues-Repositories:
 
 ```sh
 rake start
@@ -55,27 +55,142 @@ or you can use docker-compose
 ```sh
 docker-compose up
 ```
-For testing the repositories, you can try some CRUD operations to send or retrieve records.
-Method post:
+
+The Repositories' API allows the use of CRUD operations to send or retrieve records.
+The available records include services records (NSR) and functions records (VNFR).
+For testing the Repositories, you can use 'curl' tool to send a request to the API. It is required to set the HTTP header 'Content-type' field to 'application/json' or 'application/x-yaml' according to your desired format.
+Remember to set the IP address and port accordingly.
+
+Method GET:
+To receive all instances you can use
 
 ```sh
-curl -X POST --data-binary @test_vnfr.yaml -H "Content-type:application/x-yaml" http://localhost:4011/records/vnfr
-
+ curl http://localhost:4011/records/nsr
 ```
-
-Method get:
-All instances
-
 ```sh
  curl http://localhost:4011/records/vnfr
 ```
 
-Instance by an id:
+To receive an instance by its ID:
 
 ```sh
-curl -X GET http://localhost:4011/records/vnfr/9f18bc1b-b18d-483b-88da-a600e9255868
+curl -X GET http://localhost:4011/records/nsr/9f18bc1b-b18d-483b-88da-a600e9255868
 ```
-For testing the Catalogues, please visit the wikipage link below which contains some information to interact and test the Catalogues API.
+```sh
+curl -X GET http://localhost:4011/records/vnfr/9f18bc1b-b18d-483b-88da-a600e9255016
+```
+
+Method POST:
+To send a record instance
+
+```sh
+curl -X POST --data-binary @test_nsr.yaml -H "Content-type:application/x-yaml" http://localhost:4011/records/nsr
+```
+```sh
+curl -X POST --data-binary @test_vnfr.yaml -H "Content-type:application/x-yaml" http://localhost:4011/records/vnfr
+```
+
+The Catalogues' API allows the use of CRUD operations to send, retrieve, update and delete descriptors.
+The available descriptors include services (NSD), functions (VNFD) and packages (PD) descriptors.
+The Catalogues also support storage for SONATA packages, the binary files that contain the descriptors.
+For testing the Catalogues, you can use 'curl' tool to send a request to the API. It is required to set the HTTP header 'Content-type' field to 'application/json' or 'application/x-yaml' according to your desired format.
+
+Method GET:
+To receive all descriptors you can use
+
+```sh
+curl http://localhost:4011/catalogues/network-services
+```
+```sh
+curl http://localhost:4011/catalogues/vnfs
+```
+```sh
+curl http://localhost:4011/catalogues/packages
+```
+
+To receive a descriptor by its ID:
+
+```sh
+curl http://localhost:4011/catalogues/network-services/9f18bc1b-b18d-483b-88da-a600e9255016
+```
+```sh
+curl http://localhost:4011/catalogues/vnfs/9f18bc1b-b18d-483b-88da-a600e9255017
+```
+```sh
+curl http://localhost:4011/catalogues/packages/9f18bc1b-b18d-483b-88da-a600e9255018
+```
+
+Method POST:
+To send a descriptor
+
+```sh
+curl -X POST --data-binary @nsd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/network-services
+```
+```sh
+curl -X POST --data-binary @vnfd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/vnfs
+```
+```sh
+curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/packages
+```
+
+Method PUT:
+To update a descriptor is similar to the POST method, but it is required that a older version of the descriptor is stored in the Catalogues
+
+```sh
+curl -X POST --data-binary @nsd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/network-services
+```
+```sh
+curl -X POST --data-binary @vnfd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/vnfs
+```
+```sh
+curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/packages
+```
+
+Method DELETE:
+To remove a descriptor by its ID
+
+```sh
+curl -X DELETE http://localhost:4011/catalogues/network-services/9f18bc1b-b18d-483b-88da-a600e9255016
+```
+```sh
+curl -X DELETE http://localhost:4011/catalogues/vnfs/9f18bc1b-b18d-483b-88da-a600e9255017
+```
+```sh
+curl -X DELETE http://localhost:4011/catalogues/packages/9f18bc1b-b18d-483b-88da-a600e9255018
+```
+
+The API for SONATA packages works very similar to the API for the descriptors or records.
+
+Method GET:
+To receive a list of stored packages
+
+```sh
+curl http://localhost:4011/catalogues/son-packages
+```
+
+To receive a package file
+
+```sh
+curl http://localhost:4011/catalogues/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
+```
+Method POST:
+To send a package file
+
+HTTP header 'Content-Type' must be set to 'application/zip'
+HTTP header 'Content-Disposition' must be set to 'attachment; filename=<name_of_the_package>'
+
+```sh
+curl -X POST -H "Content-Type: application/zip" -H "Content-Disposition: attachment; filename=sonata_example.son" -F "@sonata-demo.son" "http://0.0.0.0:4011/catalogues/son-packages"
+```
+
+Method DELETE:
+To remove a package file by its ID
+
+```sh
+curl -X DELETE http://localhost:4011/catalogues/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
+```
+
+For more information about usage of Catalogues, please visit the wikipage link below which contains some information to interact and test the Catalogues API.
 
 * [Testing the code](http://wiki.sonata-nfv.eu/index.php/SONATA_Catalogues) - Inside SP Catalogue API Documentation (It currently works for SDK and SP Catalogues)
 
