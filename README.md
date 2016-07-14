@@ -7,6 +7,14 @@ This repository contains the development for the Service Platform catalogues and
 To contribute to the development of the SONATA editor, you may use the very same development workflow as for any other SONATA Github project. That is, you have to fork the repository and create pull requests.
 
 ### Dependencies
+It is recommended to use Ubuntu 14.04.4 LTS (Trusty Tahr).
+
+This code has been run on Ruby 2.1.
+
+A connection to a MongoDB is required, this code has been run using MongoDB version 3.2.1.
+
+Root folder provides a script "installation_mongodb.sh" to install and set up a local MongoDB, or you can use mongoexpress to manage the remote mongo databases.
+
 Ruby gems used (for more details see Gemfile):
 
 * [Sinatra](http://www.sinatrarb.com/) - Ruby framework
@@ -33,15 +41,6 @@ Which will install all the gems needed to run, or if you have docker and docker-
 ```sh
 docker-compose up
 ```
-
-### Dependencies
-It is recommended to use Ubuntu 14.04.4 LTS (Trusty Tahr).
-
-This code has been run on Ruby 2.1.
-
-A connection to a MongoDB is required, this code has been run using MongoDB version 3.2.1.
-
-Root folder provides a script "installation_mongodb.sh" to install and set up a local MongoDB, or you can use mongoexpress to manage the remote mongo databases.
 
 ## Usage
 The following shows how to start the API server for the Catalogues-Repositories:
