@@ -62,6 +62,7 @@ For testing the Repositories, you can use 'curl' tool to send a request to the A
 Remember to set the IP address and port accordingly.
 
 Method GET:
+
 To receive all instances you can use
 
 ```sh
@@ -81,6 +82,7 @@ curl -X GET http://localhost:4011/records/vnfr/9f18bc1b-b18d-483b-88da-a600e9255
 ```
 
 Method POST:
+
 To send a record instance
 
 ```sh
@@ -96,6 +98,7 @@ The Catalogues also support storage for SONATA packages, the binary files that c
 For testing the Catalogues, you can use 'curl' tool to send a request to the API. It is required to set the HTTP header 'Content-type' field to 'application/json' or 'application/x-yaml' according to your desired format.
 
 Method GET:
+
 To receive all descriptors you can use
 
 ```sh
@@ -121,6 +124,7 @@ curl http://localhost:4011/catalogues/packages/9f18bc1b-b18d-483b-88da-a600e9255
 ```
 
 Method POST:
+
 To send a descriptor
 
 ```sh
@@ -134,6 +138,7 @@ curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" 
 ```
 
 Method PUT:
+
 To update a descriptor is similar to the POST method, but it is required that a older version of the descriptor is stored in the Catalogues
 
 ```sh
@@ -147,6 +152,7 @@ curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" 
 ```
 
 Method DELETE:
+
 To remove a descriptor by its ID
 
 ```sh
@@ -162,6 +168,7 @@ curl -X DELETE http://localhost:4011/catalogues/packages/9f18bc1b-b18d-483b-88da
 The API for SONATA packages works very similar to the API for the descriptors or records.
 
 Method GET:
+
 To receive a list of stored packages
 
 ```sh
@@ -174,6 +181,7 @@ To receive a package file
 curl http://localhost:4011/catalogues/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
 ```
 Method POST:
+
 To send a package file
 
 HTTP header 'Content-Type' must be set to 'application/zip'
@@ -184,6 +192,7 @@ curl -X POST -H "Content-Type: application/zip" -H "Content-Disposition: attachm
 ```
 
 Method DELETE:
+
 To remove a package file by its ID
 
 ```sh
@@ -201,8 +210,10 @@ sonata-demo package. This is specially useful when starting an empty Catalogue. 
 
 ```sh
 rake init:load_samples[<server>]
+```
 
-Where <server> allows two options: 'development' or 'integration' server deployment
+Where ```sh <server> ``` allows two options: ```sh'development'``` or ```sh'integration'``` server deployment
+
 ```
 An example of usage:
 
