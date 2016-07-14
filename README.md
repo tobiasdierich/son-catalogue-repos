@@ -210,11 +210,10 @@ sonata-demo package. This is specially useful when starting an empty Catalogue. 
 
 ```sh
 rake init:load_samples[<server>]
+
+Where <server> allows two options: 'development' or sh'integration' server deployment
 ```
 
-Where ```sh <server> ``` allows two options: ```sh'development'``` or ```sh'integration'``` server deployment
-
-```
 An example of usage:
 
 ```sh
