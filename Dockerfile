@@ -8,8 +8,7 @@ WORKDIR /app
 RUN bundle install
 COPY . /app
 RUN rake yard
-ENV PORT 4567
-EXPOSE 8808
-EXPOSE 4567
+ENV PORT 4002
+EXPOSE 4002
 WORKDIR /app
 CMD ["rake", "start"]

@@ -36,8 +36,7 @@ desc 'Start the service'
 task :start do
   puts 'SON CATALOGUE-REPOSITORY STARTING...'
   conf = File.expand_path('config.ru', File.dirname(__FILE__))
-  conf2 = File.expand_path('config/config.yml', File.dirname(__FILE__))
-  exec("thin -C #{conf2} -R #{conf} --debug start")
+  exec("puma #{conf} -b tcp://0.0.0.0:4011")
 end
 
 desc 'Run Unit Tests'
