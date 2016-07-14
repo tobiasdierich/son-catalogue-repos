@@ -185,7 +185,8 @@ Method POST:
 To send a package file
 
 HTTP header 'Content-Type' must be set to 'application/zip'
-HTTP header 'Content-Disposition' must be set to 'attachment; filename=<name_of_the_package>'
+
+HTTP header 'Content-Disposition' must be set to 'attachment; filename=```name_of_the_package```'
 
 ```sh
 curl -X POST -H "Content-Type: application/zip" -H "Content-Disposition: attachment; filename=sonata_example.son" -F "@sonata-demo.son" "http://0.0.0.0:4011/catalogues/son-packages"
