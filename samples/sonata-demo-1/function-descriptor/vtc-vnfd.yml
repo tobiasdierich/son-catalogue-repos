@@ -1,13 +1,4 @@
-# YAML description of a firewall docker container
-# used in the SONATA platform
-
----
-##
-## Some general information regarding this
-## VNF descriptor.
-##
 descriptor_version: "vnfd-schema-01"
-
 vendor: "eu.sonata-nfv"
 name: "vtc-vnf"
 version: "0.1"
@@ -15,11 +6,6 @@ author: "George Xilouris, NCSRD"
 description: >
   "Virtual traffic classifier (vTC) descriptor file. vTC uses ndpi library for the implementation of the vTC"
 
-##
-## Some function specific managers.
-##
-
-## NOTE : this sub-section of the VNFD is not complete 
 function_specific_managers:
   - id: "fsm00"
     description: "FSM for controlling the classification capabilities of the vTC"
@@ -38,9 +24,6 @@ function_specific_managers:
       - key: "myOhterKey"
         value: "myOtherValue"
 
-##
-## The virtual deployment unit.
-##
 virtual_deployment_units:
   - id: "vdu01"
     description: "VNFC for the dashboard and the time-series database"
@@ -65,7 +48,6 @@ virtual_deployment_units:
       - name: "vm_net_tx_MB"
         unit: "Mbps"
     connection_points:
-      #Management interface
       - id: "vdu01:eth0"
         type: "interface"
   - id: "vdu02"
@@ -91,44 +73,42 @@ virtual_deployment_units:
       - name: "vm_net_tx_MB"
         unit: "Mbps"
     connection_points:
-      #Management interface
       - id: "vdu02:eth0"
-        type: "interface" #this is the only interface that should get floating IP address. traffic for the other interfaces will be forwarded via the SDN controller" 
-        access: "public" #signal the allocation of public IP from the allocated segment for this tenant. 
-      #Data-in interface
+        type: "interface" 
       - id: "vdu02:eth1"
         type: "interface"
-      #Data-out interfaces
       - id: "vdu02:eth2"
         type: "interface"
-##
-## The virtual links that interconnect
-## the different connections points.
-##
+
 virtual_links:
   - id: "mgmt"
     connectivity_type: "E-LAN"
     connection_points_reference:
       - "vdu01:eth0"
       - "vdu02:eth0"
+      - "vnf:mgmt"
     dhcp: True
   - id: "input"
     connectivity_type: "E-Line"
     connection_points_reference:
       - "vdu02:eth1"
-      - "input"
+      - "vnf:input"
     dhcp: True
   - id: "output"
     connectivity_type: "E-Line"
     connection_points_reference:
       - "vdu02:eth2"
-      - "output"
+      - "vnf:output"
     dhcp: True
 
-##
-## The monitoring rules that react
-## to the monitoring parameters
-##
+connection_points:
+- id: "vnf:mgmt"
+  type: interface
+- id: "vnf:input"
+  type: interface
+- id: "vnf:output"
+  type: interface
+
 monitoring_rules:
   - name: "mon:rule:vm_cpu_perc"
     description: "Trigger events if CPU load is above 10 percent."
