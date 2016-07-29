@@ -77,4 +77,4 @@ forwarding_graphs:
           - connection_point_ref: "vnf_vtc:output"
             position: 3
           - connection_point_ref: "ns:output"
-            position: 4l
+            position: 4
