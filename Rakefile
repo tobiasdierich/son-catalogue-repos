@@ -14,7 +14,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
-## Neither the name of the SONATA-NFV
+## Neither the name of the SONATA-NFV [, ANY ADDITIONAL AFFILIATION]
 ## nor the names of its contributors may be used to endorse or promote
 ## products derived from this software without specific prior written
 ## permission.
@@ -79,7 +79,11 @@ namespace :init do
     nsd_sample = 'samples/sonata-demo/service-descriptor/sonata-demo.yml'
     pd_sample = 'samples/sonata-demo/package-descriptor/sonata-demo.yml'
     vnfr_random_sample = 'samples/sonata-demo/function-record/random-vnfr.yml'
+    vtc_sample = 'samples/sonata-demo-1/function-descriptor/vtc-vnfd.yml'
+    nsd1_sample = 'samples/sonata-demo-1/service-descriptor/sonata-demo.yml'
 
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ nsd1_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/network-services"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ vtc_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
     sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ firewall_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
     sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ iperf_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
     sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ tcpdump_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
