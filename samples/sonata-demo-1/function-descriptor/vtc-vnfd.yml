@@ -27,7 +27,7 @@ function_specific_managers:
 virtual_deployment_units:
   - id: "vdu01"
     description: "VNFC for the dashboard and the time-series database"
-    vm_image: "TBD"
+    vm_image: "vtc_dashboard"
     vm_image_format: "qcow2"
     resource_requirements:
       cpu:
@@ -51,7 +51,7 @@ virtual_deployment_units:
       - id: "vdu01:eth0"
         type: "interface"
   - id: "vdu02"
-    vm_image: "TBD"
+    vm_image: "pfring_api_module"
     description: "VNFC for the DPI functionality"
     vm_image_format: "qcow2"
     resource_requirements:
