@@ -8,7 +8,7 @@ description: >
 
 virtual_deployment_units:
   - id: "vdu01"
-    description: "VNFC for the dashboard and the time-series database"
+    description: "VNFC for the vDPI, dashboard and the time-series database"
     vm_image: "sonata-vtc"
     vm_image_format: "qcow2"
     resource_requirements:
@@ -33,8 +33,8 @@ virtual_deployment_units:
       - id: "vdu01:eth0"
         type: "interface"
   - id: "vdu02"
-    vm_image: "pfring_api_module"
-    description: "VNFC for the DPI functionality"
+    vm_image: "sonata-vfw"
+    description: "VNFC for the vFW functionality"
     vm_image_format: "qcow2"
     resource_requirements:
       cpu:
