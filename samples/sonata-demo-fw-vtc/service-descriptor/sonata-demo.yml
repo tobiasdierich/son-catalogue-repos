@@ -11,10 +11,10 @@ descriptor_version: "1.0"
 vendor: "eu.sonata-nfv.service-descriptor"
 name: "sonata-demo-1"
 version: "0.1"
-author: "Felipe Vicens, Atos IT Solutions and Services Iberia"
+author: "Dario Valocchi, UCL"
 description: >
   "The network service descriptor for the SONATA demo,
-   comprising a Virtual Traffic Classifier"
+   including a virtual Firewall and a  Virtual Traffic Classifier"
 
 ##
 ## The various network functions this service
