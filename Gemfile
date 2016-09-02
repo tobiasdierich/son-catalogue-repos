@@ -27,25 +27,25 @@
 
 source 'https://rubygems.org'
 
-gem 'addressable'
-gem 'rake'
+gem 'addressable', '~> 2.3.8'
+gem 'rake', '~> 11.2.2'
 gem 'sinatra', '~> 1.4.3', require: 'sinatra/base'
 gem 'sinatra-contrib', '~> 1.4.1', require: false
-gem 'puma'
+gem 'puma', '~> 3.4.0'
 gem 'json', '~>1.8'
 gem 'json-schema', '~>2.5'
 gem 'rest-client', '~>1.8'
-gem 'ci_reporter_rspec'
+gem 'ci_reporter_rspec', '~> 1.0'
 
 group :development, :test do
-  gem 'webmock'
-  gem 'rspec'
-  gem 'rspec-mocks'
-  gem 'rack-test', require: 'rack/test'
-  gem 'rspec-its'
-  gem 'rubocop'
-  gem 'rubocop-checkstyle_formatter', require: false
-  gem 'license_finder'
+  gem 'webmock', '~> 2.1.0'
+  gem 'rspec', '~> 3.5.0'
+  gem 'rspec-mocks', '~> 3.5.0'
+  gem 'rack-test', '~> 0.6', require: 'rack/test'
+  gem 'rspec-its', '~> 1.2.0'
+  gem 'rubocop', '~> 0.41.2'
+  gem 'rubocop-checkstyle_formatter', '~> 0.2.0', require: false
+  gem 'license_finder', '~> 2.1.2'
 end
 
 group :doc do
