@@ -30,7 +30,7 @@ mongo:
   restart: always
 
 mongoexpress:
-  image: mongo-express/mongo-express-docker
+  image: mongo-express/mongo-express
   links:
     - mongo:mongo
   ports:
