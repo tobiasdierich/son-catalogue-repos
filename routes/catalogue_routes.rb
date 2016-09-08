@@ -166,7 +166,7 @@ class SonataCatalogue < Sinatra::Application
   # @method get_ns_sp_ns_id
   # @overload get '/catalogues/network-services/:id/?'
   #	GET one specific descriptor
-  #	@param [String] sp_ns_id NS sp ID
+  #	@param :id [Symbol] unique identifier
   # Show a NS by internal ID (uuid)
   get '/network-services/:id/?' do
     unless params[:id].nil?
@@ -573,7 +573,7 @@ class SonataCatalogue < Sinatra::Application
   # @method delete_nsd_sp_ns_id
   # @overload delete '/catalogues/network-service/:id/?'
   #	Delete a NS by its ID
-  #	@param [uuid] sp_ns_id NS sp ID
+  #	@param :id [Symbol] unique identifier
   # Delete a NS by uuid
   delete '/network-services/:id/?' do
     unless params[:id].nil?
@@ -703,7 +703,7 @@ class SonataCatalogue < Sinatra::Application
   # @method get_vnfs_id
   # @overload get '/catalogues/vnfs/:id/?'
   #	GET one specific descriptor
-  #	@param [String] id VNF ID
+  #	@param :id [Symbol] id VNF ID
   # Show a VNF by internal ID (uuid)
   get '/vnfs/:id/?' do
     unless params[:id].nil?
@@ -1107,7 +1107,7 @@ class SonataCatalogue < Sinatra::Application
   # @method delete_vnfd_sp_vnf_id
   # @overload delete '/catalogues/vnfs/:id/?'
   #	Delete a VNF by its ID
-  #	@param [uuid] id VNF ID
+  #	@param :id [Symbol] id VNF ID
   # Delete a VNF by uuid
   delete '/vnfs/:id/?' do
     unless params[:id].nil?
@@ -1238,7 +1238,7 @@ class SonataCatalogue < Sinatra::Application
   # @method get_packages_package_id
   # @overload get '/catalogues/packages:id/?'
   #	GET one specific descriptor
-  #	@param [String] package_uuid Package id
+  #	@param :id [Symbol] package_uuid Package id
   # Show a Package by uuid
   get '/packages/:id/?' do
     unless params[:id].nil?
@@ -1643,7 +1643,7 @@ class SonataCatalogue < Sinatra::Application
   # @method delete_pd_package_id
   # @overload delete '/catalogues/packages/:id/?'
   #	Delete a PD by its ID
-  #	@param [uuid] id PD ID
+  #	@param :id [Symbol] identifier for PD
   # Delete a PD by uuid
   delete '/packages/:id/?' do
     unless params[:id].nil?
@@ -1720,7 +1720,7 @@ class SonataCatalogue < Sinatra::Application
   # @method get_son_package_id
   # @overload get '/catalogues/sonp-packages/:id/?'
   #	Get a son-package
-  #	@param [string] son-package ID
+  #	@param :id [Symbol] son-package ID
   # son-package internal database identifier
   get '/son-packages/:id/?' do
     # Dir.chdir(File.dirname(__FILE__))
@@ -1829,7 +1829,7 @@ class SonataCatalogue < Sinatra::Application
   # @method delete_son_package_id
   # @overload delete '/catalogues/son-packages/:id/?'
   #	Delete a son-package by its ID
-  #	@param [uuid] son-package ID
+  #	@param :id [Symbol] son-package ID
   delete '/son-packages/:id/?' do
     unless params[:id].nil?
       logger.debug "Catalogue: entered DELETE /son-packages/#{params[:id]}"
