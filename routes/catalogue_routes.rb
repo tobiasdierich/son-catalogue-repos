@@ -166,7 +166,6 @@ class SonataCatalogue < Sinatra::Application
   # @method get_ns_sp_ns_id
   # @overload get '/catalogues/network-services/:id/?'
   #	  GET one specific descriptor
-  #   @required_argument :id [Symbol] unique identifier of service
   #	  @param :id [Symbol] unique identifier
   # Show a NS by internal ID (uuid)
   get '/network-services/:id/?' do
