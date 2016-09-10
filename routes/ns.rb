@@ -143,7 +143,7 @@ class SonataNsRepository < Sinatra::Application
     new_nsr = instance
     
     # Validation against schema
-    errors = validate_json(nsr_json, @@nsr_schema)
+    errors = validate_json(new_nsr, @@nsr_schema)
 
     puts 'nsr: ', Nsr.to_json
     return 422, errors.to_json if errors
@@ -168,7 +168,6 @@ class SonataNsRepository < Sinatra::Application
 
     nsr_json = new_nsr.to_json
     return 200, nsr_json
-    # return 200, new_ns.to_json
   end
 
   delete '/ns-instances/:id' do
