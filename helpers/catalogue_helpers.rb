@@ -244,6 +244,19 @@ class SonataCatalogue < Sinatra::Application
     halt code, {'Content-type' => 'application/json'}, msg.to_json
   end
 
+  def getcurb(url, headers={})
+    Curl.get(url) do |req|
+      req.headers = headers
+    end
+  end
+
+  def postcurb(url, body)
+    Curl.post(url, body) do |req|
+      req.headers['Content-type'] = 'application/json'
+      req.headers['Accept'] = 'application/json'
+    end
+  end
+
   # Method which lists all available interfaces
   # @return [Array] an array of hashes containing all interfaces
   def interfaces_list
