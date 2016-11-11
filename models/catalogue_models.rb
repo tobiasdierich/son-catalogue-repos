@@ -50,8 +50,32 @@ class Ns
   field :name, type: String
   field :version, type: String
 
+  #field :_id, type: String
+  #field :staus, type: String
+  #field :_nsd, type: Hash
+
   validates :vendor, :name, :version, presence: true
+  #validates :_id, :status, presence:true
 end
+
+# New item structure for meta-data and descriptor data
+# class Nsd
+#   include Mongoid::Document
+#   include Mongoid::Timestamps
+#   include Mongoid::Pagination
+#   include Mongoid::Attributes::Dynamic
+#   store_in collection: 'nsd'
+#   embeds_one :Ns
+#   validates :Ns, presence: true
+# end
+# class Ns
+#   include Mongoid::Document
+#   embedded_in :Nsd
+#   field :vendor, type: String
+#   field :name, type: String
+#   field :version, type: String
+#   validates :vendor, :name, :version, presence: true
+# end
 
 # Sonata class for Catalogue Functions
 class Vnf
@@ -102,3 +126,52 @@ class FileContainer
   # field :grid_fs_version, type: String
   field :md5, type: String
 end
+
+# Sonata class for Catalogue Functions
+# class Fsm
+#   include Mongoid::Document
+#   include Mongoid::Timestamps
+#   include Mongoid::Pagination
+# include Mongoid::Versioning
+#   include Mongoid::Attributes::Dynamic
+#   store_in session: 'vnf_db'
+
+#   field :vendor, type: String
+#   field :name, type: String
+#   field :version, type: String
+# field :vnf_manager, type: String # <- Not applicable yet
+
+#   validates :vendor, :name, :version, :presence => true
+# end
+
+# Sonata class for Catalogue Functions
+# class Ssm
+#   include Mongoid::Document
+#   include Mongoid::Timestamps
+#   include Mongoid::Pagination
+# include Mongoid::Versioning
+#   include Mongoid::Attributes::Dynamic
+#   store_in session: 'vnf_db'
+
+#   field :vendor, type: String
+#   field :name, type: String
+#   field :version, type: String
+# field :vnf_manager, type: String # <- Not applicable yet
+
+#   validates :vendor, :name, :version, :presence => true
+# end
+
+# Sonata class for Catalogue Services
+# class Vnf_Ns_map ## Temporary name
+#  include Mongoid::Document
+#  include Mongoid::Timestamps
+#  include Mongoid::Pagination
+#  include Mongoid::Attributes::Dynamic
+#  store_in session: 'map_db'
+
+#  field :vendor, type: String
+#  field :name, type: String
+#  field :version, type: String
+
+#  validates :vendor, :name, :version, :presence => true
+# end
