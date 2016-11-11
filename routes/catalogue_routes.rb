@@ -236,9 +236,9 @@ class SonataCatalogue < Sinatra::Application
     # --> Validation disabled
     # Validate NSD
     # begin
-    #	  RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    #   postcurb settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
     # rescue => e
-    #	  halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unreachable."
+    #   halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unreachable."
     # end
 
     # Check if NS already exists in the catalogue by name, vendor and version
@@ -368,7 +368,7 @@ class SonataCatalogue < Sinatra::Application
     # --> Validation disabled
     # Validate NSD
     # begin
-    #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+    #	  postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
     # rescue => e
     #	  logger.error e.response
     #	return e.response.code, e.response.body
@@ -446,7 +446,7 @@ class SonataCatalogue < Sinatra::Application
         # --> Validation disabled
         # Validate NSD
         # begin
-        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #	  postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
         # rescue => e
         #	  logger.error e.response
         #	  return e.response.code, e.response.body
@@ -511,7 +511,7 @@ class SonataCatalogue < Sinatra::Application
         # --> Validation disabled
         # Validate NSD
         # begin
-        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #	  postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
         # rescue => e
         #	  logger.error e.response
         #	  return e.response.code, e.response.body
@@ -774,7 +774,7 @@ class SonataCatalogue < Sinatra::Application
     # --> Validation disabled
     # Validate VNFD
     # begin
-    #	  RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    #	  postcurb settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
     # rescue => e
     #	  halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
     # end
@@ -906,7 +906,7 @@ class SonataCatalogue < Sinatra::Application
     # --> Validation disabled
     # Validate VNFD
     #begin
-    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+    #	postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
     #rescue => e
     #	logger.error e.response
     #	return e.response.code, e.response.body
@@ -980,7 +980,7 @@ class SonataCatalogue < Sinatra::Application
         # --> Validation disabled
         # Validate VNFD
         #begin
-        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #	postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
         #rescue => e
         #	logger.error e.response
         #	return e.response.code, e.response.body
@@ -1045,7 +1045,7 @@ class SonataCatalogue < Sinatra::Application
         # --> Validation disabled
         # Validate VNFD
         #begin
-        #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #	postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
         #rescue => e
         #	logger.error e.response
         #	return e.response.code, e.response.body
@@ -1309,7 +1309,7 @@ class SonataCatalogue < Sinatra::Application
     # --> Validation disabled
     # Validate PD
     # begin
-    #	  RestClient.post settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    #	  postcurb settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
     # rescue => e
     #	  halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unrechable."
     # end
@@ -1441,7 +1441,7 @@ class SonataCatalogue < Sinatra::Application
     # --> Validation disabled
     # Validate PD
     # begin
-    #	RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+    #	postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
     # rescue => e
     #	logger.error e.response
     #	return e.response.code, e.response.body
@@ -1515,7 +1515,7 @@ class SonataCatalogue < Sinatra::Application
         # --> Validation disabled
         # Validate PD
         # begin
-        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #	  postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
         # rescue => e
         #	  logger.error e.response
         #	  return e.response.code, e.response.body
@@ -1581,7 +1581,7 @@ class SonataCatalogue < Sinatra::Application
         # --> Validation disabled
         # Validate PD
         # begin
-        #	  RestClient.post settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        #	  postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
         # rescue => e
         #	  logger.error e.response
         #	  return e.response.code, e.response.body

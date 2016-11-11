@@ -226,6 +226,9 @@ The API documentation is expected to be generated with Swagger soon. Further inf
 
 * [SONATA Catalogues](http://wiki.sonata-nfv.eu/index.php/SONATA_Catalogues) - SONATA Catalogues on wikipages
 
+
+New API documentation in Swagger can be accessed from http://localhost:4011/api-doc while running the Catalogue server
+
 Currently, the API is documented with yardoc and can be built with a rake task:
 
 ```sh
