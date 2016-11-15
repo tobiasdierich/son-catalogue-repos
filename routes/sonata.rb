@@ -33,7 +33,8 @@ class Sonata < Sinatra::Application
   # Management method to get log file of catalogue remotely
   get '/log' do
     headers 'Content-Type' => 'text/plain; charset=utf8'
-    filename = 'log/development.log'
+    # filename = 'log/development.log'
+    filename = 'log/production.log'
 
     # For testing purposes only
     begin
