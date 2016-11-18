@@ -62,3 +62,32 @@ class Sonata < Sinatra::Application
     halt 200, api_routes.to_yaml
   end
 end
+
+# @see SonCatalogue
+class SonataCatalogue < Sinatra::Application
+  require 'addressable/uri'
+
+  before do
+    # Gatekeeper authn. code will go here for future implementation
+    # --> Gatekeeper authn. disabled
+
+    if settings.environment == 'development'
+      p 'Development settings'
+    end
+    # authorized?
+  end
+
+  DEFAULT_OFFSET = '0'
+  DEFAULT_LIMIT = '10'
+  DEFAULT_MAX_LIMIT = '100'
+
+  # @method get_root
+  # @overload get '/catalogues/'
+  # Get all available interfaces
+  # -> Get all interfacess
+  get '/' do
+    headers 'Content-Type' => 'text/plain; charset=utf8'
+    halt 200, interfaces_list.to_yaml
+  end
+
+end

@@ -50,31 +50,36 @@ class Ns
   field :name, type: String
   field :version, type: String
 
-  #field :_id, type: String
-  #field :staus, type: String
-  #field :_nsd, type: Hash
+  # field :_id, type: String
+  field :status, type: String
+  # field :_nsd, type: Hash
 
   validates :vendor, :name, :version, presence: true
-  #validates :_id, :status, presence:true
+  # validates :_id, :status, presence:true
 end
 
 # New item structure for meta-data and descriptor data
 # class Nsd
-#   include Mongoid::Document
-#   include Mongoid::Timestamps
-#   include Mongoid::Pagination
-#   include Mongoid::Attributes::Dynamic
-#   store_in collection: 'nsd'
-#   embeds_one :Ns
-#   validates :Ns, presence: true
+  # include Mongoid::Document
+  # include Mongoid::Timestamps
+  # include Mongoid::Pagination
+  # include Mongoid::Attributes::Dynamic
+  # store_in collection: 'nsd'
+  # embeds_one :nsd
+  # field :_id, type: String
+  # field :status, type: String
+  # field :signature, type: String
+  # validates :nsd, presence: true
 # end
+
 # class Ns
-#   include Mongoid::Document
-#   embedded_in :Nsd
-#   field :vendor, type: String
-#   field :name, type: String
-#   field :version, type: String
-#   validates :vendor, :name, :version, presence: true
+  # include Mongoid::Document
+  # include Mongoid::Attributes::Dynamic
+  # embedded_in :Nsd
+  # field :vendor, type: String
+  # field :name, type: String
+  # field :version, type: String
+  # validates :vendor, :name, :version, presence: true
 # end
 
 # Sonata class for Catalogue Functions
