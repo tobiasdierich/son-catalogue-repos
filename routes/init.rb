@@ -27,7 +27,11 @@
 
 require_relative 'vnf'
 require_relative 'ns'
-require_relative 'catalogue_routes'
+# require_relative 'catalogue_routes'
+require_relative 'catalogue_nsd'
+require_relative 'catalogue_vnfd'
+require_relative 'catalogue_pd'
+require_relative 'catalogue_sonp'
 require_relative 'sonata'
 require_relative 'docs'
 require_relative 'tests'
