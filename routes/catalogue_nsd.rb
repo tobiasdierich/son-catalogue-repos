@@ -237,7 +237,8 @@ class SonataCatalogue < Sinatra::Application
     begin
       new_nsd = {}
       # Generate the UUID for the descriptor
-      new_nsd['nsd'] = new_ns
+      # new_nsd['nsd'] = new_ns
+      new_nsd = new_ns
       new_nsd['_id'] = SecureRandom.uuid
       new_nsd['status'] = 'active'
       new_nsd['signature'] = 'null'
