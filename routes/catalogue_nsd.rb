@@ -29,25 +29,13 @@
 class SonataCatalogue < Sinatra::Application
   require 'addressable/uri'
 
-  get '/api-docs' do
-    redirect '/index.html'
-  end
-
-  # @method get_root
-  # @overload get '/catalogues/tests'
-  # Get all available interfaces
-  # -> Get all interfaces
-  # get '/tests' do
-  #   headers 'Content-Type' => 'text/plain; charset=utf8'
-  #   result = 'This is a test'
-  #   halt 200, result.to_yaml
-  # end
+  ### NSD API METHODS ###
 
   # @method get_nss
   # @overload get '/catalogues/network-services/?'
   #	Returns a list of NSs
   # -> List many descriptors
-  get '/tests/?' do
+  get '/network-services/?' do
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
@@ -57,21 +45,9 @@ class SonataCatalogue < Sinatra::Application
     # puts 'query_values', uri.query_values
     logger.info "Catalogue: entered GET /network-services?#{uri.query}"
 
-    # Modify Hash strings names to embedded docs names
-    metadata = ['_id', 'status', 'signature', 'created_at', 'update_at', 'offset', 'limit', 'nsd', 'vnfd', 'pd']
-
-    params.keys.each do |k|
-      p 'k', k
-      unless metadata.include?(k)
-        p 'includes?', metadata.include?(k)
-        params['nsd.'+k.to_s] = params.delete(k)
-      end
-    end
-    p 'params', params
-
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    p 'keyed_params', keyed_params
+    # puts 'keyed_params', keyed_params
 
     # Set headers
     case request.content_type
@@ -81,19 +57,19 @@ class SonataCatalogue < Sinatra::Application
         headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
-    p 'headers_params', headers[:params]
+
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
     # puts 'keyed_params(1)', keyed_params
 
     # Check for special case (:version param == last)
-    if keyed_params.key?(:'nsd.version') && keyed_params[:'nsd.version'] == 'last'
+    if keyed_params.key?(:version) && keyed_params[:version] == 'last'
       # Do query for last version -> get_nsd_ns_vendor_last_version
 
-      keyed_params.delete(:'nsd.version')
-      p 'keyed_params(2)', keyed_params
+      keyed_params.delete(:version)
+      # puts 'keyed_params(2)', keyed_params
 
-      nss = Nsd.where((keyed_params)).sort({ 'nsd.version' => -1 }) #.limit(1).first()
+      nss = Ns.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: NSDs=#{nss}"
       # nss = nss.sort({"version" => -1})
       # puts 'nss: ', nss.to_json
@@ -107,20 +83,15 @@ class SonataCatalogue < Sinatra::Application
         nss_list = []
         checked_list = []
 
-        # p 'NSS', nss.first.nsd['vendor']
-        nss_name_vendor = Pair.new(nss.first.nsd['name'], nss.first.nsd['vendor'])
-        #nss_name_vendor = Pair.new(nss.first.nsd, nss.first.nsd.vendor)
+        nss_name_vendor = Pair.new(nss.first.name, nss.first.vendor)
         # p 'nss_name_vendor:', [nss_name_vendor.one, nss_name_vendor.two]
         checked_list.push(nss_name_vendor)
         nss_list.push(nss.first)
 
         nss.each do |nsd|
-          p 'nsd', nsd
-          p 'nsd.nsd[name]', nsd.nsd['name']
-          p 'nsd.nsd[vendor]', nsd.nsd['vendor']
           # p 'Comparison: ', [nsd.name, nsd.vendor].to_s + [nss_name_vendor.one, nss_name_vendor.two].to_s
-          if (nsd.nsd['name'] != nss_name_vendor.one) || (nsd.nsd['vendor'] != nss_name_vendor.two)
-            nss_name_vendor = Pair.new(nsd.nsd['name'], nsd.nsd['vendor'])
+          if (nsd.name != nss_name_vendor.one) || (nsd.vendor != nss_name_vendor.two)
+            nss_name_vendor = Pair.new(nsd.name, nsd.vendor)
             # p 'nss_name_vendor(x):', [nss_name_vendor.one, nss_name_vendor.two]
             # checked_list.each do |pair|
             #  p [pair.one, nss_name_vendor.one], [pair.two, nss_name_vendor.two]
@@ -142,9 +113,7 @@ class SonataCatalogue < Sinatra::Application
 
     else
       # Do the query
-      p 'keyed_params', keyed_params
-
-      nss = Nsd.where(keyed_params).all
+      nss = Ns.where(keyed_params)
       logger.info "Catalogue: NSDs=#{nss}"
       # puts nss.to_json
       if nss && nss.size.to_i > 0
@@ -176,12 +145,12 @@ class SonataCatalogue < Sinatra::Application
   #	  GET one specific descriptor
   #	  @param :id [Symbol] unique identifier
   # Show a NS by internal ID (uuid)
-  get '/tests/:id/?' do
+  get '/network-services/:id/?' do
     unless params[:id].nil?
       logger.debug "Catalogue: GET /network-services/#{params[:id]}"
 
       begin
-        ns = Nsd.find(params[:id])
+        ns = Ns.find(params[:id])
       rescue Mongoid::Errors::DocumentNotFound => e
         logger.error e
         json_error 404, "The NSD ID #{params[:id]} does not exist" unless ns
@@ -204,10 +173,10 @@ class SonataCatalogue < Sinatra::Application
     json_error 400, 'No NSD ID specified'
   end
 
-  # @method post_tests
-  # @overload post '/catalogues/tests'
+  # @method post_nss
+  # @overload post '/catalogues/network-services'
   # Post a NS in JSON or YAML format
-  post '/tests' do
+  post '/network-services' do
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -237,22 +206,28 @@ class SonataCatalogue < Sinatra::Application
     end
 
     # Validate NS
-    json_error 400, 'ERROR: NS Vendor not found' unless new_ns['nsd'].has_key?('vendor')
-    json_error 400, 'ERROR: NS Name not found' unless new_ns['nsd'].has_key?('name')
-    json_error 400, 'ERROR: NS Version not found' unless new_ns['nsd'].has_key?('version')
+    json_error 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
+    json_error 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
+    json_error 400, 'ERROR: NS Version not found' unless new_ns.has_key?('version')
 
-    p new_ns['nsd']['name']
+    # --> Validation disabled
+    # Validate NSD
+    # begin
+    #   postcurb settings.nsd_validator + '/nsds', ns.to_json, :content_type => :json
+    # rescue => e
+    #   halt 500, {'Content-Type' => 'text/plain'}, "Validator mS unreachable."
+    # end
 
     # Check if NS already exists in the catalogue by name, vendor and version
     begin
-      ns = Nsd.find_by({ 'nsd.name' => new_ns['nsd']['name'], 'nsd.vendor' => new_ns['nsd']['vendor'], 'nsd.version' => new_ns['nsd']['version'] })
+      ns = Ns.find_by({ 'name' => new_ns['name'], 'vendor' => new_ns['vendor'], 'version' => new_ns['version'] })
       json_return 200, 'Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
     end
     # Check if NSD has an ID (it should not) and if it already exists in the catalogue
     begin
-      ns = Nsd.find_by({ '_id' => new_ns['_id'] })
+      ns = Ns.find_by({ '_id' => new_ns['_id'] })
       json_return 200, 'Duplicated NS ID'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -260,17 +235,13 @@ class SonataCatalogue < Sinatra::Application
 
     # Save to DB
     begin
-      new_nsd = Nsd.new('_id'=>SecureRandom.uuid, 'status' => 'active', 'signature' => 'null', )
-      new_nsd.nsd = Ns.new(new_ns['nsd'])
-      #ns = new_nsd.save!
-
-      #new_nsd = {}
+      new_nsd = {}
       # Generate the UUID for the descriptor
-      #new_nsd['nsd'] = Ns.new(new_ns)
-      #new_nsd['_id'] = SecureRandom.uuid
-      #new_nsd['status'] = 'active'
-      #new_nsd['signature'] = 'null'
-      ns = Nsd.create!(new_nsd)
+      new_nsd['nsd'] = new_ns
+      new_nsd['_id'] = SecureRandom.uuid
+      new_nsd['status'] = 'active'
+      new_nsd['signature'] = 'null'
+      ns = Ns.create!(new_nsd)
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated NS ID' if e.message.include? 'E11000'
     end
@@ -292,7 +263,7 @@ class SonataCatalogue < Sinatra::Application
   # @overload put '/catalogues/network-services/?'
   # Update a NS by vendor, name and version in JSON or YAML format
   ## Catalogue - UPDATE
-  put '/tests/?' do
+  put '/network-services/?' do
     uri = Addressable::URI.new
     uri.query_values = params
     # puts 'params', params
@@ -406,7 +377,7 @@ class SonataCatalogue < Sinatra::Application
   # @overload put '/catalogues/network-services/:id/?'
   # Update a NS in JSON or YAML format
   ## Catalogue - UPDATE
-  put '/tests/:id/?' do
+  put '/network-services/:id/?' do
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -552,7 +523,7 @@ class SonataCatalogue < Sinatra::Application
   # @method delete_nsd_sp_ns
   # @overload delete '/network-services/?'
   #	Delete a NS by vendor, name and version
-  delete '/tests/?' do
+  delete '/network-services/?' do
     uri = Addressable::URI.new
     uri.query_values = params
     # puts 'params', params
@@ -584,7 +555,7 @@ class SonataCatalogue < Sinatra::Application
   #	  Delete a NS by its ID
   #	  @param :id [Symbol] unique identifier
   # Delete a NS by uuid
-  delete '/tests/:id/?' do
+  delete '/network-services/:id/?' do
     unless params[:id].nil?
       logger.debug "Catalogue: DELETE /network-services/#{params[:id]}"
       begin
@@ -600,6 +571,4 @@ class SonataCatalogue < Sinatra::Application
     logger.debug "Catalogue: leaving DELETE /network-services/#{params[:id]} with 'No NSD ID specified'"
     json_error 400, 'No NSD ID specified'
   end
-
-
 end
