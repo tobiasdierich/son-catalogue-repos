@@ -179,8 +179,9 @@ class SonataCatalogue < Sinatra::Application
       file_container.save
     end
     logger.debug "Catalogue: leaving POST /son-packages/ with #{grid_file.id}"
+    response = {"uuid" => sonp_id}
     # halt 201, grid_file.id.to_json
-    halt 201, sonp_id.to_json
+    halt 201, response.to_json
   end
 
   # @method update_son_package_id
