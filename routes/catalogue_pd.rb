@@ -388,7 +388,7 @@ class SonataCatalogue < Sinatra::Application
         # Do update of Descriptor status -> update_ns_status
         uri = Addressable::URI.new
         uri.query_values = params
-        logger.info "Catalogue: entered PUT /network-services/#{uri.query}"
+        logger.info "Catalogue: entered PUT /packages/#{uri.query}"
 
         # Validate Package
         # Retrieve stored version
@@ -424,6 +424,51 @@ class SonataCatalogue < Sinatra::Application
         #end
 
         halt 200, "Status updated to #{uri.query_values}"
+
+      # Check for special case (:sonp_uuid param == <uuid>)
+      elsif keyed_params.key?(:sonp_uuid)
+        # Do update of Package meta-data to include son-package uuid
+        uri = Addressable::URI.new
+        uri.query_values = params
+        logger.info "Catalogue: entered PUT /packages/#{uri.query}"
+
+        # Validate Package
+        # Retrieve stored version
+        begin
+          puts 'Searching ' + params[:id].to_s
+          pks = Package.find_by({ '_id' => params[:id] })
+          puts 'Package is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, 'This PD does not exists'
+        end
+
+        # Validate son-package uuid
+        begin
+          puts 'Searching ' + params[:sonp_uuid].to_s
+          sonp = FileContainer.find_by({ '_id' => params[:sonp_uuid] })
+          p 'Filename: ', sonp['grid_fs_name']
+          puts 'son-package is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, 'Submitted son-package UUID not exists'
+        end
+
+        # Add new son-package uuid field
+        begin
+          pks.update_attributes(son_package_uuid: keyed_params[:sonp_uuid])
+        rescue Moped::Errors::OperationFailure => e
+          json_error 400, 'ERROR: Operation failed'
+        end
+
+        halt 200, "PD updated with son-package uuid: #{keyed_params[:sonp_uuid]}"
+
+        # --> Validation disabled
+        # Validate PD
+        # begin
+        #	  postcurb settings.nsd_validator + '/nsds', nsd.to_json, :content_type => :json
+        # rescue => e
+        #	  logger.error e.response
+        #	  return e.response.code, e.response.body
+        #end
 
       else
         # Compatibility support for YAML content-type
