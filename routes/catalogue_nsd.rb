@@ -27,11 +27,11 @@
 
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
-  require 'addressable/uri'
+  # require 'addressable/uri'
 
   ### NSD API METHODS ###
 
-  # @method get_nss
+  # @method get_nssSS
   # @overload get '/catalogues/network-services/?'
   #	Returns a list of NSs
   # -> List many descriptors
@@ -39,15 +39,16 @@ class SonataCatalogue < Sinatra::Application
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
-    uri = Addressable::URI.new
-    uri.query_values = params
+    #uri = Addressable::URI.new
+    #uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered GET /network-services?#{uri.query}"
+    #logger.info "Catalogue: entered GET /network-services?#{uri.query}"
+    logger.info "Catalogue: entered GET /network-services?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    # puts 'keyed_params', keyed_params
+    #puts 'keyed_params', keyed_params
 
     # Set headers
     case request.content_type
@@ -75,7 +76,7 @@ class SonataCatalogue < Sinatra::Application
       # puts 'nss: ', nss.to_json
 
       if nss && nss.size.to_i > 0
-        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
+        logger.info "Catalogue: leaving GET /network-services?#{query_string} with #{nss}"
 
         # Paginate results
         # nss = nss.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
@@ -104,7 +105,7 @@ class SonataCatalogue < Sinatra::Application
         # puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
       else
         # logger.error "ERROR: 'No NSDs were found'"
-        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+        logger.info "Catalogue: leaving GET /network-services?#{query_string} with 'No NSDs were found'"
         # json_error 404, "No NSDs were found"
         nss_list = []
       end
@@ -117,13 +118,15 @@ class SonataCatalogue < Sinatra::Application
       logger.info "Catalogue: NSDs=#{nss}"
       # puts nss.to_json
       if nss && nss.size.to_i > 0
-        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
+        #logger.info "Catalogue: leaving GET /network-services?#{uri.query} with #{nss}"
+        logger.info "Catalogue: leaving GET /network-services?#{query_string} with #{nss}"
 
         # Paginate results
         nss = nss.paginate(offset: params[:offset], limit: params[:limit])
 
       else
-        logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+        #logger.info "Catalogue: leaving GET /network-services?#{uri.query} with 'No NSDs were found'"
+        logger.info "Catalogue: leaving GET /network-services?#{query_string} with 'No NSDs were found'"
         # json_error 404, "No NSDs were found"
       end
     end
@@ -265,11 +268,11 @@ class SonataCatalogue < Sinatra::Application
   # Update a NS by vendor, name and version in JSON or YAML format
   ## Catalogue - UPDATE
   put '/network-services/?' do
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered PUT /network-services?#{uri.query}"
+    logger.info "Catalogue: entered PUT /network-services?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -360,7 +363,7 @@ class SonataCatalogue < Sinatra::Application
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated NS ID' if e.message.include? 'E11000'
     end
-    logger.debug "Catalogue: leaving PUT /network-services?#{uri.query}\" with NSD #{new_ns}"
+    logger.debug "Catalogue: leaving PUT /network-services?#{query_string}\" with NSD #{new_ns}"
 
     response = ''
     case request.content_type
@@ -394,9 +397,9 @@ class SonataCatalogue < Sinatra::Application
       if keyed_params.key?(:status)
         p 'Detected key :status'
         # Do update of Descriptor status -> update_ns_status
-        uri = Addressable::URI.new
-        uri.query_values = params
-        logger.info "Catalogue: entered PUT /network-services/#{uri.query}"
+        # uri = Addressable::URI.new
+        # uri.query_values = params
+        logger.info "Catalogue: entered PUT /network-services/#{query_string}"
 
         # Validate NS
         # Retrieve stored version
@@ -433,7 +436,7 @@ class SonataCatalogue < Sinatra::Application
         #	  return e.response.code, e.response.body
         # end
 
-        halt 200, "Status updated to #{uri.query_values}"
+        halt 200, "Status updated to {#{query_string}}"
 
       else
         # Compatibility support for YAML content-type
@@ -525,11 +528,11 @@ class SonataCatalogue < Sinatra::Application
   # @overload delete '/network-services/?'
   #	Delete a NS by vendor, name and version
   delete '/network-services/?' do
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered DELETE /network-services?#{uri.query}"
+    logger.info "Catalogue: entered DELETE /network-services?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -543,11 +546,11 @@ class SonataCatalogue < Sinatra::Application
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The NSD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-      logger.debug "Catalogue: leaving DELETE /network-services?#{uri.query}\" with NSD #{ns}"
+      logger.debug "Catalogue: leaving DELETE /network-services?#{query_string}\" with NSD #{ns}"
       ns.destroy
       halt 200, 'OK: NSD removed'
     end
-    logger.debug "Catalogue: leaving DELETE /network-services?#{uri.query} with 'No NSD Vendor, Name, Version specified'"
+    logger.debug "Catalogue: leaving DELETE /network-services?#{query_string} with 'No NSD Vendor, Name, Version specified'"
     json_error 400, 'No NSD Vendor, Name, Version specified'
   end
 

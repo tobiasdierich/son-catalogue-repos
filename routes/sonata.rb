@@ -65,7 +65,7 @@ end
 
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
-  require 'addressable/uri'
+  # require 'addressable/uri'
 
   before do
     # Gatekeeper authn. code will go here for future implementation
