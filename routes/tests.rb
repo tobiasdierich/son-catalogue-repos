@@ -51,11 +51,15 @@ class SonataCatalogue < Sinatra::Application
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
-    uri = Addressable::URI.new
-    uri.query_values = params
+    #uri = Addressable::URI.new
+    #uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered GET /network-services?#{uri.query}"
+    #logger.info "Catalogue: entered GET /network-services?#{uri.query}"
+    logger.info "Catalogue: entered GET /network-services?#{params}"
+    logger.info "Catalogue: entered GET /network-services?#{query_string}"
+
+    #puts 'request params', params
 
     # Modify Hash strings names to embedded docs names
     metadata = ['_id', 'status', 'signature', 'created_at', 'update_at', 'offset', 'limit', 'nsd', 'vnfd', 'pd']
@@ -422,9 +426,9 @@ class SonataCatalogue < Sinatra::Application
       if keyed_params.key?(:status)
         p 'Detected key :status'
         # Do update of Descriptor status -> update_ns_status
-        uri = Addressable::URI.new
-        uri.query_values = params
-        logger.info "Catalogue: entered PUT /network-services/#{uri.query}"
+        # uri = Addressable::URI.new
+        # uri.query_values = params
+        logger.info "Catalogue: entered PUT /network-services/#{query_string}"
 
         # Validate NS
         # Retrieve stored version
@@ -461,7 +465,7 @@ class SonataCatalogue < Sinatra::Application
         #	  return e.response.code, e.response.body
         # end
 
-        halt 200, "Status updated to #{uri.query_values}"
+        halt 200, "Status updated to {#{query_string}}"
 
       else
         # Compatibility support for YAML content-type
@@ -600,6 +604,4 @@ class SonataCatalogue < Sinatra::Application
     logger.debug "Catalogue: leaving DELETE /network-services/#{params[:id]} with 'No NSD ID specified'"
     json_error 400, 'No NSD ID specified'
   end
-
-
 end

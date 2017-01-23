@@ -27,7 +27,7 @@
 
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
-  require 'addressable/uri'
+  # require 'addressable/uri'
 
   ### VNFD API METHODS ###
 
@@ -39,11 +39,11 @@ class SonataCatalogue < Sinatra::Application
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered GET /vnfs?#{uri.query}"
+    logger.info "Catalogue: entered GET /vnfs?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -75,7 +75,7 @@ class SonataCatalogue < Sinatra::Application
       # puts 'vnfs: ', vnfs.to_json
 
       if vnfs && vnfs.size.to_i > 0
-        logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with #{vnfs}"
+        logger.info "Catalogue: leaving GET /vnfs?#{query_string} with #{vnfs}"
 
         # Paginate results
         # vnfs = vnfs.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
@@ -100,7 +100,7 @@ class SonataCatalogue < Sinatra::Application
         # puts 'vnfs_list:', vnfs_list.each {|vnf| p vnf.name, vnf.vendor}
       else
         # logger.error "ERROR: 'No VNFDs were found'"
-        logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
+        logger.info "Catalogue: leaving GET /vnfs?#{query_string} with 'No VNFDs were found'"
         # json_error 404, "No VNFDs were found"
         vnfs_list = []
       end
@@ -113,13 +113,13 @@ class SonataCatalogue < Sinatra::Application
       logger.info "Catalogue: VNFDs=#{vnfs}"
       # puts vnfs.to_json
       if vnfs && vnfs.size.to_i > 0
-        logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with #{vnfs}"
+        logger.info "Catalogue: leaving GET /vnfs?#{query_string} with #{vnfs}"
 
         # Paginate results
         vnfs = vnfs.paginate(offset: params[:offset], limit: params[:limit])
 
       else
-        logger.info "Catalogue: leaving GET /vnfs?#{uri.query} with 'No VNFDs were found'"
+        logger.info "Catalogue: leaving GET /vnfs?#{query_string} with 'No VNFDs were found'"
         # json_error 404, "No VNFDs were found"
       end
     end
@@ -258,11 +258,11 @@ class SonataCatalogue < Sinatra::Application
   # Update a VNF by vendor, name and version in JSON or YAML format
   ## Catalogue - UPDATE
   put '/vnfs/?' do
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered PUT /vnfs?#{uri.query}"
+    logger.info "Catalogue: entered PUT /vnfs?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -353,7 +353,7 @@ class SonataCatalogue < Sinatra::Application
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated VNF ID' if e.message.include? 'E11000'
     end
-    logger.debug "Catalogue: leaving PUT /vnfs?#{uri.query}\" with VNFD #{new_vnf}"
+    logger.debug "Catalogue: leaving PUT /vnfs?#{query_string}\" with VNFD #{new_vnf}"
 
     response = ''
     case request.content_type
@@ -385,9 +385,9 @@ class SonataCatalogue < Sinatra::Application
       # Check for special case (:status param == <new_status>)
       if keyed_params.key?(:status)
         # Do update of Descriptor status -> update_ns_status
-        uri = Addressable::URI.new
-        uri.query_values = params
-        logger.info "Catalogue: entered PUT /vnfs/#{uri.query}"
+        # uri = Addressable::URI.new
+        # uri.query_values = params
+        logger.info "Catalogue: entered PUT /vnfs/#{query_string}"
 
         # Validate VNF
         # Retrieve stored version
@@ -422,7 +422,7 @@ class SonataCatalogue < Sinatra::Application
         #	return e.response.code, e.response.body
         #end
 
-        halt 200, "Status updated to #{uri.query_values}"
+        halt 200, "Status updated to {#{query_string}}"
 
       else
         # Compatibility support for YAML content-type
@@ -514,11 +514,11 @@ class SonataCatalogue < Sinatra::Application
   # @overload delete '/vnfs/?'
   #	Delete a VNF by vendor, name and version
   delete '/vnfs/?' do
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered DELETE /vnfs?#{uri.query}"
+    logger.info "Catalogue: entered DELETE /vnfs?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -532,11 +532,11 @@ class SonataCatalogue < Sinatra::Application
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The VNFD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-      logger.debug "Catalogue: leaving DELETE /vnfs?#{uri.query}\" with NSD #{vnf}"
+      logger.debug "Catalogue: leaving DELETE /vnfs?#{query_string}\" with NSD #{vnf}"
       vnf.destroy
       halt 200, 'OK: VNFD removed'
     end
-    logger.debug "Catalogue: leaving DELETE /vnfs?#{uri.query} with 'No VNFD Vendor, Name, Version specified'"
+    logger.debug "Catalogue: leaving DELETE /vnfs?#{query_string} with 'No VNFD Vendor, Name, Version specified'"
     json_error 400, 'No VNFD Vendor, Name, Version specified'
   end
 
