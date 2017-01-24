@@ -89,5 +89,4 @@ class SonataCatalogue < Sinatra::Application
     headers 'Content-Type' => 'text/plain; charset=utf8'
     halt 200, interfaces_list.to_yaml
   end
-
 end
