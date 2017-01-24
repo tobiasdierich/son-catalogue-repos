@@ -27,7 +27,7 @@
 
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
-  require 'addressable/uri'
+  # require 'addressable/uri'
 
   ### SONP API METHODS ###
 
@@ -39,11 +39,11 @@ class SonataCatalogue < Sinatra::Application
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered GET /son-packages?#{uri.query}"
+    logger.info "Catalogue: entered GET /son-packages?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -66,7 +66,7 @@ class SonataCatalogue < Sinatra::Application
 
     file_list = FileContainer.where(keyed_params)
 
-    logger.info "Catalogue: leaving GET /son-packages?#{uri.query} with #{file_list}"
+    logger.info "Catalogue: leaving GET /son-packages?#{query_string} with #{file_list}"
 
     # Paginate results
     file_list = file_list.paginate(offset: params[:offset], limit: params[:limit])

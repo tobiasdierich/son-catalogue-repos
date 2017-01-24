@@ -27,7 +27,7 @@
 
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
-  require 'addressable/uri'
+  # require 'addressable/uri'
 
   get '/api-docs' do
     redirect '/index.html'

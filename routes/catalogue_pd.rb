@@ -27,7 +27,7 @@
 
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
-  require 'addressable/uri'
+  # require 'addressable/uri'
 
   ### PD API METHODS ###
 
@@ -39,11 +39,11 @@ class SonataCatalogue < Sinatra::Application
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered GET /packages?#{uri.query}"
+    logger.info "Catalogue: entered GET /packages?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -75,7 +75,7 @@ class SonataCatalogue < Sinatra::Application
       # puts 'pks: ', pks.to_json
 
       if pks && pks.size.to_i > 0
-        logger.info "Catalogue: leaving GET /packages?#{uri.query} with #{pks}"
+        logger.info "Catalogue: leaving GET /packages?#{query_string} with #{pks}"
 
         # Paginate results
         # pks = pks.paginate(:offset => params[:offset], :limit => params[:limit]).sort({"version" => -1})
@@ -101,7 +101,7 @@ class SonataCatalogue < Sinatra::Application
         # puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
       else
         # logger.error "ERROR: 'No PDs were found'"
-        logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
+        logger.info "Catalogue: leaving GET /packages?#{query_string} with 'No PDs were found'"
         # json_error 404, "No PDs were found"
         pks_list = []
       end
@@ -114,13 +114,13 @@ class SonataCatalogue < Sinatra::Application
       logger.info "Catalogue: PDs=#{pks}"
       # puts pks.to_json
       if pks && pks.size.to_i > 0
-        logger.info "Catalogue: leaving GET /packages?#{uri.query} with #{pks}"
+        logger.info "Catalogue: leaving GET /packages?#{query_string} with #{pks}"
 
         # Paginate results
         pks = pks.paginate(offset: params[:offset], limit: params[:limit])
 
       else
-        logger.info "Catalogue: leaving GET /packages?#{uri.query} with 'No PDs were found'"
+        logger.info "Catalogue: leaving GET /packages?#{query_string} with 'No PDs were found'"
         # json_error 404, "No PDs were found"
       end
     end
@@ -259,11 +259,11 @@ class SonataCatalogue < Sinatra::Application
   #	Update a Package vendor, name and version in JSON or YAML format
   ## Catalogue - UPDATE
   put '/packages/?' do
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered PUT /packages?#{uri.query}"
+    logger.info "Catalogue: entered PUT /packages?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -354,7 +354,7 @@ class SonataCatalogue < Sinatra::Application
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated Package ID' if e.message.include? 'E11000'
     end
-    logger.debug "Catalogue: leaving PUT /packages?#{uri.query}\" with PD #{new_pks}"
+    logger.debug "Catalogue: leaving PUT /packages?#{query_string}\" with PD #{new_pks}"
 
     response = ''
     case request.content_type
@@ -386,9 +386,9 @@ class SonataCatalogue < Sinatra::Application
       # Check for special case (:status param == <new_status>)
       if keyed_params.key?(:status)
         # Do update of Descriptor status -> update_ns_status
-        uri = Addressable::URI.new
-        uri.query_values = params
-        logger.info "Catalogue: entered PUT /packages/#{uri.query}"
+        # uri = Addressable::URI.new
+        # uri.query_values = params
+        logger.info "Catalogue: entered PUT /packages/#{query_string}"
 
         # Validate Package
         # Retrieve stored version
@@ -423,14 +423,14 @@ class SonataCatalogue < Sinatra::Application
         #	  return e.response.code, e.response.body
         #end
 
-        halt 200, "Status updated to #{uri.query_values}"
+        halt 200, "Status updated to {#{query_string}}"
 
       # Check for special case (:sonp_uuid param == <uuid>)
       elsif keyed_params.key?(:sonp_uuid)
         # Do update of Package meta-data to include son-package uuid
-        uri = Addressable::URI.new
-        uri.query_values = params
-        logger.info "Catalogue: entered PUT /packages/#{uri.query}"
+        # uri = Addressable::URI.new
+        # uri.query_values = params
+        logger.info "Catalogue: entered PUT /packages/#{query_string}"
 
         # Validate Package
         # Retrieve stored version
@@ -561,11 +561,11 @@ class SonataCatalogue < Sinatra::Application
   # @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
   #	Delete a PD by group, name and version
   delete '/packages/?' do
-    uri = Addressable::URI.new
-    uri.query_values = params
+    # uri = Addressable::URI.new
+    # uri.query_values = params
     # puts 'params', params
     # puts 'query_values', uri.query_values
-    logger.info "Catalogue: entered DELETE /packages?#{uri.query}"
+    logger.info "Catalogue: entered DELETE /packages?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -579,11 +579,11 @@ class SonataCatalogue < Sinatra::Application
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-      logger.debug "Catalogue: leaving DELETE /packages?#{uri.query}\" with PD #{pks}"
+      logger.debug "Catalogue: leaving DELETE /packages?#{query_string}\" with PD #{pks}"
       pks.destroy
       halt 200, 'OK: PD removed'
     end
-    logger.debug "Catalogue: leaving DELETE /packages?#{uri.query} with 'No PD Vendor, Name, Version specified'"
+    logger.debug "Catalogue: leaving DELETE /packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
     json_error 400, 'No PD Vendor, Name, Version specified'
   end
 
