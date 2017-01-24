@@ -25,6 +25,13 @@
 ## acknowledge the contributions of their colleagues of the SONATA
 ## partner consortium (www.sonata-nfv.eu).
 
+class CatalogueV2 < SonataCatalogue
+  get '/api-docs' do
+    redirect '/index.html'
+  end
+end
+
+
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
   require 'addressable/uri'
