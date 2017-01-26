@@ -622,11 +622,11 @@ class CatalogueV2 < SonataCatalogue
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
-    logger.info "Catalogue: entered GET /packages?#{query_string}"
+    logger.info "Catalogue: entered GET /api/v2/packages?#{query_string}"
 
-    # Transform 'string' params Hash into keys
-    keyed_params = keyed_hash(params)
-    # puts 'keyed_params', keyed_params
+    # Split keys in meta_data and data
+    # Then transform 'string' params Hash into keys
+    keyed_params = add_descriptor_level('pd', params)
 
     # Set headers
     case request.content_type
@@ -639,34 +639,32 @@ class CatalogueV2 < SonataCatalogue
 
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
-    # puts 'keyed_params(1)', keyed_params
 
     # Check for special case (:version param == last)
-    if keyed_params.key?(:version) && keyed_params[:version] == 'last'
-      # Do query for last version -> get_nsd_ns_vendor_last_version
-      keyed_params.delete(:version)
-      # puts 'keyed_params(2)', keyed_params
+    if keyed_params.key?(:'pd.version') && keyed_params[:'pd.version'] == 'last'
+      # Do query for last version -> get_pd_package_vendor_last_version
+      keyed_params.delete(:'pd.version')
 
-      pks = Package.where((keyed_params)).sort({ 'version' => -1 }) #.limit(1).first()
+      pks = Pkgd.where((keyed_params)).sort({ 'pd.version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: PDs=#{pks}"
       # pks = pks.sort({"version" => -1})
       # puts 'pks: ', pks.to_json
 
       if pks && pks.size.to_i > 0
-        logger.info "Catalogue: leaving GET /packages?#{query_string} with #{pks}"
+        logger.info "Catalogue: leaving GET /api/v2/packages?#{query_string} with #{pks}"
 
         pks_list = []
         checked_list = []
 
-        pks_name_vendor = Pair.new(pks.first.name, pks.first.vendor)
+        pks_name_vendor = Pair.new(pks.first.pd['name'], pks.first.pd['vendor'])
         # p 'pks_name_vendor:', [pks_name_vendor.one, pks_name_vendor.two]
         checked_list.push(pks_name_vendor)
         pks_list.push(pks.first)
 
         pks.each do |pd|
           # p 'Comparison: ', [pd.name, pd.vendor].to_s + [pks_name_vendor.one, pks_name_vendor.two].to_s
-          if (pd.name != pks_name_vendor.one) || (pd.vendor != pks_name_vendor.two)
-            pks_name_vendor = Pair.new(pd.name, pd.vendor)
+          if (pd.pd['name'] != pks_name_vendor.one) || (pd.pd['vendor'] != pks_name_vendor.two)
+            pks_name_vendor = Pair.new(pd.pd['name'], pd.pd['vendor'])
           end
           pks_list.push(pd) unless checked_list.any? { |pair| pair.one == pks_name_vendor.one &&
               pair.two == pks_name_vendor.two }
@@ -675,7 +673,7 @@ class CatalogueV2 < SonataCatalogue
 
         # puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
       else
-        logger.info "Catalogue: leaving GET /packages?#{query_string} with 'No PDs were found'"
+        logger.info "Catalogue: leaving GET /api/v2/packages?#{query_string} with 'No PDs were found'"
         pks_list = []
       end
       # pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
@@ -683,17 +681,14 @@ class CatalogueV2 < SonataCatalogue
 
     else
       # Do the query
-      pks = Package.where(keyed_params)
+      pks = Pkgd.where(keyed_params)
       logger.info "Catalogue: PDs=#{pks}"
-      # puts pks.to_json
       if pks && pks.size.to_i > 0
-        logger.info "Catalogue: leaving GET /packages?#{query_string} with #{pks}"
-
+        logger.info "Catalogue: leaving GET /api/v2/packages?#{query_string} with #{pks}"
         # Paginate results
         pks = pks.paginate(offset: params[:offset], limit: params[:limit])
-
       else
-        logger.info "Catalogue: leaving GET /packages?#{query_string} with 'No PDs were found'"
+        logger.info "Catalogue: leaving GET /api/v2/packages?#{query_string} with 'No PDs were found'"
       end
     end
 
@@ -716,15 +711,15 @@ class CatalogueV2 < SonataCatalogue
   # Show a Package by uuid
   get '/packages/:id/?' do
     unless params[:id].nil?
-      logger.debug "Catalogue: GET /packages/#{params[:id]}"
+      logger.debug "Catalogue: GET /api/v2/packages/#{params[:id]}"
 
       begin
-        pks = Package.find(params[:id])
+        pks = Pkgd.find(params[:id])
       rescue Mongoid::Errors::DocumentNotFound => e
         logger.error e
         json_error 404, "The PD ID #{params[:id]} does not exist" unless pks
       end
-      logger.debug "Catalogue: leaving GET /packages/#{params[:id]}\" with PD #{pks}"
+      logger.debug "Catalogue: leaving GET /api/v2/packages/#{params[:id]}\" with PD #{pks}"
 
       response = ''
       case request.content_type
@@ -738,7 +733,7 @@ class CatalogueV2 < SonataCatalogue
       halt 200, response
 
     end
-    logger.debug "Catalogue: leaving GET /packages/#{params[:id]} with 'No PD ID specified'"
+    logger.debug "Catalogue: leaving GET /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
     json_error 400, 'No PD ID specified'
   end
 
@@ -746,7 +741,6 @@ class CatalogueV2 < SonataCatalogue
   # @overload post '/catalogues/packages'
   # Post a Package in JSON or YAML format
   post '/packages' do
-    # A bit more work as it needs to parse the package descriptor to get GROUP, NAME, and VERSION.
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
@@ -764,8 +758,6 @@ class CatalogueV2 < SonataCatalogue
 
         # Validate JSON format
         new_pks, errors = parse_json(new_pks_json)
-        # puts 'pks: ', new_pks.to_json
-        # puts 'new_pks id', new_pks['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -782,14 +774,14 @@ class CatalogueV2 < SonataCatalogue
 
     # Check if PD already exists in the catalogue by name, vendor and version
     begin
-      pks = Package.find_by({ 'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version'] })
+      pks = Pkgd.find_by({ 'pd.name' => new_pks['name'], 'pd.vendor' => new_pks['vendor'], 'pd.version' => new_pks['version'] })
       json_return 200, 'Duplicated Package Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
     end
     # Check if PD has an ID (it should not) and if it already exists in the catalogue
     begin
-      pks = Package.find_by({ '_id' => new_pks['_id'] })
+      pks = Pkgd.find_by({ '_id' => new_pks['_id'] })
       json_return 200, 'Duplicated Package ID'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -797,10 +789,14 @@ class CatalogueV2 < SonataCatalogue
 
     # Save to DB
     begin
+      new_pd = {}
       # Generate the UUID for the descriptor
-      new_pks['_id'] = SecureRandom.uuid
-      new_pks['status'] = 'active'
-      pks = Package.create!(new_pks)
+      new_pd['pd'] = new_pks
+      new_pd['_id'] = SecureRandom.uuid
+      new_pd['status'] = 'active'
+      new_pd['signature'] = 'null'
+      new_pd['md5'] = 'null'
+      pks = Pkgd.create!(new_pd)
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated Package ID' if e.message.include? 'E11000'
     end
@@ -823,11 +819,10 @@ class CatalogueV2 < SonataCatalogue
   #	Update a Package vendor, name and version in JSON or YAML format
   ## Catalogue - UPDATE
   put '/packages/?' do
-    logger.info "Catalogue: entered PUT /packages?#{query_string}"
+    logger.info "Catalogue: entered PUT /api/v2/packages?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    # puts 'keyed_params', keyed_params
 
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
@@ -849,8 +844,6 @@ class CatalogueV2 < SonataCatalogue
 
         # Validate JSON format
         new_pks, errors = parse_json(new_pks_json)
-        # puts 'pks: ', new_pks.to_json
-        # puts 'new_pks id', new_pks['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -861,7 +854,7 @@ class CatalogueV2 < SonataCatalogue
     end
 
     # Validate Package
-    # Check if same vendor, Name, Version do already exists in the database
+    # Check if mandatory fields Vendor, Name, Version are included
     json_error 400, 'ERROR: Package Vendor not found' unless new_pks.has_key?('vendor')
     json_error 400, 'ERROR: Package Name not found' unless new_pks.has_key?('name')
     json_error 400, 'ERROR: Package Version not found' unless new_pks.has_key?('version')
@@ -880,16 +873,16 @@ class CatalogueV2 < SonataCatalogue
       json_error 400, 'Update Vendor, Name and Version parameters are null'
     else
       begin
-        pks = Package.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                                'version' => keyed_params[:version] })
+        pks = Pkgd.find_by({ 'pd.vendor' => keyed_params[:vendor], 'pd.name' => keyed_params[:name],
+                                'pd.version' => keyed_params[:version] })
         puts 'Package is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
     end
-    # Check if PD already exists in the catalogue by name, group and version
+    # Check if PD already exists in the catalogue by Name, Vendor and Version
     begin
-      pks = Package.find_by({ 'name' => new_pks['name'], 'vendor' => new_pks['vendor'], 'version' => new_pks['version'] })
+      pks = Pkgd.find_by({ 'pd.name' => new_pks['name'], 'pd.vendor' => new_pks['vendor'], 'pd.version' => new_pks['version'] })
       json_return 200, 'Duplicated PD Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -897,15 +890,19 @@ class CatalogueV2 < SonataCatalogue
 
     # Update to new version
     puts 'Updating...'
-    new_pks['_id'] = SecureRandom.uuid # Unique UUIDs per PD entries
-    pd = new_pks
+    new_pd = {}
+    new_pd['_id'] = SecureRandom.uuid # Unique UUIDs per PD entries
+    new_pd['pd'] = new_pks
+    new_pd['status'] = 'active'
+    new_pd['signature'] = 'null'
+    new_pd['md5'] = 'null'
 
     begin
-      new_pks = Package.create!(pd)
+      new_pks = Pkgd.create!(new_pd)
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated Package ID' if e.message.include? 'E11000'
     end
-    logger.debug "Catalogue: leaving PUT /packages?#{query_string}\" with PD #{new_pks}"
+    logger.debug "Catalogue: leaving PUT /api/v2/packages?#{query_string}\" with PD #{new_pks}"
 
     response = ''
     case request.content_type
@@ -928,24 +925,21 @@ class CatalogueV2 < SonataCatalogue
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
 
     unless params[:id].nil?
-      logger.debug "Catalogue: PUT /packages/#{params[:id]}"
+      logger.debug "Catalogue: PUT /api/v2/packages/#{params[:id]}"
 
       # Transform 'string' params Hash into keys
       keyed_params = keyed_hash(params)
-      # puts 'keyed_params', keyed_params
 
       # Check for special case (:status param == <new_status>)
       if keyed_params.key?(:status)
         # Do update of Descriptor status -> update_ns_status
-        # uri = Addressable::URI.new
-        # uri.query_values = params
-        logger.info "Catalogue: entered PUT /packages/#{query_string}"
+        logger.info "Catalogue: entered PUT /api/v2/packages/#{query_string}"
 
         # Validate Package
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          pks = Package.find_by({ '_id' => params[:id] })
+          pks = Pkgd.find_by({ '_id' => params[:id] })
           puts 'Package is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, 'This PD does not exists'
@@ -970,13 +964,13 @@ class CatalogueV2 < SonataCatalogue
         # Check for special case (:sonp_uuid param == <uuid>)
       elsif keyed_params.key?(:sonp_uuid)
         # Do update of Package meta-data to include son-package uuid
-        logger.info "Catalogue: entered PUT /packages/#{query_string}"
+        logger.info "Catalogue: entered PUT /api/v2/packages/#{query_string}"
 
         # Validate Package
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          pks = Package.find_by({ '_id' => params[:id] })
+          pks = Pkgd.find_by({ '_id' => params[:id] })
           puts 'Package is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, 'This PD does not exists'
@@ -998,7 +992,7 @@ class CatalogueV2 < SonataCatalogue
         rescue Moped::Errors::OperationFailure => e
           json_error 400, 'ERROR: Operation failed'
         end
-
+        logger.debug "Catalogue: leaving PUT /api/v2/packages/#{query_string} succesfully"
         halt 200, "PD updated with son-package uuid: #{keyed_params[:sonp_uuid]}"
 
       else
@@ -1006,8 +1000,8 @@ class CatalogueV2 < SonataCatalogue
         case request.content_type
           when 'application/x-yaml'
             # Validate YAML format
-            # When updating a NSD, the json object sent to API must contain just data inside
-            # of the nsd, without the json field nsd: before
+            # When updating a PD, the json object sent to API must contain just data inside
+            # of the pd, without the json field pd: before
             pks, errors = parse_yaml(request.body.read)
             halt 400, errors.to_json if errors
 
@@ -1016,8 +1010,6 @@ class CatalogueV2 < SonataCatalogue
 
             # Validate JSON format
             new_pks, errors = parse_json(new_ns_json)
-            # puts 'pks: ', new_pks.to_json
-            # puts 'new_pks id', new_pks['_id'].to_json
             halt 400, errors.to_json if errors
 
           else
@@ -1028,7 +1020,7 @@ class CatalogueV2 < SonataCatalogue
         end
 
         # Validate Package
-        # Check if same vendor, Name, Version do already exists in the database
+        # Check if mandatory fields Vendor, Name, Version are included
         json_error 400, 'ERROR: Package Vendor not found' unless new_pks.has_key?('vendor')
         json_error 400, 'ERROR: Package Name not found' unless new_pks.has_key?('name')
         json_error 400, 'ERROR: Package Version not found' unless new_pks.has_key?('version')
@@ -1036,7 +1028,7 @@ class CatalogueV2 < SonataCatalogue
         # Retrieve stored version
         begin
           puts 'Searching ' + params[:id].to_s
-          pks = Package.find_by({ '_id' => params[:id] })
+          pks = Pkgd.find_by({ '_id' => params[:id] })
           puts 'Package is found'
         rescue Mongoid::Errors::DocumentNotFound => e
           json_error 404, "The PD ID #{params[:id]} does not exist"
@@ -1044,8 +1036,8 @@ class CatalogueV2 < SonataCatalogue
 
         # Check if Package already exists in the catalogue by name, vendor and version
         begin
-          pks = Package.find_by({ 'name' => new_pks['name'], 'vendor' => new_pks['vendor'],
-                                  'version' => new_pks['version'] })
+          pks = Pkgd.find_by({ 'pd.name' => new_pks['name'], 'pd.vendor' => new_pks['vendor'],
+                                  'pd.version' => new_pks['version'] })
           json_return 200, 'Duplicated Package Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
           # Continue
@@ -1053,15 +1045,19 @@ class CatalogueV2 < SonataCatalogue
 
         # Update to new version
         puts 'Updating...'
-        new_pks['_id'] = SecureRandom.uuid
-        pd = new_pks
+        new_pd = {}
+        new_pd['_id'] = SecureRandom.uuid # Unique UUIDs per PD entries
+        new_pd['pd'] = new_pks
+        new_pd['status'] = 'active'
+        new_pd['signature'] = 'null'
+        new_pd['md5'] = 'null'
 
         begin
-          new_pks = Package.create!(pd)
+          new_pks = Pkgd.create!(new_pd)
         rescue Moped::Errors::OperationFailure => e
           json_return 200, 'Duplicated Package ID' if e.message.include? 'E11000'
         end
-        logger.debug "Catalogue: leaving PUT /packages/#{params[:id]}\" with PD #{new_pks}"
+        logger.debug "Catalogue: leaving PUT /api/v2/packages/#{params[:id]}\" with PD #{new_pks}"
 
         response = ''
         case request.content_type
@@ -1075,7 +1071,7 @@ class CatalogueV2 < SonataCatalogue
         halt 200, response
       end
     end
-    logger.debug "Catalogue: leaving PUT /packages/#{params[:id]} with 'No PD ID specified'"
+    logger.debug "Catalogue: leaving PUT /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
     json_error 400, 'No PD ID specified'
   end
 
@@ -1083,7 +1079,7 @@ class CatalogueV2 < SonataCatalogue
   # @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
   #	Delete a PD by group, name and version
   delete '/packages/?' do
-    logger.info "Catalogue: entered DELETE /packages?#{query_string}"
+    logger.info "Catalogue: entered DELETE /api/v2/packages?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
@@ -1091,17 +1087,17 @@ class CatalogueV2 < SonataCatalogue
 
     unless keyed_params[:vendor].nil? && keyed_params[:name].nil? && keyed_params[:version].nil?
       begin
-        pks = Package.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
-                                'version' => keyed_params[:version] })
+        pks = Pkgd.find_by({ 'pd.vendor' => keyed_params[:vendor], 'pd.name' => keyed_params[:name],
+                                'pd.version' => keyed_params[:version] })
         puts 'Package is found'
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-      logger.debug "Catalogue: leaving DELETE /packages?#{query_string}\" with PD #{pks}"
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
       pks.destroy
       halt 200, 'OK: PD removed'
     end
-    logger.debug "Catalogue: leaving DELETE /packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
+    logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
     json_error 400, 'No PD Vendor, Name, Version specified'
   end
 
@@ -1112,18 +1108,18 @@ class CatalogueV2 < SonataCatalogue
   # Delete a PD by uuid
   delete '/packages/:id/?' do
     unless params[:id].nil?
-      logger.debug "Catalogue: DELETE /packages/#{params[:id]}"
+      logger.debug "Catalogue: DELETE /api/v2/packages/#{params[:id]}"
       begin
-        pks = Package.find(params[:id])
+        pks = Pkgd.find(params[:id])
       rescue Mongoid::Errors::DocumentNotFound => e
         logger.error e
         json_error 404, "The PD ID #{params[:id]} does not exist" unless pks
       end
-      logger.debug "Catalogue: leaving DELETE /packages/#{params[:id]}\" with PD #{pks}"
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]}\" with PD #{pks}"
       pks.destroy
       halt 200, 'OK: PD removed'
     end
-    logger.debug "Catalogue: leaving DELETE /packages/#{params[:id]} with 'No PD ID specified'"
+    logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
     json_error 400, 'No PD ID specified'
   end
 end
