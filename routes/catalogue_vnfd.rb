@@ -65,7 +65,7 @@ class CatalogueV1 < SonataCatalogue
 
     # Check for special case (:version param == last)
     if keyed_params.key?(:version) && keyed_params[:version] == 'last'
-      # Do query for last version -> get_nsd_ns_vendor_last_version
+      # Do query for last version -> get_vnfd_vnf_vendor_last_version
 
       keyed_params.delete(:version)
       # puts 'keyed_params(2)', keyed_params
@@ -173,7 +173,6 @@ class CatalogueV1 < SonataCatalogue
   # @method post_vnfs
   # @overload post '/catalogues/vnfs'
   # Post a VNF in JSON or YAML format
-
   post '/vnfs' do
     # Return if content-type is invalid
     halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
@@ -279,8 +278,8 @@ class CatalogueV1 < SonataCatalogue
     case request.content_type
       when 'application/x-yaml'
         # Validate YAML format
-        # When updating a NSD, the json object sent to API must contain just data inside
-        # of the nsd, without the json field nsd: before
+        # When updating a VNFD, the json object sent to API must contain just data inside
+        # of the vnfd, without the json field vnfd: before
         vnf, errors = parse_yaml(request.body.read)
         halt 400, errors.to_json if errors
 
@@ -533,7 +532,7 @@ class CatalogueV1 < SonataCatalogue
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The VNFD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-      logger.debug "Catalogue: leaving DELETE /vnfs?#{query_string}\" with NSD #{vnf}"
+      logger.debug "Catalogue: leaving DELETE /vnfs?#{query_string}\" with VNFD #{vnf}"
       vnf.destroy
       halt 200, 'OK: VNFD removed'
     end
@@ -555,7 +554,7 @@ class CatalogueV1 < SonataCatalogue
         logger.error e
         json_error 404, "The VNFD ID #{params[:id]} does not exist" unless vnf
       end
-      logger.debug "Catalogue: leaving DELETE /vnfs/#{params[:id]}\" with NSD #{vnf}"
+      logger.debug "Catalogue: leaving DELETE /vnfs/#{params[:id]}\" with VNFD #{vnf}"
       vnf.destroy
       halt 200, 'OK: VNFD removed'
     end
@@ -594,7 +593,7 @@ class CatalogueV2 < SonataCatalogue
 
     # Check for special case (:version param == last)
     if keyed_params.key?(:'vnfd.version') && keyed_params[:'vnfd.version'] == 'last'
-      # Do query for last version -> get_nsd_ns_vendor_last_version
+      # Do query for last version -> get_vnfd_vnf_vendor_last_version
       keyed_params.delete(:'vnfd.version')
 
       vnfs = Vnfd.where((keyed_params)).sort({ 'vnfd.version' => -1 }) #.limit(1).first()
@@ -750,7 +749,7 @@ class CatalogueV2 < SonataCatalogue
       new_vnfd['status'] = 'active'
       new_vnfd['signature'] = 'null'
       new_vnfd['md5'] = 'null'
-      vnf = Nsd.create!(new_vnfd)
+      vnf = Vnfd.create!(new_vnfd)
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated VNF ID' if e.message.include? 'E11000'
     end
@@ -1012,7 +1011,7 @@ class CatalogueV2 < SonataCatalogue
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The VNFD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-      logger.debug "Catalogue: leaving DELETE /api/v2/vnfs?#{query_string}\" with NSD #{vnf}"
+      logger.debug "Catalogue: leaving DELETE /api/v2/vnfs?#{query_string}\" with VNFD #{vnf}"
       vnf.destroy
       halt 200, 'OK: VNFD removed'
     end
@@ -1034,7 +1033,7 @@ class CatalogueV2 < SonataCatalogue
         logger.error e
         json_error 404, "The VNFD ID #{params[:id]} does not exist" unless vnf
       end
-      logger.debug "Catalogue: leaving DELETE /api/v2/vnfs/#{params[:id]}\" with NSD #{vnf}"
+      logger.debug "Catalogue: leaving DELETE /api/v2/vnfs/#{params[:id]}\" with VNFD #{vnf}"
       vnf.destroy
       halt 200, 'OK: VNFD removed'
     end

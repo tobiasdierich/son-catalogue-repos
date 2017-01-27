@@ -16,7 +16,6 @@ A connection to a MongoDB is required, this code has been run using MongoDB vers
 Root folder provides a script "installation_mongodb.sh" to install and set up a local MongoDB, or you can use mongoexpress to manage the remote mongo databases.
 
 Ruby gems used (for more details see Gemfile):
-
 * [Sinatra](http://www.sinatrarb.com/) - Ruby framework
 * [puma](http://puma.io/) - Web server
 * [json](https://github.com/flori/json) - JSON specification
@@ -25,6 +24,7 @@ Ruby gems used (for more details see Gemfile):
 * [JSON-schema](https://github.com/ruby-json-schema/json-schema) - JSON schema validator
 * [Rest-client](https://github.com/rest-client/rest-client) - HTTP and REST client
 * [Yard](https://github.com/lsegal/yard) - Documentation generator tool
+* [mongoid-grid_fs](https://github.com/mongoid/mongoid-grid_fs) - Implementation of the MongoDB GridFS specification
 
 ### Contributing
 You may contribute to the editor similar to other SONATA (sub-) projects, i.e. by creating pull requests.
@@ -91,35 +91,38 @@ curl -X POST --data-binary @test_nsr.yaml -H "Content-type:application/x-yaml" h
 curl -X POST --data-binary @test_vnfr.yaml -H "Content-type:application/x-yaml" http://localhost:4011/records/vnfr
 ```
 
-The Catalogues' API allows the use of CRUD operations to send, retrieve, update and delete descriptors.
+The Catalogues' API allows the use of CRUD operations to send, retrieve, update and delete descriptors and sonata files.
 The available descriptors include services (NSD), functions (VNFD) and packages (PD) descriptors.
-The Catalogues also support storage for SONATA packages, the binary files that contain the descriptors.
-For testing the Catalogues, you can use 'curl' tool to send a request to the API. It is required to set the HTTP header 'Content-type' field to 'application/json' or 'application/x-yaml' according to your desired format.
+The Catalogues also support storage for SONATA packages (son-packages), the binary files that contain the descriptors.
+For testing the Catalogues, you can use 'curl' tool to send a request descriptors to the API. It is required to set the HTTP header 'Content-type' field to 'application/json' or 'application/x-yaml' according to your desired format.
+
+The Catalogues' API now supports API versioning. New API v2 has been introduced in release v2.0 which implements some structure changes in the descriptors.
+For legacy compatibility, the API v1 is supported, however it is recommended to not mix a MongoDB databse with both versions.
 
 Method GET:
 
 To receive all descriptors you can use
 
 ```sh
-curl http://localhost:4011/catalogues/network-services
+curl http://localhost:4011/catalogues/api/v2/network-services
 ```
 ```sh
-curl http://localhost:4011/catalogues/vnfs
+curl http://localhost:4011/catalogues/api/v2/vnfs
 ```
 ```sh
-curl http://localhost:4011/catalogues/packages
+curl http://localhost:4011/catalogues/api/v2/packages
 ```
 
 To receive a descriptor by its ID:
 
 ```sh
-curl http://localhost:4011/catalogues/network-services/9f18bc1b-b18d-483b-88da-a600e9255016
+curl http://localhost:4011/catalogues/api/v2/network-services/9f18bc1b-b18d-483b-88da-a600e9255016
 ```
 ```sh
-curl http://localhost:4011/catalogues/vnfs/9f18bc1b-b18d-483b-88da-a600e9255017
+curl http://localhost:4011/catalogues/api/v2/vnfs/9f18bc1b-b18d-483b-88da-a600e9255017
 ```
 ```sh
-curl http://localhost:4011/catalogues/packages/9f18bc1b-b18d-483b-88da-a600e9255018
+curl http://localhost:4011/catalogues/api/v2/packages/9f18bc1b-b18d-483b-88da-a600e9255018
 ```
 
 Method POST:
@@ -127,13 +130,13 @@ Method POST:
 To send a descriptor
 
 ```sh
-curl -X POST --data-binary @nsd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/network-services
+curl -X POST --data-binary @nsd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/api/v2/network-services
 ```
 ```sh
-curl -X POST --data-binary @vnfd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/vnfs
+curl -X POST --data-binary @vnfd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/api/v2/vnfs
 ```
 ```sh
-curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/packages
+curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/api/v2/packages
 ```
 
 Method PUT:
@@ -141,13 +144,13 @@ Method PUT:
 To update a descriptor is similar to the POST method, but it is required that a older version of the descriptor is stored in the Catalogues
 
 ```sh
-curl -X POST --data-binary @nsd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/network-services
+curl -X POST --data-binary @nsd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/api/v2/network-services
 ```
 ```sh
-curl -X POST --data-binary @vnfd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/vnfs
+curl -X POST --data-binary @vnfd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/api/v2/vnfs
 ```
 ```sh
-curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/packages
+curl -X POST --data-binary @pd_sample.yaml -H "Content-type:application/x-yaml" http://localhost:4011/catalogues/api/v2/packages
 ```
 
 Method DELETE:
@@ -155,29 +158,29 @@ Method DELETE:
 To remove a descriptor by its ID
 
 ```sh
-curl -X DELETE http://localhost:4011/catalogues/network-services/9f18bc1b-b18d-483b-88da-a600e9255016
+curl -X DELETE http://localhost:4011/catalogues/network-services/api/v2/9f18bc1b-b18d-483b-88da-a600e9255016
 ```
 ```sh
-curl -X DELETE http://localhost:4011/catalogues/vnfs/9f18bc1b-b18d-483b-88da-a600e9255017
+curl -X DELETE http://localhost:4011/catalogues/vnfs/api/v2/9f18bc1b-b18d-483b-88da-a600e9255017
 ```
 ```sh
-curl -X DELETE http://localhost:4011/catalogues/packages/9f18bc1b-b18d-483b-88da-a600e9255018
+curl -X DELETE http://localhost:4011/catalogues/packages/api/v2/9f18bc1b-b18d-483b-88da-a600e9255018
 ```
 
-The API for SONATA packages works very similar to the API for the descriptors or records.
+The API for SONATA packages (son-package) files works very similar to the API for the descriptors or records.
 
 Method GET:
 
 To receive a list of stored packages
 
 ```sh
-curl http://localhost:4011/catalogues/son-packages
+curl http://localhost:4011/catalogues/api/v2/son-packages
 ```
 
 To receive a package file
 
 ```sh
-curl http://localhost:4011/catalogues/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
+curl http://localhost:4011/catalogues/api/v2/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
 ```
 Method POST:
 
@@ -188,7 +191,7 @@ HTTP header 'Content-Type' must be set to 'application/zip'
 HTTP header 'Content-Disposition' must be set to 'attachment; filename=```name_of_the_package```'
 
 ```sh
-curl -X POST -H "Content-Type: application/zip" -H "Content-Disposition: attachment; filename=sonata_example.son" -F "@sonata-demo.son" "http://0.0.0.0:4011/catalogues/son-packages"
+curl -X POST -H "Content-Type: application/zip" -H "Content-Disposition: attachment; filename=sonata_example.son" -F "@sonata-demo.son" "http://0.0.0.0:4011/catalogues/api/v2/son-packages"
 ```
 
 Method DELETE:
@@ -196,7 +199,7 @@ Method DELETE:
 To remove a package file by its ID
 
 ```sh
-curl -X DELETE http://localhost:4011/catalogues/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
+curl -X DELETE http://localhost:4011/catalogues/api/v2/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
 ```
 
 For more information about usage of Catalogues, please visit the wikipage link below which contains some information to interact and test the Catalogues API.
