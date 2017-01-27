@@ -232,11 +232,10 @@ class CatalogueV2 < SonataCatalogue
     params['offset'] ||= DEFAULT_OFFSET
     params['limit'] ||= DEFAULT_LIMIT
 
-    logger.info "Catalogue: entered GET /son-packages?#{query_string}"
+    logger.info "Catalogue: entered GET /api/v2/son-packages?#{query_string}"
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    # puts 'keyed_params', keyed_params
 
     # Set headers
     case request.content_type
@@ -249,11 +248,10 @@ class CatalogueV2 < SonataCatalogue
 
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
-    # puts 'keyed_params(1)', keyed_params
 
     # Do the query
     file_list = FileContainer.where(keyed_params)
-    logger.info "Catalogue: leaving GET /son-packages?#{query_string} with #{file_list}"
+    logger.info "Catalogue: leaving GET /api/v2/son-packages?#{query_string} with #{file_list}"
 
     # Paginate results
     file_list = file_list.paginate(offset: params[:offset], limit: params[:limit])
@@ -277,7 +275,7 @@ class CatalogueV2 < SonataCatalogue
   # son-package internal database identifier
   get '/son-packages/:id/?' do
     # Dir.chdir(File.dirname(__FILE__))
-    logger.debug "Catalogue: entered GET /son-packages/#{params[:id]}"
+    logger.debug "Catalogue: entered GET /api/v2/son-packages/#{params[:id]}"
     # puts 'ID: ', params[:id]
     begin
       sonp = FileContainer.find_by({ '_id' => params[:id] })
@@ -292,7 +290,7 @@ class CatalogueV2 < SonataCatalogue
     grid_fs = Mongoid::GridFs
     grid_file = grid_fs.get(sonp['grid_fs_id'])
 
-    logger.debug "Catalogue: leaving GET /son-packages/#{params[:id]}"
+    logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
     halt 200, grid_file.data
   end
 
@@ -300,7 +298,7 @@ class CatalogueV2 < SonataCatalogue
   # @overload post '/catalogues/son-package'
   # Post a son Package in binary-data
   post '/son-packages' do
-    logger.debug 'Catalogue: entered POST /son-packages/'
+    logger.debug "Catalogue: entered POST /api/v2/son-packages/"
     # Return if content-type is invalid
     halt 415 unless request.content_type == 'application/zip'
 
@@ -347,19 +345,10 @@ class CatalogueV2 < SonataCatalogue
       file_container.md5 = grid_file.md5
       file_container.save
     end
-    logger.debug "Catalogue: leaving POST /son-packages/ with #{grid_file.id}"
+    logger.debug "Catalogue: leaving POST /api/v2/son-packages/ with #{grid_file.id}"
     response = {"uuid" => sonp_id}
     # halt 201, grid_file.id.to_json
     halt 201, response.to_json
-  end
-
-  # @method update_son_package_id
-  # @overload put '/catalogues/son-packages/:id/?'
-  #	Update a son-package in JSON or YAML format
-  ## Catalogue - UPDATE
-  put '/son-packages/:id/?' do
-    # Work in progress
-    halt 501
   end
 
   # @method delete_son_package_id
@@ -368,7 +357,7 @@ class CatalogueV2 < SonataCatalogue
   #	  @param :id [Symbol] son-package ID
   delete '/son-packages/:id/?' do
     unless params[:id].nil?
-      logger.debug "Catalogue: entered DELETE /son-packages/#{params[:id]}"
+      logger.debug "Catalogue: entered DELETE /api/v2/son-packages/#{params[:id]}"
       begin
         sonp = FileContainer.find_by('_id' => params[:id])
       rescue Mongoid::Errors::DocumentNotFound => e
@@ -381,10 +370,10 @@ class CatalogueV2 < SonataCatalogue
       grid_fs.delete(sonp['grid_fs_id'])
       sonp.destroy
 
-      logger.debug "Catalogue: leaving DELETE /son-packages/#{params[:id]}\" with son-package #{sonp}"
+      logger.debug "Catalogue: leaving DELETE /api/v2/son-packages/#{params[:id]}\" with son-package #{sonp}"
       halt 200, 'OK: son-package removed'
     end
-    logger.debug "Catalogue: leaving DELETE /son-packages/#{params[:id]} with 'No son-package ID specified'"
+    logger.debug "Catalogue: leaving DELETE /api/v2/son-packages/#{params[:id]} with 'No son-package ID specified'"
     json_error 400, 'No son-package ID specified'
   end
 end

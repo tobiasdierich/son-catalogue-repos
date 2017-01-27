@@ -225,7 +225,6 @@ class SonataCatalogue < Sinatra::Application
     new_parameters = {}
     meta_data = %w(offset limit _id status signature md5 updated_at created_at)
     parameters.each { |k, v|
-      p "k, v", k, v
       if meta_data.include? k
         new_parameters.store( k, v)
       else
