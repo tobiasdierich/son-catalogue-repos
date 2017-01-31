@@ -661,6 +661,8 @@ class CatalogueV2 < SonataCatalogue
     else
       # Do the query
       nss = Nsd.where(keyed_params)
+      # Set total count for results
+      headers 'Record-Count' => nss.count.to_s
       logger.info "Catalogue: NSDs=#{nss}"
       if nss && nss.size.to_i > 0
         logger.info "Catalogue: leaving GET /api/v2/network-services?#{query_string} with #{nss}"
