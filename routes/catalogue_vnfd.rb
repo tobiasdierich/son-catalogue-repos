@@ -600,7 +600,7 @@ class CatalogueV2 < SonataCatalogue
       logger.info "Catalogue: VNFDs=#{vnfs}"
       # vnfs = vnfs.sort({"version" => -1})
       # puts 'vnfs: ', vnfs.to_json
-      puts 'vnfs_size: ', vnfs.size.to_i
+      # puts 'vnfs_size: ', vnfs.size.to_i
 
       if vnfs && vnfs.size.to_i > 0
         logger.info "Catalogue: leaving GET /api/v2/vnfs?#{query_string} with #{vnfs}"
