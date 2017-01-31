@@ -633,6 +633,8 @@ class CatalogueV2 < SonataCatalogue
     else
       # Do the query
       vnfs = Vnfd.where(keyed_params)
+      # Set total count for results
+      headers 'Record-Count' => vnfs.count.to_s
       logger.info "Catalogue: VNFDs=#{vnfs}"
       if vnfs && vnfs.size.to_i > 0
         logger.info "Catalogue: leaving GET /api/v2/vnfs?#{query_string} with #{vnfs}"

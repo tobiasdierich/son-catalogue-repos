@@ -251,6 +251,8 @@ class CatalogueV2 < SonataCatalogue
 
     # Do the query
     file_list = FileContainer.where(keyed_params)
+    # Set total count for results
+    headers 'Record-Count' => file_list.count.to_s
     logger.info "Catalogue: leaving GET /api/v2/son-packages?#{query_string} with #{file_list}"
 
     # Paginate results

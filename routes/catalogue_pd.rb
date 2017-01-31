@@ -682,6 +682,8 @@ class CatalogueV2 < SonataCatalogue
     else
       # Do the query
       pks = Pkgd.where(keyed_params)
+      # Set total count for results
+      headers 'Record-Count' => pks.count.to_s
       logger.info "Catalogue: PDs=#{pks}"
       if pks && pks.size.to_i > 0
         logger.info "Catalogue: leaving GET /api/v2/packages?#{query_string} with #{pks}"
