@@ -43,51 +43,36 @@ class Ns
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Pagination
+  # include Mongoid::Versioning
   include Mongoid::Attributes::Dynamic
   store_in collection: 'nsd'
 
   field :vendor, type: String
   field :name, type: String
   field :version, type: String
-
-  # field :_id, type: String
   field :status, type: String
-  # field :_nsd, type: Hash
-
   validates :vendor, :name, :version, presence: true
-  # validates :_id, :status, presence:true
 end
 
 # New item structure for meta-data and descriptor data
-# class Nsd
-  # include Mongoid::Document
-  # include Mongoid::Timestamps
-  # include Mongoid::Pagination
-  # include Mongoid::Attributes::Dynamic
-  # store_in collection: 'nsd'
-  # embeds_one :nsd
-  # field :_id, type: String
-  # field :status, type: String
-  # field :signature, type: String
-  # validates :nsd, presence: true
-# end
+class Nsd
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
+  store_in collection: 'nsd'
 
-# class Ns
-  # include Mongoid::Document
-  # include Mongoid::Attributes::Dynamic
-  # embedded_in :Nsd
-  # field :vendor, type: String
-  # field :name, type: String
-  # field :version, type: String
-  # validates :vendor, :name, :version, presence: true
-# end
+  field :nsd, type: Hash
+  field :status, type: String
+  field :signature, type: String
+  validates :nsd, presence: true
+end
 
 # Sonata class for Catalogue Functions
 class Vnf
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Pagination
-  # include Mongoid::Versioning
   include Mongoid::Attributes::Dynamic
   store_in collection: 'vnfd'
 
@@ -95,8 +80,21 @@ class Vnf
   field :name, type: String
   field :version, type: String
   # field :vnf_manager, type: String # <- Not applicable yet
-
   validates :vendor, :name, :version, presence: true
+end
+
+# New item structure for meta-data and descriptor data
+class Vnfd
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
+  store_in collection: 'vnfd'
+
+  field :vnfd, type: Hash
+  field :status, type: String
+  field :signature, type: String
+  validates :vnfd, presence: true
 end
 
 # Sonata class for Catalogue Packages
@@ -104,22 +102,35 @@ class Package
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Pagination
-  # include Mongoid::Versioning
   include Mongoid::Attributes::Dynamic
   store_in collection: 'pd'
 
   field :vendor, type: String
   field :name, type: String
   field :version, type: String
-
   validates :vendor, :name, :version, presence: true
 end
 
-# Class model for binary data storage on database
-require 'mongoid/grid_fs'
+# New item structure for meta-data and descriptor data
+class Pkgd
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
+  store_in collection: 'pd'
 
+  field :pd, type: Hash
+  field :status, type: String
+  field :signature, type: String
+  validates :pd, presence: true
+end
+
+# Class model for binary data storage on database
+# require 'mongoid/grid_fs'
 # Sonata class for Catalogue son-packages
 class FileContainer
+  require 'mongoid/grid_fs'
+
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Pagination
@@ -132,40 +143,6 @@ class FileContainer
   field :md5, type: String
 end
 
-# Sonata class for Catalogue Functions
-# class Fsm
-#   include Mongoid::Document
-#   include Mongoid::Timestamps
-#   include Mongoid::Pagination
-# include Mongoid::Versioning
-#   include Mongoid::Attributes::Dynamic
-#   store_in session: 'vnf_db'
-
-#   field :vendor, type: String
-#   field :name, type: String
-#   field :version, type: String
-# field :vnf_manager, type: String # <- Not applicable yet
-
-#   validates :vendor, :name, :version, :presence => true
-# end
-
-# Sonata class for Catalogue Functions
-# class Ssm
-#   include Mongoid::Document
-#   include Mongoid::Timestamps
-#   include Mongoid::Pagination
-# include Mongoid::Versioning
-#   include Mongoid::Attributes::Dynamic
-#   store_in session: 'vnf_db'
-
-#   field :vendor, type: String
-#   field :name, type: String
-#   field :version, type: String
-# field :vnf_manager, type: String # <- Not applicable yet
-
-#   validates :vendor, :name, :version, :presence => true
-# end
-
 # Sonata class for Catalogue Services
 # class Vnf_Ns_map ## Temporary name
 #  include Mongoid::Document
@@ -177,6 +154,5 @@ end
 #  field :vendor, type: String
 #  field :name, type: String
 #  field :version, type: String
-
 #  validates :vendor, :name, :version, :presence => true
 # end

@@ -221,6 +221,19 @@ class SonataCatalogue < Sinatra::Application
     Hash[hash.map { |(k, v)| [k.to_sym, v] }]
   end
 
+  def add_descriptor_level(descriptor_type, parameters)
+    new_parameters = {}
+    meta_data = %w(offset limit _id status signature md5 updated_at created_at)
+    parameters.each { |k, v|
+      if meta_data.include? k
+        new_parameters.store( k, v)
+      else
+        new_parameters.store((descriptor_type.to_s + '.' + k), v)
+      end
+    }
+    parameters = keyed_hash(new_parameters)
+  end
+
   class Pair
     attr_accessor :one, :two
 
