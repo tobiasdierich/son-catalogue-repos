@@ -130,6 +130,12 @@ class CatalogueV1 < SonataCatalogue
 
     # puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env['HTTP_CONTENT_DISPOSITION']
+
+    unless att
+      error = "HTTP Content-Disposition is missing"
+      halt 400, error.to_json
+    end
+
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
     # puts "filename", filename
     # JSON.pretty_generate(request.env)
@@ -165,7 +171,7 @@ class CatalogueV1 < SonataCatalogue
     grid_file = grid_fs.put(file,
                             filename: filename,
                             content_type: 'application/zip',
-                            _id: SecureRandom.uuid,
+                            # _id: SecureRandom.uuid,
     # :file_hash   => file_hash,
     # :chunk_size   => 100 * 1024,
     # :metadata     => {'description' => "SONATA zip package"}
@@ -306,6 +312,12 @@ class CatalogueV2 < SonataCatalogue
 
     # puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env['HTTP_CONTENT_DISPOSITION']
+
+    unless att
+      error = "HTTP Content-Disposition is missing"
+      halt 400, error.to_json
+    end
+
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
     # puts "filename", filename
     # JSON.pretty_generate(request.env)
@@ -330,14 +342,17 @@ class CatalogueV2 < SonataCatalogue
     end
 
     grid_fs = Mongoid::GridFs
+
     grid_file = grid_fs.put(file,
                             filename: filename,
                             content_type: 'application/zip',
-                            _id: SecureRandom.uuid,
+                            # _id: SecureRandom.uuid,
     # :file_hash   => file_hash,
     # :chunk_size   => 100 * 1024,
     # :metadata     => {'description' => "SONATA zip package"}
     )
+
+    #puts "GRID_FILE ID", (grid_file.id)
 
     sonp_id = SecureRandom.uuid
     FileContainer.new.tap do |file_container|
