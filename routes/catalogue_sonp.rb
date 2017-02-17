@@ -255,8 +255,19 @@ class CatalogueV2 < SonataCatalogue
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
 
+    # Translate 'uuid' field to '_id'
+    new_params = {}
+    keyed_params.each { |k, v|
+        if k == :'uuid'
+          new_params.store( '_id', v)
+        else
+          new_params.store( k, v)
+        end
+    }
+
     # Do the query
-    file_list = FileContainer.where(keyed_params)
+    # file_list = FileContainer.where(keyed_params)
+    file_list = FileContainer.where(new_params)
     # Set total count for results
     headers 'Record-Count' => file_list.count.to_s
     logger.info "Catalogue: leaving GET /api/v2/son-packages?#{query_string} with #{file_list}"
