@@ -296,21 +296,43 @@ class CatalogueV2 < SonataCatalogue
     # Dir.chdir(File.dirname(__FILE__))
     logger.debug "Catalogue: entered GET /api/v2/son-packages/#{params[:id]}"
     # puts 'ID: ', params[:id]
-    begin
-      sonp = FileContainer.find_by({ '_id' => params[:id] })
-      # p 'FileContainer FOUND'
-      p 'Filename: ', sonp['grid_fs_name']
-      p 'grid_fs_id: ', sonp['grid_fs_id']
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      halt 404
+
+    # Check headers
+    case request.content_type
+      when 'application/zip'
+        begin
+          sonp = FileContainer.find_by({ '_id' => params[:id] })
+          # p 'FileContainer FOUND'
+          p 'Filename: ', sonp['grid_fs_name']
+          p 'grid_fs_id: ', sonp['grid_fs_id']
+        rescue Mongoid::Errors::DocumentNotFound => e
+          logger.error e
+          halt 404
+        end
+
+        grid_fs = Mongoid::GridFs
+        grid_file = grid_fs.get(sonp['grid_fs_id'])
+
+        # Set custom header with package Filename
+        headers 'Filename' => (sonp['grid_fs_name'].to_s)
+
+        logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
+        halt 200, grid_file.data
+
+      when 'application/json'
+        begin
+          sonp = FileContainer.find_by('_id' => params[:id])
+        rescue Mongoid::Errors::DocumentNotFound => e
+          logger.error e
+          json_error 404, "The son-package ID #{params[:id]} does not exist" unless sonp
+        end
+
+        logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
+        halt 200, sonp.to_json
+
+      else
+        halt 415
     end
-
-    grid_fs = Mongoid::GridFs
-    grid_file = grid_fs.get(sonp['grid_fs_id'])
-
-    logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
-    halt 200, grid_file.data
   end
 
   # @method post_son_package
