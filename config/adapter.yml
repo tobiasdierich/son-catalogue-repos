@@ -1,0 +1,9 @@
+---
+address: 127.0.0.1
+port: 9292
+api_ver: /api/v1
+path:
+catalogue_client: son-catalogue
+catalogue_secret: 1234
+repos_client: son-repositories
+repos_secret: 1234

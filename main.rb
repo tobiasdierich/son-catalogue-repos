@@ -50,10 +50,43 @@ configure do
   log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
   log_file.sync = true
   use Rack::CommonLogger, log_file
+
+  # Configuration for AuthC/AuthZ layer
+  conf = YAML::load_file("#{settings.root}/config/adapter.yml")
+  set :auth_address, conf['address']
+  set :auth_port, conf['port']
+
+  # turn keycloak realm pub key into an actual openssl compat pub key.
+  keycloak_key = get_public_key(settings.auth_address, settings.auth_port)
+  @s = "-----BEGIN PUBLIC KEY-----\n"
+  @s += keycloak_key.scan(/.{1,64}/).join("\n")
+  @s += "\n-----END PUBLIC KEY-----\n"
+  @key = OpenSSL::PKey::RSA.new @s
+  set :keycloak_pub_key, @key
+  puts "Keycloak public key: ", settings.keycloak_pub_key
+  register_service(settings.auth_address, settings.auth_port)
+  login_service(settings.auth_address, settings.auth_port)
+  check_token(settings.auth_address, settings.auth_port, settings.keycloak_pub_key)
 end
 
 before do
   logger.level = Logger::DEBUG
+  check_token(settings.auth_address, settings.auth_port, settings.keycloak_pub_key)
+
+  # Get authorization token
+  if request.env["HTTP_AUTHORIZATION"] != nil
+    #puts "AUTH HEADER", request.env["HTTP_AUTHORIZATION"]
+    provided_token = request.env["HTTP_AUTHORIZATION"].split(' ').last
+    unless provided_token
+      error = {"ERROR" => "Access token is not provided"}
+      halt 400, error.to_json
+    else
+      puts "CHECK provided_token IN GATEKEEPER??"
+    end
+  else
+    error = {"ERROR" => "Unauthorized"}
+    halt 401, error.to_json
+  end
 end
 
 # Configurations for Services Repository
