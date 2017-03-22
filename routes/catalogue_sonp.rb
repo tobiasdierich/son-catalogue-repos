@@ -323,6 +323,9 @@ class CatalogueV2 < SonataCatalogue
 
     # puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env['HTTP_CONTENT_DISPOSITION']
+    # sonp_vendor = request.env['HTTP_VENDOR']
+    # sonp_name = request.env['HTTP_NAME']
+    # sonp_version = request.env['HTTP_VERSION']
 
     unless att
       error = "HTTP Content-Disposition is missing"
@@ -343,6 +346,14 @@ class CatalogueV2 < SonataCatalogue
     # p "FILE HASH is: ", file_hash
 
     # Check duplicates
+    # -> vendor, name, version
+    # Check if son-package already exists in the catalogue by vendor, name, version (name convention identifier)
+    # begin
+    #   sonpkg = FileContainer.find_by({ 'vendor' => sonp_vendor, 'name' => sonp_name, 'version' => sonp_version })
+    #   json_return 200, 'Duplicated son-package Filename'
+    # rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
+    # end
     # -> grid_fs_name
     # Check if son-package already exists in the catalogue by filename (grid-fs-name identifier)
     begin
@@ -369,6 +380,9 @@ class CatalogueV2 < SonataCatalogue
     FileContainer.new.tap do |file_container|
       file_container._id = sonp_id
       file_container.grid_fs_id = grid_file.id
+      # file_container.vendor = sonp_vendor
+      # file_container.name = sonp_name
+      # file_container.version = sonp_version
       file_container.grid_fs_name = filename
       file_container.md5 = grid_file.md5
       file_container.save

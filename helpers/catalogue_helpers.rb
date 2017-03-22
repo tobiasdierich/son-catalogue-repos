@@ -30,6 +30,7 @@ class SonataCatalogue < Sinatra::Application
   require 'json'
   require 'yaml'
   require 'digest/md5'
+  require 'jwt'
 
   # Read config settings from config file
   # @return [String, Integer] the address and port of the API
