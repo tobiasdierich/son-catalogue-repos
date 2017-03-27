@@ -93,7 +93,7 @@ RSpec.describe SonataVnfRepository do
   describe 'GET /vnf-instances/:uuid' do
     context 'with (UU)ID given' do
       before do
-        get '/vnf-instances/9e3d3b42-6372-2250-969d-53ae91bb5cfc'
+        get '/vnf-instances/1b5bab2a-8286-2b40-4827-dc5d6e37bf8e'
       end
       subject { last_response }
       its(:status) { is_expected.to eq 200 }
@@ -103,7 +103,7 @@ RSpec.describe SonataVnfRepository do
   describe 'DELETE /vnf-instances/:uuid' do
     context 'with (UU)ID given' do
       before do
-        delete '/vnf-instances/9e3d3b42-6372-2250-969d-53ae91bb5cfc'
+        delete '/vnf-instances/1b5bab2a-8286-2b40-4827-dc5d6e37bf8e'
       end
       subject { last_response }
       its(:status) { is_expected.to eq 200 }

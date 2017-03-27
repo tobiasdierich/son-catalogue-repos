@@ -1,199 +1,62 @@
 {
-  "descriptor_version": "0FcaFAJqKak--oy5m8i33-56i6JrvtPH8R",
-  "id": "9e3d3b42-6372-2250-969d-53ae91bb5cfc",
-  /*"status": "offline",*/
+  "descriptor_version": "i0ocAa",
+  "id": "1b5bab2a-8286-2b40-4827-dc5d6e37bf8e",
+  /*"status": "normal operation",*/
   "virtual_deployment_units": [
     {
-      "id": "anim incididunt est sit",
+      "id": "nostrud in",
       "resource_requirements": {
         "cpu": {
-          "vcpus": 87614283,
-          "cpu_model": "veniam",
-          "cpu_support_accelerator": "Duis ea"
+          "vcpus": 44612128
         },
         "memory": {
-          "size": 88811678.90124677,
-          "numa_allocation_policy": "ullamco nulla aliqua cupidatat"
+          "size": 80183833
         }
-      },
-      "vnfc_instance": [
-        {},
-        {
-          "connection_points": [
-            {
-              "id": "ea minim",
-              "type": {}
-            },
-            {
-              "id": "aliquip nisi",
-              "type": {
-                "netmask": "nostrud minim"
-              }
-            },
-            {
-              "id": "aliqua labore laborum",
-              "type": {
-                "netmask": "nisi incididunt enim pariatur"
-              }
-            }
-          ]
-        },
-        {
-          "vc_id": "adipisicing Ut laborum consequat",
-          "id": "in nisi"
-        },
-        {
-          "vc_id": "ipsum",
-          "vim_id": "deser"
-        }
-      ],
-      "number_of_instances": 73681541
+      }
     },
     {
-      "id": "tempor Duis qui do",
+      "id": "eu dolore nisi incididunt",
       "resource_requirements": {
         "cpu": {
-          "vcpus": 43050767
+          "vcpus": 2304668
         },
         "memory": {
-          "size": 94081860.07935287
+          "size": 8962376
+        }
+      },
+      "vdu_reference": "pariatur"
+    },
+    {
+      "id": "commodo dolor nostrud",
+      "resource_requirements": {
+        "cpu": {
+          "vcpus": 50962880
         },
-        "storage": {
-          "size": 9105483.077627752,
-          "size_unit": "MB"
+        "memory": {
+          "size": 91724292
         },
         "network": {
-          "data_processing_acceleration_library": "ex consequat",
-          "network_interface_card_capabilities": {
-            "mirroring": false
-          },
-          "network_interface_bandwidth_unit": "Gbps"
-        },
-        "vswitch_capabilities": {},
-        "pcie": {
-          "device_pass_through": false
-        }
-      },
-      "number_of_instances": 75018133
-    },
-    {
-      "id": "ut in veniam",
-      "resource_requirements": {
-        "cpu": {
-          "vcpus": 50203075
-        },
-        "memory": {
-          "size": 84537986.29708818,
-          "size_unit": "MiB"
+          "data_processing_acceleration_library": "adipisicing tempor ut in in"
         },
         "hypervisor_parameters": {
-          "type": "dolor tempor"
-        },
-        "pcie": {},
-        "storage": {
-          "size": 9277567.91917589,
-          "size_unit": "B"
+          "type": "qui laboris enim in",
+          "version": "4920.305.4"
         }
       }
     },
     {
-      "id": "nisi laborum",
+      "id": "in non sint",
       "resource_requirements": {
         "cpu": {
-          "vcpus": 48434294,
-          "cpu_clock_speed": "cupidatat magna ea",
-          "cpu_support_accelerator": "commodo Excepteur"
+          "vcpus": 82258996,
+          "cpu_support_accelerator": "non ea irure"
         },
         "memory": {
-          "size": 53308490.99612409,
-          "large_pages_required": false,
-          "numa_allocation_policy": "nulla"
+          "size": 89557457,
+          "numa_allocation_policy": "sint Duis voluptate consectetur"
         }
-      }
+      },
+      "number_of_instances": 34083178
     }
-  ],
-  "virtual_links": [
-    {
-      "id": "Lorem dolore eu sed",
-      "connectivity_type": "E-Line",
-      "connection_points_reference": [
-        "labore minim"
-      ]
-    },
-    {
-      "id": "pariatur exercitation null",
-      "connectivity_type": "E-Tree",
-      "connection_points_reference": [
-        "consequat ipsum irure"
-      ],
-      "root_requirement": "dolor ipsum mollit ex",
-      "qos": "Ut magna in",
-      "dhcp": false,
-      "leaf_requirement": "id"
-    },
-    {
-      "id": "sunt dolor magna deserunt",
-      "connectivity_type": "E-LAN",
-      "connection_points_reference": [
-        "sunt consectetur magna irure"
-      ]
-    }
-  ],
-  "lifecycle_events": [
-    {},
-    {
-      "authentication_username": "dolore",
-      "authentication_type": "culpa nisi",
-      "vnf_container": "Excepteur cupidatat",
-      "driver": "pariatur",
-      "authentication": "",
-      "flavor_id_ref": "nulla id exercitation"
-    },
-    {
-      "authentication": "occaecat",
-      "vnf_container": "incididunt est moll",
-      "flavor_id_ref": "amet nisi fugiat",
-      "authentication_type": "ad aute sint nostrud"
-    }
-  ],
-  "descriptor_reference": "12733130-3433-ae6d-44bf-72b639cd7437",
-  "vnf_address": [
-    {
-      "address": "consequat"
-    },
-    {
-      "address": "dolor fugiat irure sunt"
-    },
-    {
-      "address": "cillum"
-    }
-  ],
-  "connection_points": [
-    {
-      "id": "sed",
-      "type": {
-        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
-      }
-    },
-    {
-      "id": "Excepteur anim",
-      "type": {
-        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
-      }
-    },
-    {
-      "id": "proident esse nisi",
-      "type": {
-        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
-      }
-    },
-    {
-      "id": "et occaecat sed ut",
-      "type": {
-        "description": "The type of connection point, such as a virtual port, a virtual NIC address, a physical port, a physcial NIC address, or the endpoint of a VPN tunnel."
-      }
-    }
-  ],
-  "parent_ns": "a43626e9-7e39-e94b-5d59-690dce95d298",
-  "version": "171325088403401200849299218898311299360627365024377573783264598"
+  ]
 }

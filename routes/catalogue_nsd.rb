@@ -682,7 +682,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method get_ns_sp_ns_id
@@ -711,7 +711,7 @@ class CatalogueV2 < SonataCatalogue
         else
           halt 415
       end
-      halt 200, response
+      halt 200, {'Content-type' => request.content_type}, response
 
     end
     logger.debug "Catalogue: leaving GET /api/v2/network-services/#{params[:id]} with 'No NSD ID specified'"
@@ -792,7 +792,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 201, response
+    halt 201, {'Content-type' => request.content_type}, response
   end
 
   # @method update_nss
@@ -896,7 +896,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method update_nss_id
@@ -1016,7 +1016,7 @@ class CatalogueV2 < SonataCatalogue
           else
             halt 415
         end
-        halt 200, response
+        halt 200, {'Content-type' => request.content_type}, response
       end
     end
     logger.debug "Catalogue: leaving PUT /api/v2/network-services/#{params[:id]} with 'No NSD ID specified'"
