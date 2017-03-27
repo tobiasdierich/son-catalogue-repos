@@ -137,9 +137,10 @@ class FileContainer
   store_in collection: 'file_containers'
 
   field :grid_fs_id, type: String
-  # field :grid_fs_vendor, type: String
   field :grid_fs_name, type: String
-  # field :grid_fs_version, type: String
+  # field :vendor, type: String
+  # field :name, type: String
+  # field :version, type: String
   field :md5, type: String
 end
 

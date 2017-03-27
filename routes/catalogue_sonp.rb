@@ -296,21 +296,43 @@ class CatalogueV2 < SonataCatalogue
     # Dir.chdir(File.dirname(__FILE__))
     logger.debug "Catalogue: entered GET /api/v2/son-packages/#{params[:id]}"
     # puts 'ID: ', params[:id]
-    begin
-      sonp = FileContainer.find_by({ '_id' => params[:id] })
-      # p 'FileContainer FOUND'
-      p 'Filename: ', sonp['grid_fs_name']
-      p 'grid_fs_id: ', sonp['grid_fs_id']
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      halt 404
+
+    # Check headers
+    case request.content_type
+      when 'application/zip'
+        begin
+          sonp = FileContainer.find_by({ '_id' => params[:id] })
+          # p 'FileContainer FOUND'
+          p 'Filename: ', sonp['grid_fs_name']
+          p 'grid_fs_id: ', sonp['grid_fs_id']
+        rescue Mongoid::Errors::DocumentNotFound => e
+          logger.error e
+          halt 404
+        end
+
+        grid_fs = Mongoid::GridFs
+        grid_file = grid_fs.get(sonp['grid_fs_id'])
+
+        # Set custom header with package Filename
+        headers 'Filename' => (sonp['grid_fs_name'].to_s)
+
+        logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
+        halt 200, grid_file.data
+
+      when 'application/json'
+        begin
+          sonp = FileContainer.find_by('_id' => params[:id])
+        rescue Mongoid::Errors::DocumentNotFound => e
+          logger.error e
+          json_error 404, "The son-package ID #{params[:id]} does not exist" unless sonp
+        end
+
+        logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
+        halt 200, sonp.to_json
+
+      else
+        halt 415
     end
-
-    grid_fs = Mongoid::GridFs
-    grid_file = grid_fs.get(sonp['grid_fs_id'])
-
-    logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
-    halt 200, grid_file.data
   end
 
   # @method post_son_package
@@ -323,6 +345,9 @@ class CatalogueV2 < SonataCatalogue
 
     # puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env['HTTP_CONTENT_DISPOSITION']
+    # sonp_vendor = request.env['HTTP_VENDOR']
+    # sonp_name = request.env['HTTP_NAME']
+    # sonp_version = request.env['HTTP_VERSION']
 
     unless att
       error = "HTTP Content-Disposition is missing"
@@ -343,6 +368,14 @@ class CatalogueV2 < SonataCatalogue
     # p "FILE HASH is: ", file_hash
 
     # Check duplicates
+    # -> vendor, name, version
+    # Check if son-package already exists in the catalogue by vendor, name, version (name convention identifier)
+    # begin
+    #   sonpkg = FileContainer.find_by({ 'vendor' => sonp_vendor, 'name' => sonp_name, 'version' => sonp_version })
+    #   json_return 200, 'Duplicated son-package Filename'
+    # rescue Mongoid::Errors::DocumentNotFound => e
+      # Continue
+    # end
     # -> grid_fs_name
     # Check if son-package already exists in the catalogue by filename (grid-fs-name identifier)
     begin
@@ -369,6 +402,9 @@ class CatalogueV2 < SonataCatalogue
     FileContainer.new.tap do |file_container|
       file_container._id = sonp_id
       file_container.grid_fs_id = grid_file.id
+      # file_container.vendor = sonp_vendor
+      # file_container.name = sonp_name
+      # file_container.version = sonp_version
       file_container.grid_fs_name = filename
       file_container.md5 = grid_file.md5
       file_container.save
