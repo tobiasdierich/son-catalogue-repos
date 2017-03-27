@@ -284,7 +284,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method get_son_package_id
@@ -328,7 +328,7 @@ class CatalogueV2 < SonataCatalogue
         end
 
         logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
-        halt 200, sonp.to_json
+        halt 200, {'Content-type' => 'application/json'}, sonp.to_json
 
       else
         halt 415
@@ -412,7 +412,7 @@ class CatalogueV2 < SonataCatalogue
     logger.debug "Catalogue: leaving POST /api/v2/son-packages/ with #{grid_file.id}"
     response = {"uuid" => sonp_id}
     # halt 201, grid_file.id.to_json
-    halt 201, response.to_json
+    halt 201, {'Content-type' => 'application/json'}, response.to_json
   end
 
   # @method delete_son_package_id

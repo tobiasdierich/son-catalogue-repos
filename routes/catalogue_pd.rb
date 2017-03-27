@@ -703,7 +703,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method get_packages_package_id
@@ -732,7 +732,7 @@ class CatalogueV2 < SonataCatalogue
         else
           halt 415
       end
-      halt 200, response
+      halt 200, {'Content-type' => request.content_type}, response
 
     end
     logger.debug "Catalogue: leaving GET /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
@@ -813,7 +813,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 201, response
+    halt 201, {'Content-type' => request.content_type}, response
   end
 
   # @method update_package_group_name_version
@@ -915,7 +915,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method update_package_id
@@ -1070,7 +1070,7 @@ class CatalogueV2 < SonataCatalogue
           else
             halt 415
         end
-        halt 200, response
+        halt 200, {'Content-type' => request.content_type}, response
       end
     end
     logger.debug "Catalogue: leaving PUT /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
