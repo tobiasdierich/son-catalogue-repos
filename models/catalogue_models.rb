@@ -134,6 +134,7 @@ class FileContainer
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
   store_in collection: 'file_containers'
 
   field :grid_fs_id, type: String
