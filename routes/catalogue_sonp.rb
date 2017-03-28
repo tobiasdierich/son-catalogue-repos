@@ -415,6 +415,47 @@ class CatalogueV2 < SonataCatalogue
     halt 201, {'Content-type' => 'application/json'}, response.to_json
   end
 
+  # @method update_son_package_id
+  # @overload put '/catalogues/son-packages/:id/?'
+  #	Update a son-package in JSON or YAML format
+  ## Catalogue - UPDATE
+  put '/son-packages/:id/?' do
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+    unless params[:id].nil?
+      logger.debug "Catalogue: PUT /son-packages/#{params[:id]}"
+
+      # Transform 'string' params Hash into keys
+      keyed_params = keyed_hash(params)
+      # puts 'keyed_params', keyed_params
+      if [:vendor, :name, :version].all? {|s| keyed_params.key? s }
+        #if keyed_params.key?(:vendor, :name, :version)
+        # Do update of Son-Package meta-data
+        logger.info "Catalogue: entered PUT /son-packages/#{query_string}"
+
+        # Validate son-package uuid
+        begin
+          puts 'Searching ' + params[:sonp_uuid].to_s
+          sonp = FileContainer.find_by({ '_id' => params[:id] })
+          p 'Filename: ', sonp['grid_fs_name']
+          puts 'son-package is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, 'Submitted son-package UUID not exists'
+        end
+
+        # Add new son-package uuid field
+        begin
+          sonp.update_attributes(vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version])
+        rescue Moped::Errors::OperationFailure => e
+          json_error 400, 'ERROR: Operation failed'
+        end
+
+        halt 200, "File son-package updated attributes: #{keyed_params[:vendor]}, #{keyed_params[:name]}, #{keyed_params[:version]}"
+      end
+    end
+  end
+
   # @method delete_son_package_id
   # @overload delete '/catalogues/son-packages/:id/?'
   #	  Delete a son-package by its ID
