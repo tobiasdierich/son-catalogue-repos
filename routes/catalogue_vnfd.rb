@@ -722,6 +722,9 @@ class CatalogueV2 < SonataCatalogue
         halt 400, errors.to_json if errors
     end
 
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+
     # Validate VNF
     json_error 400, 'ERROR: VNF Vendor not found' unless new_vnf.has_key?('vendor')
     json_error 400, 'ERROR: VNF Name not found' unless new_vnf.has_key?('name')
@@ -742,15 +745,23 @@ class CatalogueV2 < SonataCatalogue
       # Continue
     end
 
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
+
     # Save to DB
     begin
       new_vnfd = {}
-      # Generate the UUID for the descriptor
       new_vnfd['vnfd'] = new_vnf
+      # Generate the UUID for the descriptor
       new_vnfd['_id'] = SecureRandom.uuid
       new_vnfd['status'] = 'active'
-      new_vnfd['signature'] = 'null'
-      new_vnfd['md5'] = 'null'
+      # Signature will be supported
+      new_vnfd['signature'] = nil
+      new_vnfd['md5'] = checksum new_vnf.to_s
+      new_vnfd['username'] = username
       vnf = Vnfd.create!(new_vnfd)
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated VNF ID' if e.message.include? 'E11000'
@@ -843,14 +854,21 @@ class CatalogueV2 < SonataCatalogue
       # Continue
     end
 
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
+
     # Update to new version
     puts 'Updating...'
     new_vnfd = {}
     new_vnfd['_id'] = SecureRandom.uuid # Unique UUIDs per VNFD entries
     new_vnfd['vnfd'] = new_vnf
     new_vnfd['status'] = 'active'
-    new_vnfd['signature'] = 'null'
-    new_vnfd['md5'] = 'null'
+    new_vnfd['signature'] = nil
+    new_vnfd['md5'] = checksum new_vnf.to_s
+    new_vnfd['username'] = username
 
     begin
       new_vnf = Vnf.create!(new_vnfd)
@@ -964,14 +982,21 @@ class CatalogueV2 < SonataCatalogue
           # Continue
         end
 
+        if keyed_params.key?(:username)
+          username = keyed_params[:username]
+        else
+          username = nil
+        end
+
         # Update to new version
         puts 'Updating...'
         new_vnfd = {}
         new_vnfd['_id'] = SecureRandom.uuid # Unique UUIDs per VNFD entries
         new_vnfd['vnfd'] = new_vnf
         new_vnfd['status'] = 'active'
-        new_vnfd['signature'] = 'null'
-        new_vnfd['md5'] = 'null'
+        new_vnfd['signature'] = nil
+        new_vnfd['md5'] = checksum new_vnf.to_s
+        new_vnfd['username'] = username
 
         begin
           new_vnf = Vnfd.create!(new_vnfd)
