@@ -748,6 +748,9 @@ class CatalogueV2 < SonataCatalogue
         halt 400, errors.to_json if errors
     end
 
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+
     # Validate NS
     json_error 400, 'ERROR: NS Vendor not found' unless new_ns.has_key?('vendor')
     json_error 400, 'ERROR: NS Name not found' unless new_ns.has_key?('name')
@@ -768,15 +771,23 @@ class CatalogueV2 < SonataCatalogue
       # Continue
     end
 
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
+
     # Save to DB
     begin
       new_nsd = {}
-      # Generate the UUID for the descriptor
       new_nsd['nsd'] = new_ns
+      # Generate the UUID for the descriptor
       new_nsd['_id'] = SecureRandom.uuid
       new_nsd['status'] = 'active'
-      new_nsd['signature'] = 'null'
-      new_nsd['md5'] = 'null'
+      # Signature will be supported
+      new_nsd['signature'] = nil
+      new_nsd['md5'] = checksum new_ns.to_s
+      new_nsd['username'] = username
       ns = Nsd.create!(new_nsd)
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated NS ID' if e.message.include? 'E11000'
@@ -871,14 +882,21 @@ class CatalogueV2 < SonataCatalogue
       # Continue
     end
 
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
+
     # Update to new version
     puts 'Updating...'
     new_nsd = {}
     new_nsd['_id'] = SecureRandom.uuid # Unique UUIDs per NSD entries
     new_nsd['nsd'] = new_ns
     new_nsd['status'] = 'active'
-    new_nsd['signature'] = 'null'
-    new_nsd['md5'] = 'null'
+    new_nsd['signature'] = nil
+    new_nsd['md5'] = checksum new_ns.to_s
+    new_nsd['username'] = username
 
     begin
       new_ns = Nsd.create!(new_nsd)
@@ -991,14 +1009,21 @@ class CatalogueV2 < SonataCatalogue
           # Continue
         end
 
+        if keyed_params.key?(:username)
+          username = keyed_params[:username]
+        else
+          username = nil
+        end
+
         # Update to new version
         puts 'Updating...'
         new_nsd = {}
         new_nsd['_id'] = SecureRandom.uuid # Unique UUIDs per NSD entries
         new_nsd['nsd'] = new_ns
         new_nsd['status'] = 'active'
-        new_nsd['signature'] = 'null'
-        new_nsd['md5'] = 'null'
+        new_nsd['signature'] = nil
+        new_nsd['md5'] = checksum new_ns.to_s
+        new_nsd['username'] = username
 
         begin
           new_ns = Nsd.create!(new_nsd)

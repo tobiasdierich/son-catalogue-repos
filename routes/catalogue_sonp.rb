@@ -339,7 +339,8 @@ class CatalogueV2 < SonataCatalogue
   # @overload post '/catalogues/son-package'
   # Post a son Package in binary-data
   post '/son-packages' do
-    logger.debug "Catalogue: entered POST /api/v2/son-packages/"
+    # logger.debug "Catalogue: entered POST /api/v2/son-packages/"
+    logger.debug "Catalogue: entered POST /api/v2/son-packages?#{query_string}"
     # Return if content-type is invalid
     halt 415 unless request.content_type == 'application/zip'
 
@@ -348,11 +349,16 @@ class CatalogueV2 < SonataCatalogue
     # sonp_vendor = request.env['HTTP_VENDOR']
     # sonp_name = request.env['HTTP_NAME']
     # sonp_version = request.env['HTTP_VERSION']
+    # sonp_username = request.env['HTTP_USERNAME']
 
     unless att
       error = "HTTP Content-Disposition is missing"
       halt 400, error.to_json
     end
+
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+
 
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
     # puts "filename", filename
@@ -397,6 +403,11 @@ class CatalogueV2 < SonataCatalogue
     )
 
     #puts "GRID_FILE ID", (grid_file.id)
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
 
     sonp_id = SecureRandom.uuid
     FileContainer.new.tap do |file_container|
@@ -407,6 +418,7 @@ class CatalogueV2 < SonataCatalogue
       # file_container.version = sonp_version
       file_container.grid_fs_name = filename
       file_container.md5 = grid_file.md5
+      file_container.username = username
       file_container.save
     end
     logger.debug "Catalogue: leaving POST /api/v2/son-packages/ with #{grid_file.id}"
@@ -444,7 +456,7 @@ class CatalogueV2 < SonataCatalogue
           json_error 404, 'Submitted son-package UUID not exists'
         end
 
-        # Add new son-package uuid field
+        # Add new son-package attribute fields
         begin
           sonp.update_attributes(vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version])
         rescue Moped::Errors::OperationFailure => e
