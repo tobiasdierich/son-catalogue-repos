@@ -1,7 +1,7 @@
 son-catalogue-repos:
   image: registry.sonata-nfv.eu:5000/son-catalogue-repos
   links:
-   - mongo-catalogues
+   - mongo-catalogues:mongo
   ports:
     - "4002:4011"
   restart: always
@@ -32,7 +32,7 @@ mongo-catalogues:
 mongoexpress:
   image: mongo-express
   links:
-    - mongo-catalogues
+    - mongo-catalogues:mongo
   ports:
     - "8090:8081"
   restart: always
