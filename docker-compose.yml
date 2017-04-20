@@ -23,7 +23,7 @@ mongodata-catalogues:
 mongo-catalogues:  
   image: mongo:3.0.4
   volumes_from:
-    - mongodata
+    - mongodata-catalogues
   ports:
     - "27017"
   command: --smallfiles --rest
@@ -32,7 +32,7 @@ mongo-catalogues:
 mongoexpress:
   image: mongo-express
   links:
-    - mongo:mongo
+    - mongo-catalogues
   ports:
     - "8090:8081"
   restart: always
