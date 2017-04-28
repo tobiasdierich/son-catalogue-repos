@@ -355,8 +355,6 @@ class CatalogueV2 < SonataCatalogue
       error = "HTTP Content-Disposition is missing"
       halt 400, error.to_json
     end
-
-<<<<<<< HEAD
     if request.env['HTTP_SIGNATURE']
       signature = request.env['HTTP_SIGNATURE']
     else
@@ -365,13 +363,8 @@ class CatalogueV2 < SonataCatalogue
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-
-=======
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-
-
->>>>>>> ea55bef4c4654c92b8918a1983487399d6e234eb
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
     # puts "filename", filename
     # JSON.pretty_generate(request.env)
