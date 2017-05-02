@@ -355,11 +355,16 @@ class CatalogueV2 < SonataCatalogue
       error = "HTTP Content-Disposition is missing"
       halt 400, error.to_json
     end
+    if request.env['HTTP_SIGNATURE']
+      signature = request.env['HTTP_SIGNATURE']
+    else
+      signature = nil
+    end
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-
-
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
     # puts "filename", filename
     # JSON.pretty_generate(request.env)
@@ -419,6 +424,7 @@ class CatalogueV2 < SonataCatalogue
       file_container.grid_fs_name = filename
       file_container.md5 = grid_file.md5
       file_container.username = username
+      file_container.signature = signature
       file_container.save
     end
     logger.debug "Catalogue: leaving POST /api/v2/son-packages/ with #{grid_file.id}"
