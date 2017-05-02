@@ -1,8 +1,13 @@
 ---
-address: 127.0.0.1
-port: 9292
+address: sp.int3.sonata-nfv.eu
+port: 5600
 api_ver: /api/v1
-path:
+
+public_key_path: /public-key
+registration_path: /register/service
+login_path: /login/service
+authorization_path: /authorize
+
 catalogue_client: son-catalogue
 catalogue_secret: 1234
 repos_client: son-repositories

@@ -31,6 +31,7 @@ require 'jwt'
 require 'sinatra'
 require 'net/http'
 require 'uri'
+require 'base64'
 
 # Sonata class for API routes
 class Sonata < Sinatra::Application
@@ -75,24 +76,20 @@ def parse_json(message)
   return parsed_message, nil
 end
 
-def get_public_key(address, port)
-  #TODO: Check failures
-  # p "ADDRESS_PORT", address, port
-  url = URI("http://#{address}:#{port}/api/v1/public-key")
-  #url = URI("http://127.0.0.1:9292/api/v1/public-key")
+def get_public_key(address, port, api_ver, path)
+  request_url = "http://#{address}:#{port}#{api_ver}#{path}"
+  url = URI.parse(request_url)
+  full_path = (url.query.blank?) ? url.path : "#{url.path}?#{url.query}"
   http = Net::HTTP.new(url.host, url.port)
-  request = Net::HTTP::Get.new(url)
+  request = Net::HTTP::Get.new(full_path)
   response = http.request(request)
-  # puts response.read_body
-
   # p "RESPONSE", response.body
   # p "CODE", response.code
-
   if response.code.to_i != 200
     raise 'Error: Public key not available'
   else
     # Writes the Keycloak public key to a config file
-    File.open('config/public_key.txt', 'w') do |f|
+    File.open('config/public_key', 'w') do |f|
       f.puts response.body
     end
     puts "Keycloak PUBLIC_KEY saved"  #, response.body.to_s
@@ -100,99 +97,111 @@ def get_public_key(address, port)
   end
 end
 
-def register_service(address, port)
+def register_service(address, port, api_ver, path)
   #TODO: Check failures
   # READ REGISTRATION FROM CONFIG_FORM
   catalogue_reg = JSON.parse(File.read('config/catalogue_registration.json'))
   # repos_reg = JSON.parse(File.read('config/repos_registration.json'))
-  # puts "CATALOGUE_REG_FORM", catalogue_reg
 
-  url = URI("http://#{address}:#{port}/api/v1/register/service")
-  # url = URI("http://127.0.0.1:9292/api/v1/register/service")
+  request_url = "http://#{address}:#{port}#{api_ver}#{path}"
+  url = URI.parse(request_url)
+  full_path = (url.query.blank?) ? url.path : "#{url.path}?#{url.query}"
   http = Net::HTTP.new(url.host, url.port)
-  request = Net::HTTP::Post.new(url)
+  request = Net::HTTP::Post.new(full_path)
   request["content-type"] = 'application/json'
 
   request.body = catalogue_reg.to_json
   response = http.request(request)
   # puts "CODE", response.code
   # puts "BODY", response.body
-  if response.code.to_i != '201'
-    return
-    #raise 'Error: registration failure'
-    # handle 409, {"error":"{\"errorMessage\":\"Client son-catalogue already exists\"}"}
-  else
-    puts "SON-CATALOGUE Service client: Registered"
-    return # Return an OK?
+  case response.code.to_i
+    when 201
+      puts "SON-CATALOGUE Service client: Registered"
+      return true
+    when 409
+      puts "SON-CATALOGUE Service client: Already registered"
+      return true
+    else
+      #raise 'Error: registration failure'
+      return false
   end
 end
 
-def login_service(address, port)
+def login_service(address, port, api_ver, path)
   adapter_yml = YAML.load_file('config/adapter.yml')
-  url = URI("http://#{address}:#{port}/api/v1/login/service")
+  request_url = "http://#{address}:#{port}#{api_ver}#{path}"
+  url = URI.parse(request_url)
+  full_path = (url.query.blank?) ? url.path : "#{url.path}?#{url.query}"
   http = Net::HTTP.new(url.host, url.port)
-  request = Net::HTTP::Post.new(url)
-  request.basic_auth(adapter_yml['catalogue_client'], adapter_yml['catalogue_secret'])
+  request = Net::HTTP::Post.new(full_path)
+  credentials =  Base64.strict_encode64("#{adapter_yml['catalogue_client']}:#{adapter_yml['catalogue_secret']}")
+  request['authorization'] = "Basic #{credentials}"
   # request.basic_auth(adapter_yml[repos_client], adapter_yml[repos_secret])
   response = http.request(request)
   # p "RESPONSE", response.body
   # p "CODE", response.code
 
-  if response.code.to_i != ''
+  if response.code.to_i == 200
     parsed_res, errors = parse_json(response.body)
-    # puts "PARSED_RES", parsed_res
+    if errors
+      puts 'SON-CATALOGUE Service client: Error while parsing response'
+      return nil
+    end
     # Write access token
-    File.open('config/catalogue_token.json', 'w') do |f|
+    File.open('config/catalogue_token', 'w') do |f|
       # File.open('config/repos_token.json', 'w') do |f|
       f.puts parsed_res['access_token']
-      #f.puts response.body # .to_json
     end
-    puts "SON-CATALOGUE Service client: Logged-in"
+    puts 'SON-CATALOGUE Service client: Logged-in'
+    parsed_res['access_token']
   else
-    raise 'Error: login failure'
+    # raise 'Error: login failure'
+    puts 'SON-CATALOGUE Service client: Login failed'
+    nil
   end
 end
 
-#def authorized?(address, port, token)
+#def authorized?(address, port, api_ver, path, token)
 # TODO: CHECK IF A PROVIDED TOKEN IS VALID
 #end
 
-def check_token(address, port, keycloak_pub_key)
-  #p uts "CHECKING ACCESS TOKEN"
-  #=> READ TOKEN, READ PUBLIC KEY
-  catalogue_token = (File.read('config/catalogue_token.json'))
-  #catalogue_token = JSON.parse(File.read('config/catalogue_token.json'))
-  #=> Check if token.expired?
-  code = decode_token(catalogue_token, keycloak_pub_key)
-  case code
-    when 'OK'
-      puts "Catalogue Access Token: OK"
-      return
-    else
-      #=> Then GET new token
-      puts "Catalogue Access Token: REFRESHING..."
-      login_service(address, port)
-  end
+def check_token(address, port, keycloak_pub_key, access_token)
+  # puts "CHECKING ACCESS TOKEN"
+  # => READ TOKEN, READ PUBLIC KEY
+  # catalogue_token = (File.read('config/catalogue_token.json'))
+  # catalogue_token = JSON.parse(File.read('config/catalogue_token.json'))
+  # => Check if token.expired?
+  # status = decode_token(access_token, keycloak_pub_key)
+  # case code
+  #  when true
+  #    puts "Catalogue Access Token: OK"
+  #    return
+  #  else
+  #    #=> Then GET new token
+  #    puts "Catalogue Access Token: REFRESHING..."
+  #    login_service(address, port)
+  #end
 end
 
 def decode_token(token, pub_key)
-  # puts "TOKEN", token
-  # puts "PUB", pub_key
 
   begin
     decoded_payload, decoded_header = JWT.decode token, pub_key, true, { :algorithm => 'RS256' }
     # puts "DECODED_HEADER: ", decoded_header
     # puts "DECODED_PAYLOAD: ", decoded_payload
-    response = 'OK'
-      # if expired token, refresh token
+    return true
   rescue JWT::DecodeError
-    response = 'DecodeError'
+    puts 'Decode token: DecodeError'
+    return false
   rescue JWT::ExpiredSignature
-    response = 'ExpiredSignature'
+    puts 'Decode token: ExpiredSignature'
+    return false
   rescue JWT::InvalidIssuerError
-    response = 'InvalidIssuerError'
+    puts 'Decode token: InvalidIssuerError'
+    return false
   rescue JWT::InvalidIatError
-    response = 'InvalidIatError'
+    puts 'Decode token: InvalidIatError'
+    return false
   end
 end
 

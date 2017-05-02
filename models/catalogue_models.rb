@@ -145,6 +145,7 @@ class FileContainer
   # field :vendor, type: String
   # field :name, type: String
   # field :version, type: String
+  field :signature, type: String
   field :md5, type: String
   field :username, type: String
 end
