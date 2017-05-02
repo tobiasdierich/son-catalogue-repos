@@ -64,28 +64,28 @@ configure do
   set :access_token, nil
 
   # turn keycloak realm pub key into an actual openssl compat pub key.
-  keycloak_key = get_public_key(settings.auth_address, settings.auth_port, settings.api_ver, settings.pub_key_path)
-  keycloak_key, errors = parse_json(keycloak_key)
+  # keycloak_key = get_public_key(settings.auth_address, settings.auth_port, settings.api_ver, settings.pub_key_path)
+  # keycloak_key, errors = parse_json(keycloak_key)
   # puts keycloak_key['public-key']
-  @s = "-----BEGIN PUBLIC KEY-----\n"
-  @s += keycloak_key['public-key'].scan(/.{1,64}/).join("\n")
-  @s += "\n-----END PUBLIC KEY-----\n"
-  @key = OpenSSL::PKey::RSA.new @s
-  set :keycloak_pub_key, @key
-  puts "Keycloak public key: ", settings.keycloak_pub_key
+  # @s = "-----BEGIN PUBLIC KEY-----\n"
+  # @s += keycloak_key['public-key'].scan(/.{1,64}/).join("\n")
+  # @s += "\n-----END PUBLIC KEY-----\n"
+  # @key = OpenSSL::PKey::RSA.new @s
+  # set :keycloak_pub_key, @key
+  # puts "Keycloak public key: ", settings.keycloak_pub_key
 
-  register_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.reg_path)
-  access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
-  if access_token
-    set :access_token, access_token
-  end
+  # register_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.reg_path)
+  # access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
+  # if access_token
+  #   set :access_token, access_token
+  # end
 end
 
 before do
   logger.level = Logger::DEBUG
   # SECURITY CHECKS ARE TEMPORARY DISABLED!
-  status = decode_token(settings.keycloak_pub_key, settings.access_token)
-  login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path) unless status
+  # status = decode_token(settings.keycloak_pub_key, settings.access_token)
+  # login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path) unless status
 
   # Get authorization token
   #if request.env["HTTP_AUTHORIZATION"] != nil
