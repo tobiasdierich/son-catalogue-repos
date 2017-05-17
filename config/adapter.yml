@@ -1,6 +1,8 @@
 ---
+# Connecto to GK API
 address: sp.int3.sonata-nfv.eu
 port: 5600
+
 api_ver: /api/v1
 
 public_key_path: /public-key
