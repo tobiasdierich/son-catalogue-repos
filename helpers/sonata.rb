@@ -124,6 +124,7 @@ def register_service(address, port, api_ver, path)
     else
       #raise 'Error: registration failure'
       return false
+
   end
 end
 
