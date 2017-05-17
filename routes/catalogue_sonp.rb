@@ -284,7 +284,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method get_son_package_id
@@ -296,28 +296,51 @@ class CatalogueV2 < SonataCatalogue
     # Dir.chdir(File.dirname(__FILE__))
     logger.debug "Catalogue: entered GET /api/v2/son-packages/#{params[:id]}"
     # puts 'ID: ', params[:id]
-    begin
-      sonp = FileContainer.find_by({ '_id' => params[:id] })
-      # p 'FileContainer FOUND'
-      p 'Filename: ', sonp['grid_fs_name']
-      p 'grid_fs_id: ', sonp['grid_fs_id']
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error e
-      halt 404
+
+    # Check headers
+    case request.content_type
+      when 'application/zip'
+        begin
+          sonp = FileContainer.find_by({ '_id' => params[:id] })
+          # p 'FileContainer FOUND'
+          p 'Filename: ', sonp['grid_fs_name']
+          p 'grid_fs_id: ', sonp['grid_fs_id']
+        rescue Mongoid::Errors::DocumentNotFound => e
+          logger.error e
+          halt 404
+        end
+
+        grid_fs = Mongoid::GridFs
+        grid_file = grid_fs.get(sonp['grid_fs_id'])
+
+        # Set custom header with package Filename
+        headers 'Filename' => (sonp['grid_fs_name'].to_s)
+
+        logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
+        halt 200, grid_file.data
+
+      when 'application/json'
+        begin
+          sonp = FileContainer.find_by('_id' => params[:id])
+        rescue Mongoid::Errors::DocumentNotFound => e
+          logger.error e
+          json_error 404, "The son-package ID #{params[:id]} does not exist" unless sonp
+        end
+
+        logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
+        halt 200, {'Content-type' => 'application/json'}, sonp.to_json
+
+      else
+        halt 415
     end
-
-    grid_fs = Mongoid::GridFs
-    grid_file = grid_fs.get(sonp['grid_fs_id'])
-
-    logger.debug "Catalogue: leaving GET /api/v2/son-packages/#{params[:id]}"
-    halt 200, grid_file.data
   end
 
   # @method post_son_package
   # @overload post '/catalogues/son-package'
   # Post a son Package in binary-data
   post '/son-packages' do
-    logger.debug "Catalogue: entered POST /api/v2/son-packages/"
+    # logger.debug "Catalogue: entered POST /api/v2/son-packages/"
+    logger.debug "Catalogue: entered POST /api/v2/son-packages?#{query_string}"
     # Return if content-type is invalid
     halt 415 unless request.content_type == 'application/zip'
 
@@ -326,12 +349,22 @@ class CatalogueV2 < SonataCatalogue
     # sonp_vendor = request.env['HTTP_VENDOR']
     # sonp_name = request.env['HTTP_NAME']
     # sonp_version = request.env['HTTP_VERSION']
+    # sonp_username = request.env['HTTP_USERNAME']
 
     unless att
       error = "HTTP Content-Disposition is missing"
       halt 400, error.to_json
     end
+    if request.env['HTTP_SIGNATURE']
+      signature = request.env['HTTP_SIGNATURE']
+    else
+      signature = nil
+    end
 
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
     # puts "filename", filename
     # JSON.pretty_generate(request.env)
@@ -375,6 +408,11 @@ class CatalogueV2 < SonataCatalogue
     )
 
     #puts "GRID_FILE ID", (grid_file.id)
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
 
     sonp_id = SecureRandom.uuid
     FileContainer.new.tap do |file_container|
@@ -385,6 +423,8 @@ class CatalogueV2 < SonataCatalogue
       # file_container.version = sonp_version
       file_container.grid_fs_name = filename
       file_container.md5 = grid_file.md5
+      file_container.username = username
+      file_container.signature = signature
       file_container.save
     end
     logger.debug "Catalogue: leaving POST /api/v2/son-packages/ with #{grid_file.id}"
@@ -399,7 +439,48 @@ class CatalogueV2 < SonataCatalogue
     #
 
     # halt 201, grid_file.id.to_json
-    halt 201, response.to_json
+    halt 201, {'Content-type' => 'application/json'}, response.to_json
+  end
+
+  # @method update_son_package_id
+  # @overload put '/catalogues/son-packages/:id/?'
+  #	Update a son-package in JSON or YAML format
+  ## Catalogue - UPDATE
+  put '/son-packages/:id/?' do
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+
+    unless params[:id].nil?
+      logger.debug "Catalogue: PUT /son-packages/#{params[:id]}"
+
+      # Transform 'string' params Hash into keys
+      keyed_params = keyed_hash(params)
+      # puts 'keyed_params', keyed_params
+      if [:vendor, :name, :version].all? {|s| keyed_params.key? s }
+        #if keyed_params.key?(:vendor, :name, :version)
+        # Do update of Son-Package meta-data
+        logger.info "Catalogue: entered PUT /son-packages/#{query_string}"
+
+        # Validate son-package uuid
+        begin
+          puts 'Searching ' + params[:sonp_uuid].to_s
+          sonp = FileContainer.find_by({ '_id' => params[:id] })
+          p 'Filename: ', sonp['grid_fs_name']
+          puts 'son-package is found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, 'Submitted son-package UUID not exists'
+        end
+
+        # Add new son-package attribute fields
+        begin
+          sonp.update_attributes(vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version])
+        rescue Moped::Errors::OperationFailure => e
+          json_error 400, 'ERROR: Operation failed'
+        end
+
+        halt 200, "File son-package updated attributes: #{keyed_params[:vendor]}, #{keyed_params[:name]}, #{keyed_params[:version]}"
+      end
+    end
   end
 
   # @method delete_son_package_id

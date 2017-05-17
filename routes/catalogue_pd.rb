@@ -703,7 +703,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method get_packages_package_id
@@ -732,7 +732,7 @@ class CatalogueV2 < SonataCatalogue
         else
           halt 415
       end
-      halt 200, response
+      halt 200, {'Content-type' => request.content_type}, response
 
     end
     logger.debug "Catalogue: leaving GET /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
@@ -769,6 +769,9 @@ class CatalogueV2 < SonataCatalogue
         halt 400, errors.to_json if errors
     end
 
+    # Transform 'string' params Hash into keys
+    keyed_params = keyed_hash(params)
+
     # Validate NS
     json_error 400, 'ERROR: Package Vendor not found' unless new_pks.has_key?('vendor')
     json_error 400, 'ERROR: Package Name not found' unless new_pks.has_key?('name')
@@ -789,15 +792,23 @@ class CatalogueV2 < SonataCatalogue
       # Continue
     end
 
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
+
     # Save to DB
     begin
       new_pd = {}
-      # Generate the UUID for the descriptor
       new_pd['pd'] = new_pks
+      # Generate the UUID for the descriptor
       new_pd['_id'] = SecureRandom.uuid
       new_pd['status'] = 'active'
-      new_pd['signature'] = 'null'
-      new_pd['md5'] = 'null'
+      # Signature will be supported
+      new_pd['signature'] = nil
+      new_pd['md5'] = checksum new_pks.to_s
+      new_pd['username'] = username
       pks = Pkgd.create!(new_pd)
     rescue Moped::Errors::OperationFailure => e
       json_return 200, 'Duplicated Package ID' if e.message.include? 'E11000'
@@ -813,7 +824,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 201, response
+    halt 201, {'Content-type' => request.content_type}, response
   end
 
   # @method update_package_group_name_version
@@ -890,14 +901,21 @@ class CatalogueV2 < SonataCatalogue
       # Continue
     end
 
+    if keyed_params.key?(:username)
+      username = keyed_params[:username]
+    else
+      username = nil
+    end
+
     # Update to new version
     puts 'Updating...'
     new_pd = {}
     new_pd['_id'] = SecureRandom.uuid # Unique UUIDs per PD entries
     new_pd['pd'] = new_pks
     new_pd['status'] = 'active'
-    new_pd['signature'] = 'null'
-    new_pd['md5'] = 'null'
+    new_pd['signature'] = nil
+    new_pd['md5'] = checksum new_pks.to_s
+    new_pd['username'] = username
 
     begin
       new_pks = Pkgd.create!(new_pd)
@@ -915,7 +933,7 @@ class CatalogueV2 < SonataCatalogue
       else
         halt 415
     end
-    halt 200, response
+    halt 200, {'Content-type' => request.content_type}, response
   end
 
   # @method update_package_id
@@ -1045,14 +1063,21 @@ class CatalogueV2 < SonataCatalogue
           # Continue
         end
 
+        if keyed_params.key?(:username)
+          username = keyed_params[:username]
+        else
+          username = nil
+        end
+
         # Update to new version
         puts 'Updating...'
         new_pd = {}
         new_pd['_id'] = SecureRandom.uuid # Unique UUIDs per PD entries
         new_pd['pd'] = new_pks
         new_pd['status'] = 'active'
-        new_pd['signature'] = 'null'
-        new_pd['md5'] = 'null'
+        new_pd['signature'] = nil
+        new_pd['md5'] = checksum new_pks.to_s
+        new_pd['username'] = username
 
         begin
           new_pks = Pkgd.create!(new_pd)
@@ -1070,7 +1095,7 @@ class CatalogueV2 < SonataCatalogue
           else
             halt 415
         end
-        halt 200, response
+        halt 200, {'Content-type' => request.content_type}, response
       end
     end
     logger.debug "Catalogue: leaving PUT /api/v2/packages/#{params[:id]} with 'No PD ID specified'"

@@ -54,7 +54,7 @@ class Ns
   validates :vendor, :name, :version, presence: true
 end
 
-# New item structure for meta-data and descriptor data
+# New API v2 item structure for meta-data and descriptor data
 class Nsd
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -65,6 +65,7 @@ class Nsd
   field :nsd, type: Hash
   field :status, type: String
   field :signature, type: String
+  field :username, type: String
   validates :nsd, presence: true
 end
 
@@ -83,7 +84,7 @@ class Vnf
   validates :vendor, :name, :version, presence: true
 end
 
-# New item structure for meta-data and descriptor data
+# New API v2 item structure for meta-data and descriptor data
 class Vnfd
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -94,6 +95,7 @@ class Vnfd
   field :vnfd, type: Hash
   field :status, type: String
   field :signature, type: String
+  field :username, type: String
   validates :vnfd, presence: true
 end
 
@@ -111,7 +113,7 @@ class Package
   validates :vendor, :name, :version, presence: true
 end
 
-# New item structure for meta-data and descriptor data
+# New API v2 item structure for meta-data and descriptor data
 class Pkgd
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -122,18 +124,20 @@ class Pkgd
   field :pd, type: Hash
   field :status, type: String
   field :signature, type: String
+  field :username, type: String
   validates :pd, presence: true
 end
 
 # Class model for binary data storage on database
 # require 'mongoid/grid_fs'
-# Sonata class for Catalogue son-packages
+# Sonata API v2 class for Catalogue son-packages
 class FileContainer
   require 'mongoid/grid_fs'
 
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
   store_in collection: 'file_containers'
 
   field :grid_fs_id, type: String
@@ -141,7 +145,9 @@ class FileContainer
   # field :vendor, type: String
   # field :name, type: String
   # field :version, type: String
+  field :signature, type: String
   field :md5, type: String
+  field :username, type: String
 end
 
 # Sonata class for Catalogue Element Dependencies
