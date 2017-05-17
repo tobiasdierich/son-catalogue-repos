@@ -1,6 +1,6 @@
 ---
 address: 127.0.0.1
-port: 9292
+port: 4021
 api_ver: /api/v1
 path:
 catalogue_client: son-catalogue

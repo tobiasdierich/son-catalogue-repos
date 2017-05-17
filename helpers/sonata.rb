@@ -117,7 +117,8 @@ def register_service(address, port)
   response = http.request(request)
   # puts "CODE", response.code
   # puts "BODY", response.body
-  if response.code.to_i != '201'
+  if response.code.to_i != 201
+    puts "#{response.code.to_i}, #{response.body.to_s}"
     return
     #raise 'Error: registration failure'
     # handle 409, {"error":"{\"errorMessage\":\"Client son-catalogue already exists\"}"}

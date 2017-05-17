@@ -389,6 +389,15 @@ class CatalogueV2 < SonataCatalogue
     end
     logger.debug "Catalogue: leaving POST /api/v2/son-packages/ with #{grid_file.id}"
     response = {"uuid" => sonp_id}
+
+    # TODO: BEFORE SENDING BACK RESPONSE, A DEPENDENCIES MAPPING DOCUMENT MUST BE BUILT AND SAVED IN THE CATALOGUE
+    #
+    # TODO: CALL METHOD OR IMPLEMENT LOGICS HERE
+    # Requirements:
+    # sonp_id, pd_name.trio, nsds_name.trio, vnfds_name.trio
+    #
+    #
+
     # halt 201, grid_file.id.to_json
     halt 201, response.to_json
   end

@@ -144,16 +144,18 @@ class FileContainer
   field :md5, type: String
 end
 
-# Sonata class for Catalogue Services
-# class Vnf_Ns_map ## Temporary name
-#  include Mongoid::Document
-#  include Mongoid::Timestamps
-#  include Mongoid::Pagination
-#  include Mongoid::Attributes::Dynamic
-#  store_in session: 'map_db'
+# Sonata class for Catalogue Element Dependencies
+class Dependencies_mapping ## Temporary name
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
+  store_in session: 'mapping_db'
 
-#  field :vendor, type: String
-#  field :name, type: String
-#  field :version, type: String
-#  validates :vendor, :name, :version, :presence => true
-# end
+  field :son_package_uuid, type: String
+  field :pd, type: String
+  field :nsds, type: String
+  field :vnfds, type: String
+  field :deps, type: string
+  validates :son_package_uuid, :pd, :nsds, :vnfds, :presence => true
+end

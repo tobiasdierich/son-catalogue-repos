@@ -1095,8 +1095,11 @@ class CatalogueV2 < SonataCatalogue
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+
+      # TODO: Implement Intelligent DELETE feature
+
       pks.destroy
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
       halt 200, 'OK: PD removed'
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
@@ -1117,8 +1120,11 @@ class CatalogueV2 < SonataCatalogue
         logger.error e
         json_error 404, "The PD ID #{params[:id]} does not exist" unless pks
       end
-      logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]}\" with PD #{pks}"
+
+      # TODO: Implement Intelligent DELETE feature
+
       pks.destroy
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]}\" with PD #{pks}"
       halt 200, 'OK: PD removed'
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
