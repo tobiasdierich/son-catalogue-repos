@@ -1,10 +1,11 @@
 [![Build Status](http://jenkins.sonata-nfv.eu/buildStatus/icon?job=son-catalogue-repos)](http://jenkins.sonata-nfv.eu/job/son-catalogue-repos)
 
-# SP Catalogues and Repositories
-This repository contains the development for the Service Platform catalogues and repositories. It holds the API implementation of SP catalogue and repos. Moreover, is is closely related to the [son-catalogue](https://github.com/sonata-nfv/son-catalogue) repository that holds the catalogs of the SDK as well at the [son-schema](https://github.com/sonata-nfv/son-schema) repository that holds the schema for the various descriptors, such as the VNFD and the NSD.
+# SON Catalogue and Repositories
+This repository contains the development for the [SONATA](http://www.sonata-nfv.eu) 's Service Platform Catalogue and Repositories. It holds the API implementation for the Service Platform Catalogue component and Repositories component.
+The Catalogue now integrates the SDK [son-catalogue](https://github.com/sonata-nfv/son-catalogue) in the Service Platform. It is closely related to the [son-schema](https://github.com/sonata-nfv/son-schema) repository that holds the schema for the various descriptors, such as the VNFD and the NSD.
 
 ## Development
-To contribute to the development of the SONATA editor, you may use the very same development workflow as for any other SONATA Github project. That is, you have to fork the repository and create pull requests.
+To contribute to the development of the SONATA Catalogue and/or Repositories, you may use the very same development workflow as for any other SONATA Github project. That is, you have to fork the repository and create pull requests.
 
 ### Dependencies
 It is recommended to use Ubuntu 14.04.4 LTS (Trusty Tahr).
@@ -22,7 +23,8 @@ Ruby gems used (for more details see Gemfile):
 * [sinatra-contrib](https://github.com/sinatra/sinatra-contrib) - Sinatra extensions
 * [rake](http://rake.rubyforge.org/) - Ruby build program with capabilities similar to make
 * [JSON-schema](https://github.com/ruby-json-schema/json-schema) - JSON schema validator
-* [Rest-client](https://github.com/rest-client/rest-client) - HTTP and REST client
+* [jwt](https://github.com/jwt/ruby-jwt) - Json Web Token lib
+* [curb](https://github.com/taf2/curb) - HTTP and REST client
 * [Yard](https://github.com/lsegal/yard) - Documentation generator tool
 * [mongoid-grid_fs](https://github.com/mongoid/mongoid-grid_fs) - Implementation of the MongoDB GridFS specification
 
@@ -91,13 +93,13 @@ curl -X POST --data-binary @test_nsr.yaml -H "Content-type:application/x-yaml" h
 curl -X POST --data-binary @test_vnfr.yaml -H "Content-type:application/x-yaml" http://localhost:4011/records/vnfr
 ```
 
-The Catalogues' API allows the use of CRUD operations to send, retrieve, update and delete descriptors and sonata files.
+The Catalogue's API allows the use of CRUD operations to send, retrieve, update and delete descriptors and sonata files.
 The available descriptors include services (NSD), functions (VNFD) and packages (PD) descriptors.
-The Catalogues also support storage for SONATA packages (son-packages), the binary files that contain the descriptors.
+The Catalogue also support storage for SONATA packages (son-packages), the binary files that contain the descriptors.
 For testing the Catalogues, you can use 'curl' tool to send a request descriptors to the API. It is required to set the HTTP header 'Content-type' field to 'application/json' or 'application/x-yaml' according to your desired format.
 
 The Catalogues' API now supports API versioning. New API v2 has been introduced in release v2.0 which implements some structure changes in the descriptors.
-For legacy compatibility, the API v1 is supported, however it is recommended to not mix a MongoDB databse with both versions.
+The API v1 is deprecated and is no longer supported by the SONATA Service Platform. It is recommended to use v2 only in a MongoDB database.
 
 Method GET:
 
@@ -202,13 +204,13 @@ To remove a package file by its ID
 curl -X DELETE http://localhost:4011/catalogues/api/v2/son-packages/9f18bc1b-b18d-483b-88da-a600e9255000
 ```
 
-For more information about usage of Catalogues, please visit the wikipage link below which contains some information to interact and test the Catalogues API.
+For more information about usage of Catalogue, please visit the wikipage link below which contains some information to interact and test the Catalogues API.
 
 * [Testing the code](http://wiki.sonata-nfv.eu/index.php/SONATA_Catalogues) - Inside SP Catalogue API Documentation (It currently works for SDK and SP Catalogues)
 
-### Pushing 'sonata-demo' files to Catalogues
+### Pushing 'sonata-demo' files to Catalogue
 
-The Rakefile in root folder includes an specific task to fill the Catalogues with descriptor sample files from
+The Rakefile in root folder includes an specific task to fill the Catalogue with descriptor sample files from
 sonata-demo package. This is specially useful when starting an empty Catalogue. It can be run with a rake task:
 
 ```sh

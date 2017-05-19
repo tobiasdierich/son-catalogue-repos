@@ -34,7 +34,6 @@ gem 'sinatra-contrib', '~> 1.4.1', require: false
 gem 'puma', '~> 3.4.0'
 gem 'json', '~>1.8'
 gem 'json-schema', '~>2.5'
-# gem 'rest-client', '~>1.8'
 gem 'curb', '~> 0.9.3' # Better performance Rest gem
 gem 'ci_reporter_rspec', '~> 1.0'
 gem 'jwt', '~> 1.5.5' # Json Web Token gem

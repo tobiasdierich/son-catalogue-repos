@@ -107,7 +107,7 @@ class CatalogueV1 < SonataCatalogue
         pks_list = []
       end
       # pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
-      pks = apply_limit_and_offset(pks_list, offset=params[:offset], limit=params[:limit])
+      pks = apply_limit_and_offset(pks_list, params[:offset], params[:limit])
 
     else
       # Do the query
@@ -323,7 +323,7 @@ class CatalogueV1 < SonataCatalogue
       begin
         pks = Package.find_by({ 'vendor' => keyed_params[:vendor], 'name' => keyed_params[:name],
                                 'version' => keyed_params[:version] })
-        puts 'Package is found'
+        puts "Package is found #{pks.to_s}"
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
