@@ -363,11 +363,7 @@ class CatalogueV2 < SonataCatalogue
 
     # Transform 'string' params Hash into keys
     keyed_params = keyed_hash(params)
-    # Transform 'string' params Hash into keys
-    keyed_params = keyed_hash(params)
     filename = att.match(/filename=(\"?)(.+)\1/)[2]
-    # puts "filename", filename
-    # JSON.pretty_generate(request.env)
 
     # Reads body data
     file, errors = request.body
