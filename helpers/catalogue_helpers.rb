@@ -31,6 +31,7 @@ class SonataCatalogue < Sinatra::Application
   require 'yaml'
   require 'digest/md5'
   require 'jwt'
+  require 'zip'
 
   # Read config settings from config file
   # @return [String, Integer] the address and port of the API
@@ -272,6 +273,31 @@ class SonataCatalogue < Sinatra::Application
     Curl.post(url, body) do |req|
       req.headers['Content-type'] = 'application/json'
       req.headers['Accept'] = 'application/json'
+    end
+  end
+
+  def son_package_mapping(sonpfile)
+    pd = {}
+    nsds = []
+    vnfds = []
+    Zip::InputStream.open(sonpfile) do |io|
+      while (entry = io.get_next_entry)
+        content = io.read
+        desc, errors = parse_yaml(content)
+        if !desc['package_name'].nil?
+          pd['name'] = desc['package_name']
+          pd['vendor'] = desc['package_group']
+          pd['version'] = desc['package_version']
+          puts 'It\'s a pakage descriptor!'
+        end
+        if !desc['vendor'].nil?
+          if !desc['network_functions'].nil?
+            puts 'It\'s a network service descriptor!'
+          else
+            puts 'It\'s a vnf descriptor!'
+          end
+        end
+      end
     end
   end
 
