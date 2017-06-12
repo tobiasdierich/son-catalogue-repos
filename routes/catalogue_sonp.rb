@@ -469,9 +469,19 @@ class CatalogueV2 < SonataCatalogue
           json_error 404, 'Submitted son-package UUID not exists'
         end
 
+        begin
+          puts 'Searching ' + params[:id].to_s
+          son_mapping = Dependencies_mapping.find_by({ 'son_package_uuid' => params[:id]})
+          p 'Dependencies mapping ', params[:id]
+          puts 'Dependencies mapping found'
+        rescue Mongoid::Errors::DocumentNotFound => e
+          json_error 404, 'Submitted dependencies mapping not exists'
+        end
+
         # Add new son-package attribute fields
         begin
           sonp.update_attributes(vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version])
+          son_mapping.update('pd' => {vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version]})
         rescue Moped::Errors::OperationFailure => e
           json_error 400, 'ERROR: Operation failed'
         end
