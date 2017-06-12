@@ -156,12 +156,12 @@ class Dependencies_mapping ## Temporary name
   include Mongoid::Timestamps
   include Mongoid::Pagination
   include Mongoid::Attributes::Dynamic
-  store_in session: 'mapping_db'
+  store_in collection: 'mapping_db'
 
   field :son_package_uuid, type: String
-  field :pd, type: String
-  field :nsds, type: String
-  field :vnfds, type: String
-  field :deps, type: String
+  field :pd, type: Hash
+  field :nsds, type: Array
+  field :vnfds, type: Array
+  field :deps, type: Array
   validates :son_package_uuid, :pd, :nsds, :vnfds, :presence => true
 end

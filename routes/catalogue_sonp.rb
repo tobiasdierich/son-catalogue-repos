@@ -436,7 +436,7 @@ class CatalogueV2 < SonataCatalogue
     #
 
     # halt 201, grid_file.id.to_json
-    son_package_mapping(file)
+    nmpr = Dependencies_mapping.create!(son_package_mapping(file, sonp_id))
     halt 201, {'Content-type' => 'application/json'}, response.to_json
   end
 

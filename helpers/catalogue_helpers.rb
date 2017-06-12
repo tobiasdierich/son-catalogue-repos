@@ -276,7 +276,7 @@ class SonataCatalogue < Sinatra::Application
     end
   end
 
-  def son_package_mapping(sonpfile)
+  def son_package_mapping(sonpfile, sonp_id)
     pd = {}
     nsds = []
     vnfds = []
@@ -288,17 +288,28 @@ class SonataCatalogue < Sinatra::Application
           pd['name'] = desc['package_name']
           pd['vendor'] = desc['package_group']
           pd['version'] = desc['package_version']
-          puts 'It\'s a pakage descriptor!'
         end
         if !desc['vendor'].nil?
           if !desc['network_functions'].nil?
-            puts 'It\'s a network service descriptor!'
+            nsds.append({'vendor' => desc['vendor'],
+                         'name' => desc['name'],
+                         'version' => desc['version']})
           else
-            puts 'It\'s a vnf descriptor!'
+            vnfds.append({'vendor' => desc['vendor'],
+                          'name' => desc['name'],
+                          'version' => desc['version']})
           end
         end
       end
     end
+    mapping_id = SecureRandom.uuid
+    new_mapping = {
+      '_id' => mapping_id,
+      'son_package_uuid' => sonp_id,
+      'pd' => pd,
+      'nsds' => nsds,
+      'vnfds' => vnfds
+    }
   end
 
   # Method which lists all available interfaces
