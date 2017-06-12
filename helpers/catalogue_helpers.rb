@@ -280,14 +280,24 @@ class SonataCatalogue < Sinatra::Application
     pd = {}
     nsds = []
     vnfds = []
+    deps = []
     Zip::InputStream.open(sonpfile) do |io|
       while (entry = io.get_next_entry)
         content = io.read
         desc, errors = parse_yaml(content)
-        if !desc['package_name'].nil?
-          pd['name'] = desc['package_name']
-          pd['vendor'] = desc['package_group']
-          pd['version'] = desc['package_version']
+        if !desc['maintainer'].nil?
+          pd['name'] = desc['name']
+          pd['vendor'] = desc['vendor']
+          pd['version'] = desc['version']
+          if !desc['package_dependencies'].nil?
+            desc['package_dependencies'].each do |pd|
+              deps.append({'vendor' => pd['vendor'],
+                           'version' => pd['version'],
+                           'name' => pd['name']})
+            end
+          end
+          # Preventing inclusion of PDs in VNFDs array
+          next
         end
         if !desc['vendor'].nil?
           if !desc['network_functions'].nil?
@@ -308,7 +318,8 @@ class SonataCatalogue < Sinatra::Application
       'son_package_uuid' => sonp_id,
       'pd' => pd,
       'nsds' => nsds,
-      'vnfds' => vnfds
+      'vnfds' => vnfds,
+      'deps' => deps
     }
   end
 
