@@ -436,7 +436,7 @@ class CatalogueV2 < SonataCatalogue
     #
 
     # halt 201, grid_file.id.to_json
-    nmpr = Dependencies_mapping.create!(son_package_mapping(file, sonp_id))
+    nmpr = Dependencies_mapping.create!(son_package_dep_mapping(file, sonp_id))
     halt 201, {'Content-type' => 'application/json'}, response.to_json
   end
 
@@ -471,7 +471,7 @@ class CatalogueV2 < SonataCatalogue
 
         begin
           puts 'Searching ' + params[:id].to_s
-          son_mapping = Dependencies_mapping.find_by({ 'son_package_uuid' => params[:id]})
+          son_dep_mapping = Dependencies_mapping.find_by({ 'son_package_uuid' => params[:id]})
           p 'Dependencies mapping ', params[:id]
           puts 'Dependencies mapping found'
         rescue Mongoid::Errors::DocumentNotFound => e
@@ -481,7 +481,7 @@ class CatalogueV2 < SonataCatalogue
         # Add new son-package attribute fields
         begin
           sonp.update_attributes(vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version])
-          son_mapping.update('pd' => {vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version]})
+          son_dep_mapping.update('pd' => {vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version]})
         rescue Moped::Errors::OperationFailure => e
           json_error 400, 'ERROR: Operation failed'
         end

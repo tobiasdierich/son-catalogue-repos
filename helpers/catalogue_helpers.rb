@@ -276,7 +276,7 @@ class SonataCatalogue < Sinatra::Application
     end
   end
 
-  def son_package_mapping(sonpfile, sonp_id)
+  def son_package_dep_mapping(sonpfile, sonp_id)
     pd = {}
     nsds = []
     vnfds = []
