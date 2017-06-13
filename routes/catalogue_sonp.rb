@@ -439,8 +439,8 @@ class CatalogueV2 < SonataCatalogue
     begin
       Dependencies_mapping.create!(son_package_dep_mapping(file, sonp_id))
     rescue => e
-      logger.debug e.message
-      halt 400, e.message
+      logger.error e.message
+      halt 400, {'Content-type' => 'text/plain'}, e.message
     end
     halt 201, {'Content-type' => 'application/json'}, response.to_json
   end

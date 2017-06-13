@@ -293,10 +293,14 @@ class SonataCatalogue < Sinatra::Application
               mapping[:pd] = {vendor: desc['vendor'],
                               version: desc['version'],
                               name: desc['name']}
-              desc['package_dependencies'].each do |pdep|
-                mapping[:deps].append({vendor: pdep['vendor'],
-                                       version: pdep['version'],
-                                       name: pdep['name']})
+              if !desc['package_dependencies'].nil?
+                desc['package_dependencies'].each do |pdep|
+                  if valid_dep_mapping_descriptor? desc
+                    mapping[:deps].append({vendor: pdep['vendor'],
+                                           version: pdep['version'],
+                                           name: pdep['name']})
+                  end
+                end
               end
             end
           end
