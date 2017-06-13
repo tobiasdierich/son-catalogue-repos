@@ -37,6 +37,7 @@ gem 'json-schema', '~>2.5'
 gem 'curb', '~> 0.9.3' # Better performance Rest gem
 gem 'ci_reporter_rspec', '~> 1.0'
 gem 'jwt', '~> 1.5.5' # Json Web Token gem
+gem 'rubyzip'
 
 
 group :development, :test do
