@@ -32,6 +32,7 @@ class SonataCatalogue < Sinatra::Application
   require 'digest/md5'
   require 'jwt'
   require 'zip'
+  require 'pathname'
 
   # Read config settings from config file
   # @return [String, Integer] the address and port of the API
@@ -276,51 +277,49 @@ class SonataCatalogue < Sinatra::Application
     end
   end
 
+  def valid_dep_mapping_descriptor?(desc)
+    (desc['name'] && desc['vendor'] && desc['version'])
+  end
+
   def son_package_dep_mapping(sonpfile, sonp_id)
-    pd = {}
-    nsds = []
-    vnfds = []
-    deps = []
+    mapping = {pd: {}, nsds: [], vnfds: [], deps: []}
     Zip::InputStream.open(sonpfile) do |io|
       while (entry = io.get_next_entry)
-        content = io.read
-        desc, errors = parse_yaml(content)
-        if !desc['maintainer'].nil?
-          pd['name'] = desc['name']
-          pd['vendor'] = desc['vendor']
-          pd['version'] = desc['version']
-          if !desc['package_dependencies'].nil?
-            desc['package_dependencies'].each do |pd|
-              deps.append({'vendor' => pd['vendor'],
-                           'version' => pd['version'],
-                           'name' => pd['name']})
+        dirname = Pathname(File.path(entry.name)).split.first.to_s
+        if dirname.casecmp('META-INF') == 0
+          if File.basename(entry.name).casecmp('MANIFEST.MF') == 0
+            desc, errors = parse_yaml(io.read)
+            if valid_dep_mapping_descriptor? desc
+              mapping[:pd] = {vendor: desc['vendor'],
+                              version: desc['version'],
+                              name: desc['name']}
             end
           end
-          # Preventing inclusion of PDs in VNFDs array
-          next
-        end
-        if !desc['vendor'].nil?
-          if !desc['network_functions'].nil?
-            nsds.append({'vendor' => desc['vendor'],
-                         'name' => desc['name'],
-                         'version' => desc['version']})
-          else
-            vnfds.append({'vendor' => desc['vendor'],
-                          'name' => desc['name'],
-                          'version' => desc['version']})
+        elsif dirname.casecmp('SERVICE_DESCRIPTORS') == 0
+          if !entry.name_is_directory?
+            desc, errors = parse_yaml(io.read)
+            if valid_dep_mapping_descriptor? desc
+              mapping[:nsds].append({vendor: desc['vendor'],
+                                     version: desc['version'],
+                                     name: desc['name']})
+            end
+          end
+        else dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
+          if !entry.name_is_directory?
+            desc, errors = parse_yaml(io.read)
+            if valid_dep_mapping_descriptor? desc
+              mapping[:vnfds].append({vendor: desc['vendor'],
+                                      version: desc['version'],
+                                      name: desc['name']})
+            end
           end
         end
       end
     end
     mapping_id = SecureRandom.uuid
-    new_mapping = {
-      '_id' => mapping_id,
-      'son_package_uuid' => sonp_id,
-      'pd' => pd,
-      'nsds' => nsds,
-      'vnfds' => vnfds,
-      'deps' => deps
-    }
+    mapping['_id'] = mapping_id
+    mapping['son_package_uuid'] = sonp_id
+    mapping
   end
 
   # Method which lists all available interfaces

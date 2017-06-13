@@ -437,7 +437,7 @@ class CatalogueV2 < SonataCatalogue
 
     # halt 201, grid_file.id.to_json
     begin
-      nmpr = Dependencies_mapping.create!(son_package_dep_mapping(file, sonp_id))
+      Dependencies_mapping.create!(son_package_dep_mapping(file, sonp_id))
     rescue => e
       logger.debug e.message
       halt 400, e.message
