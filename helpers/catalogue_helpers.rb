@@ -295,7 +295,7 @@ class SonataCatalogue < Sinatra::Application
                               name: desc['name']}
               if !desc['package_dependencies'].nil?
                 desc['package_dependencies'].each do |pdep|
-                  if valid_dep_mapping_descriptor? desc
+                  if valid_dep_mapping_descriptor? pdep
                     mapping[:deps].append({vendor: pdep['vendor'],
                                            version: pdep['version'],
                                            name: pdep['name']})
