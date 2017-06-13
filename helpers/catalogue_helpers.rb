@@ -293,6 +293,11 @@ class SonataCatalogue < Sinatra::Application
               mapping[:pd] = {vendor: desc['vendor'],
                               version: desc['version'],
                               name: desc['name']}
+              desc['package_dependencies'].each do |pdep|
+                mapping[:deps].append({vendor: pdep['vendor'],
+                                       version: pdep['version'],
+                                       name: pdep['name']})
+              end
             end
           end
         elsif dirname.casecmp('SERVICE_DESCRIPTORS') == 0
