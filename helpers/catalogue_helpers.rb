@@ -277,10 +277,17 @@ class SonataCatalogue < Sinatra::Application
     end
   end
 
+  # Check if it's a valid dependency mapping descriptor
   def valid_dep_mapping_descriptor?(desc)
     (desc['name'] && desc['vendor'] && desc['version'])
   end
 
+  # Rebuild and evaluate the package in order to generate
+  #     the dependencies mapping record name-version-vendor based;
+  #     Supported sonata package descriptor files:
+  #     https://github.com/sonata-nfv/son-schema/tree/master/package-descriptor
+  #     also expected a directory 'service_descriptors' holding the nsds
+  #     and a 'function_descriptos' folder containing the vnfds
   def son_package_dep_mapping(sonpfile, sonp_id)
     mapping = {pd: {}, nsds: [], vnfds: [], deps: []}
     Zip::InputStream.open(sonpfile) do |io|
