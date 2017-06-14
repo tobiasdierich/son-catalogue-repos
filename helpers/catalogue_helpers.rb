@@ -303,9 +303,9 @@ class SonataCatalogue < Sinatra::Application
               if !desc['package_dependencies'].nil?
                 desc['package_dependencies'].each do |pdep|
                   if valid_dep_mapping_descriptor? pdep
-                    mapping[:deps].append({vendor: pdep['vendor'],
-                                           version: pdep['version'],
-                                           name: pdep['name']})
+                    mapping[:deps] << {vendor: pdep['vendor'],
+                                       version: pdep['version'],
+                                       name: pdep['name']}
                   end
                 end
               end
@@ -315,18 +315,18 @@ class SonataCatalogue < Sinatra::Application
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:nsds].append({vendor: desc['vendor'],
-                                     version: desc['version'],
-                                     name: desc['name']})
+              mapping[:nsds] << {vendor: desc['vendor'],
+                                 version: desc['version'],
+                                 name: desc['name']}
             end
           end
         else dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:vnfds].append({vendor: desc['vendor'],
-                                      version: desc['version'],
-                                      name: desc['name']})
+              mapping[:vnfds] << {vendor: desc['vendor'],
+                                  version: desc['version'],
+                                  name: desc['name']}
             end
           end
         end
