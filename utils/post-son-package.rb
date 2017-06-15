@@ -48,27 +48,39 @@ def xtract_zip(sonpfile)
   {manifest: manifest, vnfds: vnfds, nsds: nsds}
 end
 
-filename = ARGV[0]
-content = xtract_zip(filename)
-postsonp = RestClient.post('http://localhost:4011/catalogues/api/v2/son-packages',
-                           File.binread(filename),
-                           :content_type => 'application/zip',
-                           :'Content-Disposition' => "attachment; filename=#{filename}")
+uuids = []
+ARGV.each do |filename|
+  content = xtract_zip(filename)
+  puts filename
+  postsonp = RestClient.post('http://localhost:4011/catalogues/api/v2/son-packages',
+                             File.binread(filename),
+                             :content_type => 'application/zip',
+                             :'Content-Disposition' => "attachment; filename=#{filename}")
 
-raise 'Error trying to post son-package' unless postsonp.code == 201
+  raise 'Error trying to post son-package' unless postsonp.code == 201
 
-postpd = RestClient.post('http://localhost:4011/catalogues/api/v2/packages',
-                         content[:manifest],
-                         :content_type => 'application/x-yaml')
+  content[:vnfds].each do |vnfd|
+    postvnf = RestClient.post('http://localhost:4011/catalogues/api/v2/vnfs',
+                              vnfd,
+                              :content_type => 'application/x-yaml')
+  end
 
-content[:vnfds].each do |vnfd|
-  postvnf = RestClient.post('http://localhost:4011/catalogues/api/v2/vnfs',
-                            vnfd,
-                            :content_type => 'application/x-yaml')
+  content[:nsds].each do |vnfd|
+    postnsd = RestClient.post('http://localhost:4011/catalogues/api/v2/network-services',
+                              vnfd,
+                              :content_type => 'application/x-yaml')
+  end
+
+  postpd = RestClient.post('http://localhost:4011/catalogues/api/v2/packages',
+                           content[:manifest],
+                           :content_type => 'application/x-yaml')
+
+  uuids << YAML.load(postpd.body)['uuid']
 end
 
-content[:nsds].each do |vnfd|
-  postnsd = RestClient.post('http://localhost:4011/catalogues/api/v2/network-services',
-                            vnfd,
-                            :content_type => 'application/x-yaml')
-end
+# Try to delete first package sent
+puts
+puts uuids.join("\n")
+puts
+deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0])
+puts deleteresp.code
