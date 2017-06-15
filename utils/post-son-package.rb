@@ -79,8 +79,8 @@ ARGV.each do |filename|
 end
 
 # Try to delete first package sent
-deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0])
-puts deleteresp.code
 puts
 puts uuids.join("\n")
 puts
+deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0])
+puts deleteresp.code
