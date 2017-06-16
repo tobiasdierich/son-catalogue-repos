@@ -353,7 +353,7 @@ class SonataCatalogue < Sinatra::Application
     vendor = desc[:vendor]
     begin
       dependent_packages = Dependencies_mapping.where(
-        {type => {'$elemMatch': {name: name,
+        {type => {'$elemMatch'=> {name: name,
                                  vendor: vendor,
                                  version: version}}})
       return dependent_packages
