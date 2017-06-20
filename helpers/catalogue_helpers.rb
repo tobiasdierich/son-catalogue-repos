@@ -290,8 +290,8 @@ class SonataCatalogue < Sinatra::Application
   #     https://github.com/sonata-nfv/son-schema/tree/master/package-descriptor
   #     also expected a directory 'service_descriptors' holding the nsds
   #     and a 'function_descriptos' folder containing the vnfds
-  # @param [StringIO] The sonata package file contents
-  # @param [String] The sonata package file id
+  # @param [StringIO] sonpfile The sonata package file contents
+  # @param [String] sonp_id The sonata package file id
   # @return [Hash] Document containing the dependencies mapping
   def son_package_dep_mapping(sonpfile, sonp_id)
     mapping = {pd: {}, nsds: [], vnfds: [], deps: []}
