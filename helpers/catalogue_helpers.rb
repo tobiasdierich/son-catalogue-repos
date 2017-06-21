@@ -325,7 +325,7 @@ class SonataCatalogue < Sinatra::Application
                                  name: desc['name']}
             end
           end
-        else dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
+        elsif dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
