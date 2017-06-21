@@ -1122,8 +1122,8 @@ class CatalogueV2 < SonataCatalogue
       end
 
       # TODO: Implement Intelligent DELETE feature
-      # todelete = intelligent_delete_nodeps(pks)
-      # logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
+      todelete = intelligent_delete_nodeps(pks)
+      logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
       pks.destroy
       logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
       halt 200, 'OK: PD removed'
@@ -1148,8 +1148,8 @@ class CatalogueV2 < SonataCatalogue
       end
 
       # TODO: Implement Intelligent DELETE feature
-      # todelete = intelligent_delete_nodeps(pks)
-      # logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
+      todelete = intelligent_delete_nodeps(pks)
+      logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
       pks.destroy
       logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]}\" with PD #{pks}"
       halt 200, 'OK: PD removed'

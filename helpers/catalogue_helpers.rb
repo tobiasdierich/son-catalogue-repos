@@ -353,20 +353,10 @@ class SonataCatalogue < Sinatra::Application
     vendor = desc[:vendor]
     dependent_packages = []
     begin
-      # Should refactor with an $elemMatch operator
-      Dependencies_mapping.all().each do |dm|
-        dm[type].each do |dep|
-          if (dep[:name] == name) && (dep[:version] == version) && (dep[:vendor] == vendor)
-            dependent_packages << dm
-          end
-        end
-      end
-      # Ruby ORM development version presents problems with the $elemMatch syntax
-      #    correctly tested on ruby-2.3.1 using mongoid 4.0.2
-      # dependent_packages = Dependencies_mapping.where(
-      #   {type => {'$elemMatch' => {name: name,
-      #                              vendor: vendor,
-      #                              version: version}}})
+      dependent_packages = Dependencies_mapping.where(
+        {type => {'$elemMatch' => {name: name,
+                                   vendor: vendor,
+                                   version: version}}})
       return dependent_packages
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
@@ -386,6 +376,8 @@ class SonataCatalogue < Sinatra::Application
                                                    'pd.vendor' => package.pd['vendor']})
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error 'Dependencies not found'
+      # If no document found, avoid to delete descriptors blindly
+      return {vnfds: [], nsds: []}
     end
     pdep_mapping.vnfds.each do |vnfd|
       if check_dependencies(:vnfds, vnfd).length > 1
