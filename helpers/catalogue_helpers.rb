@@ -430,6 +430,59 @@ class SonataCatalogue < Sinatra::Application
     { vnfds: vnfds, nsds: nsds }
   end
 
+  # Method deleting vnfds from name, vendor, version
+  # @param [Array] vnfds array of hashes
+  # @return [Array] Not found array
+  def delete_vnfds(vnfds)
+    not_found = []
+    vnfds.each do |vnfd_td|
+      descriptor = Vnfd.where({ 'vnfd.name' => vnfd_td['name'],
+                                'vnfd.vendor' => vnfd_td['vendor'],
+                                'vnfd.version' => vnfd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'VNFD Descriptor not found'
+        not_found << vnfd_td
+      elsif descriptor['status'].casecmp('ACTIVE') == 0
+        descriptor.update('status' => 'inactive')
+      elsif descriptor['status'].casecmp('INACTIVE') == 0
+        descriptor.destroy
+      end
+    end
+    return not_found
+  end
+
+  # Method deleting nsds from name, vendor, version
+  # @param [Array] vnfds vnfds array of hashes
+  # @return [Array] Not found array
+  def delete_nsds(nsds)
+    not_found = []
+    nsds.each do |nsd_td|
+      descriptor = Nsd.where({ 'nsd.name' => nsd_td['name'],
+                               'nsd.vendor' => nsd_td['vendor'],
+                               'nsd.version' => nsd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'NSD Descriptor not found ' + nsd_td.to_s
+        not_found << nsd_td
+      elsif descriptor['status'].casecmp('ACTIVE') == 0
+        descriptor.update('status' => 'inactive')
+      elsif descriptor['status'].casecmp('INACTIVE') == 0
+        descriptor.destroy
+      end
+    end
+    return not_found
+  end
+
+  # Method deleting pd from name, vendor, version
+  # @param [Hash] package model hash
+  # @return [void]
+  def delete_pd(descriptor)
+    if descriptor['status'].casecmp('ACTIVE') == 0
+      descriptor.update('status' => 'inactive')
+    elsif descriptor['status'].casecmp('INACTIVE') == 0
+      descriptor.destroy
+    end
+  end
+
   # Method which lists all available interfaces
   # @return [Array] an array of hashes containing all interfaces
   def interfaces_list
