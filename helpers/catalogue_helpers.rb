@@ -347,16 +347,16 @@ class SonataCatalogue < Sinatra::Application
   # @param [Symbol] type descriptor type (:vnfds, :nsds, :deps)
   # @param [Hash] desc descriptor
   # @return [Dependencies_mapping] Documents
-  def check_dependencies(type, desc)
+  def check_dependencies(desc_type, desc)
     name = desc[:name]
     version = desc[:version]
     vendor = desc[:vendor]
     dependent_packages = []
     begin
       dependent_packages = Dependencies_mapping.where(
-        {type => {'$elemMatch' => {name: name,
-                                   vendor: vendor,
-                                   version: version}}})
+        {desc_type => {'$elemMatch' => {name: name,
+                                        vendor: vendor,
+                                        version: version}}})
       return dependent_packages
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
