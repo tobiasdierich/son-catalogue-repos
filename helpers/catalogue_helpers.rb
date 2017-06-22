@@ -1,3 +1,4 @@
+# coding: utf-8
 ##
 ## Copyright (c) 2015 SONATA-NFV
 ## ALL RIGHTS RESERVED.
@@ -344,7 +345,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Method returning packages depending on a descriptor
-  # @param [Symbol] type descriptor type (:vnfds, :nsds, :deps)
+  # @param [Symbol] desc_type descriptor type (:vnfds, :nsds, :deps)
   # @param [Hash] desc descriptor
   # @return [Dependencies_mapping] Documents
   def check_dependencies(desc_type, desc)
@@ -361,6 +362,40 @@ class SonataCatalogue < Sinatra::Application
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
     end
+  end
+
+  # Method returning boolean depending if there's some instance of a descriptor
+  # @param [Symbol] desc_type descriptor type (:vnfd, :nsd)
+  # @param [Hash] descriptor descriptor
+  # @return [Boolean] true/false
+  def instantiated_descriptor?(desc_type, descriptor)
+    if desc_type == :vnfd
+      descs = Vnfd.where({'vnfd.name' => descriptor['name'],
+                          'vnfd.vendor' => descriptor['vendor'],
+                          'vnfd.version' => descriptor['version']})
+    elsif desc_type == :nsd
+      descs = Nsd.where({'nsd.name' => descriptor['name'],
+                         'nsd.vendor' => descriptor['vendor'],
+                         'nsd.version' => descriptor['version']})
+    end
+    if descs[0].nil?
+      logger.error 'Descriptor not found'
+      # Caveat ... if there's no possibility to retrieve the descriptor _id
+      #     we return true to avoid blind deletion
+      return false
+    end
+    instances = 0
+    descs.each do |desc|
+      if desc_type == :vnfd
+        instances += Vnfr.where({'descriptor_reference' => desc['_id']}).count
+      elsif desc_type = :nsd
+        instances += Vnfr.where({'descriptor_reference' => desc['_id']}).count
+      end
+    end
+    if instances > 0
+      return true
+    end
+    return false
   end
 
   # Method returning Hash containing Vnfds and Nsds that can safely be deleted
@@ -383,14 +418,18 @@ class SonataCatalogue < Sinatra::Application
       if check_dependencies(:vnfds, vnfd).length > 1
         logger.info 'VNFD '+vnfd[:name]+' has more than one dependency'
       else
-        vnfds << vnfd
+        unless instantiated_descriptor?(:vnfd, vnfd)
+          vnfds << vnfd
+        end
       end
     end
     pdep_mapping.nsds.each do |nsd|
       if check_dependencies(:nsds, nsd).length > 1
         logger.info 'NSD '+nsd[:name]+' has more than one dependency'
       else
-        nsds << nsd
+        unless instantiated_descriptor?(:nsd, nsd)
+          nsds << nsd
+        end
       end
     end
     {vnfds: vnfds, nsds: nsds}
