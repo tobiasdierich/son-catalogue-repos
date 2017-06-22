@@ -1,4 +1,3 @@
-# coding: utf-8
 ##
 ## Copyright (c) 2015 SONATA-NFV
 ## ALL RIGHTS RESERVED.
