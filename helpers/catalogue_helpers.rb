@@ -294,7 +294,7 @@ class SonataCatalogue < Sinatra::Application
   # @param [String] sonp_id The sonata package file id
   # @return [Hash] Document containing the dependencies mapping
   def son_package_dep_mapping(sonpfile, sonp_id)
-    mapping = {pd: {}, nsds: [], vnfds: [], deps: []}
+    mapping = { pd: {}, nsds: [], vnfds: [], deps: [] }
     Zip::InputStream.open(sonpfile) do |io|
       while (entry = io.get_next_entry)
         dirname = Pathname(File.path(entry.name)).split.first.to_s
@@ -302,15 +302,15 @@ class SonataCatalogue < Sinatra::Application
           if File.basename(entry.name).casecmp('MANIFEST.MF') == 0
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:pd] = {vendor: desc['vendor'],
-                              version: desc['version'],
-                              name: desc['name']}
+              mapping[:pd] = { vendor: desc['vendor'],
+                               version: desc['version'],
+                               name: desc['name'] }
               if !desc['package_dependencies'].nil?
                 desc['package_dependencies'].each do |pdep|
                   if valid_dep_mapping_descriptor? pdep
-                    mapping[:deps] << {vendor: pdep['vendor'],
-                                       version: pdep['version'],
-                                       name: pdep['name']}
+                    mapping[:deps] << { vendor: pdep['vendor'],
+                                        version: pdep['version'],
+                                        name: pdep['name'] }
                   end
                 end
               end
@@ -320,18 +320,18 @@ class SonataCatalogue < Sinatra::Application
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:nsds] << {vendor: desc['vendor'],
-                                 version: desc['version'],
-                                 name: desc['name']}
+              mapping[:nsds] << { vendor: desc['vendor'],
+                                  version: desc['version'],
+                                  name: desc['name'] }
             end
           end
         elsif dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:vnfds] << {vendor: desc['vendor'],
-                                  version: desc['version'],
-                                  name: desc['name']}
+              mapping[:vnfds] << { vendor: desc['vendor'],
+                                   version: desc['version'],
+                                   name: desc['name'] }
             end
           end
         end
@@ -354,9 +354,9 @@ class SonataCatalogue < Sinatra::Application
     dependent_packages = []
     begin
       dependent_packages = Dependencies_mapping.where(
-        {desc_type => {'$elemMatch' => {name: name,
-                                        vendor: vendor,
-                                        version: version}}})
+        {desc_type => { '$elemMatch' => { name: name,
+                                          vendor: vendor,
+                                          version: version } } })
       return dependent_packages
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
@@ -369,26 +369,26 @@ class SonataCatalogue < Sinatra::Application
   # @return [Boolean] true/false
   def instantiated_descriptor?(desc_type, descriptor)
     if desc_type == :vnfd
-      descs = Vnfd.where({'vnfd.name' => descriptor['name'],
-                          'vnfd.vendor' => descriptor['vendor'],
-                          'vnfd.version' => descriptor['version']})
+      descs = Vnfd.where({ 'vnfd.name' => descriptor['name'],
+                           'vnfd.vendor' => descriptor['vendor'],
+                           'vnfd.version' => descriptor['version'] })
     elsif desc_type == :nsd
-      descs = Nsd.where({'nsd.name' => descriptor['name'],
-                         'nsd.vendor' => descriptor['vendor'],
-                         'nsd.version' => descriptor['version']})
+      descs = Nsd.where({ 'nsd.name' => descriptor['name'],
+                          'nsd.vendor' => descriptor['vendor'],
+                          'nsd.version' => descriptor['version'] })
     end
     if descs[0].nil?
       logger.error 'Descriptor not found'
-      # Caveat ... if there's no possibility to retrieve the descriptor _id
+      # Caveat ... if there's no chance to retrieve the descriptor _id
       #     we return true to avoid blind deletion
       return false
     end
     instances = 0
     descs.each do |desc|
       if desc_type == :vnfd
-        instances += Vnfr.where({'descriptor_reference' => desc['_id']}).count
+        instances += Vnfr.where({ 'descriptor_reference' => desc['_id'] }).count
       elsif desc_type = :nsd
-        instances += Vnfr.where({'descriptor_reference' => desc['_id']}).count
+        instances += Vnfr.where({ 'descriptor_reference' => desc['_id'] }).count
       end
     end
     if instances > 0
@@ -405,33 +405,29 @@ class SonataCatalogue < Sinatra::Application
     vnfds = []
     nsds = []
     begin
-      pdep_mapping = Dependencies_mapping.find_by({'pd.name' => package.pd['name'],
-                                                   'pd.version' => package.pd['version'],
-                                                   'pd.vendor' => package.pd['vendor']})
+      pdep_mapping = Dependencies_mapping.find_by({ 'pd.name' => package.pd['name'],
+                                                    'pd.version' => package.pd['version'],
+                                                    'pd.vendor' => package.pd['vendor'] })
     rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error 'Dependencies not found'
+      logger.error 'Dependencies not found: ' + e.message
       # If no document found, avoid to delete descriptors blindly
-      return {vnfds: [], nsds: []}
+      return { vnfds: [], nsds: [] }
     end
     pdep_mapping.vnfds.each do |vnfd|
       if check_dependencies(:vnfds, vnfd).length > 1
-        logger.info 'VNFD '+vnfd[:name]+' has more than one dependency'
+        logger.info 'VNFD ' + vnfd[:name] + ' has more than one dependency'
       else
-        unless instantiated_descriptor?(:vnfd, vnfd)
-          vnfds << vnfd
-        end
+        vnfds << vnfd unless instantiated_descriptor?(:vnfd, vnfd)
       end
     end
     pdep_mapping.nsds.each do |nsd|
       if check_dependencies(:nsds, nsd).length > 1
-        logger.info 'NSD '+nsd[:name]+' has more than one dependency'
+        logger.info 'NSD ' + nsd[:name] + ' has more than one dependency'
       else
-        unless instantiated_descriptor?(:nsd, nsd)
-          nsds << nsd
-        end
+        nsds << nsd unless instantiated_descriptor?(:nsd, nsd)
       end
     end
-    {vnfds: vnfds, nsds: nsds}
+    { vnfds: vnfds, nsds: nsds }
   end
 
   # Method which lists all available interfaces
