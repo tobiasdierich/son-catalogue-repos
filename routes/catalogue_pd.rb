@@ -1,3 +1,4 @@
+# coding: utf-8
 ##
 ## Copyright (c) 2015 SONATA-NFV
 ## ALL RIGHTS RESERVED.
@@ -1124,7 +1125,9 @@ class CatalogueV2 < SonataCatalogue
       # TODO: Implement Intelligent DELETE feature
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
-      pks.destroy
+      delete_vnfds(todelete[:vnfds])
+      delete_nsds(todelete[:nsds])
+      delete_pd(pks)
       logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
       halt 200, 'OK: PD removed'
     end
@@ -1150,7 +1153,9 @@ class CatalogueV2 < SonataCatalogue
       # TODO: Implement Intelligent DELETE feature
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
-      pks.destroy
+      delete_vnfds(todelete[:vnfds])
+      delete_nsds(todelete[:nsds])
+      delete_pd(pks)
       logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]}\" with PD #{pks}"
       halt 200, 'OK: PD removed'
     end
