@@ -290,8 +290,8 @@ class SonataCatalogue < Sinatra::Application
   #     https://github.com/sonata-nfv/son-schema/tree/master/package-descriptor
   #     also expected a directory 'service_descriptors' holding the nsds
   #     and a 'function_descriptos' folder containing the vnfds
-  # @param [StringIO] The sonata package file contents
-  # @param [String] The sonata package file id
+  # @param [StringIO] sonpfile The sonata package file contents
+  # @param [String] sonp_id The sonata package file id
   # @return [Hash] Document containing the dependencies mapping
   def son_package_dep_mapping(sonpfile, sonp_id)
     mapping = {pd: {}, nsds: [], vnfds: [], deps: []}
@@ -325,7 +325,7 @@ class SonataCatalogue < Sinatra::Application
                                  name: desc['name']}
             end
           end
-        else dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
+        elsif dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
@@ -351,11 +351,12 @@ class SonataCatalogue < Sinatra::Application
     name = desc[:name]
     version = desc[:version]
     vendor = desc[:vendor]
+    dependent_packages = []
     begin
       dependent_packages = Dependencies_mapping.where(
-        {type => {'$elemMatch'=> {name: name,
-                                 vendor: vendor,
-                                 version: version}}})
+        {type => {'$elemMatch' => {name: name,
+                                   vendor: vendor,
+                                   version: version}}})
       return dependent_packages
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
@@ -375,6 +376,8 @@ class SonataCatalogue < Sinatra::Application
                                                    'pd.vendor' => package.pd['vendor']})
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error 'Dependencies not found'
+      # If no document found, avoid to delete descriptors blindly
+      return {vnfds: [], nsds: []}
     end
     pdep_mapping.vnfds.each do |vnfd|
       if check_dependencies(:vnfds, vnfd).length > 1
