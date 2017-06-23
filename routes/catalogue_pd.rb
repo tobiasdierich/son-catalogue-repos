@@ -1,4 +1,3 @@
-# coding: utf-8
 ##
 ## Copyright (c) 2015 SONATA-NFV
 ## ALL RIGHTS RESERVED.
@@ -1125,11 +1124,19 @@ class CatalogueV2 < SonataCatalogue
       # TODO: Implement Intelligent DELETE feature
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
-      delete_vnfds(todelete[:vnfds])
-      delete_nsds(todelete[:nsds])
+      not_found_vnfds = delete_vnfds(todelete[:vnfds])
+      not_found_nsds = delete_nsds(todelete[:nsds])
       delete_pd(pks)
-      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-      halt 200, 'OK: PD removed'
+      if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+        halt 200, 'OK: PD removed'
+      else
+        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+        logger.error "Some descriptors where not found "
+        logger.error "Vnfds not found: " + not_found_vnfds.to_s
+        logger.error "Nsds not found: " + not_found_nsds.to_s
+        halt 200, 'OK: PD removed'
+      end
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
     json_error 400, 'No PD Vendor, Name, Version specified'
@@ -1153,11 +1160,19 @@ class CatalogueV2 < SonataCatalogue
       # TODO: Implement Intelligent DELETE feature
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
-      delete_vnfds(todelete[:vnfds])
-      delete_nsds(todelete[:nsds])
+      not_found_vnfds = delete_vnfds(todelete[:vnfds])
+      not_found_nsds = delete_nsds(todelete[:nsds])
       delete_pd(pks)
-      logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]}\" with PD #{pks}"
-      halt 200, 'OK: PD removed'
+      if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+        halt 200, 'OK: PD removed'
+      else
+        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+        logger.error "Some descriptors where not found "
+        logger.error "Vnfds not found: " + not_found_vnfds.to_s
+        logger.error "Nsds not found: " + not_found_nsds.to_s
+        halt 200, 'OK: PD removed'
+      end
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
     json_error 400, 'No PD ID specified'

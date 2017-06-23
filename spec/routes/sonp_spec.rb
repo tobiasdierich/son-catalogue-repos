@@ -31,6 +31,7 @@ require 'json'
 require 'securerandom'
 require 'pp'
 require 'rspec/its'
+require 'yaml'
 
 RSpec.describe CatalogueV1 do
 
@@ -84,4 +85,50 @@ RSpec.describe CatalogueV2 do
       its(:status) { is_expected.to eq 200 }
     end
   end
+
+  describe 'POST /api/v2/son-packages' do
+    context 'post packages simulating gatekeeper operation (posting all descriptors)' do
+      before do
+        filenames = [ 'samples/dependencies_mapping/sonata-demo.son',
+                      'samples/dependencies_mapping/sonata-demo-2.son' ]
+        $pd_uuids = []
+        filenames.each do |filename|
+          headers = { 'CONTENT_TYPE' => 'application/zip',
+                      'HTTP_CONTENT_DISPOSITION' => "attachment; filename=#{filename}" }
+          response = post '/son-packages', File.binread(filename), headers
+          $sonp_uuids = JSON.parse(response.body)
+          content = xtract_sonp(filename)
+          content[:vnfds].each do |vnfd|
+            postvnf = post '/vnfs',
+                           vnfd,
+                           { 'CONTENT_TYPE' => 'application/x-yaml' }
+          end
+
+          content[:nsds].each do |nsd|
+            postnsd = post '/network-services',
+                           nsd,
+                           { 'CONTENT_TYPE' => 'application/x-yaml' }
+          end
+
+          postpd = post '/packages',
+                         content[:manifest],
+                         { 'CONTENT_TYPE' => 'application/x-yaml' }
+          $pd_uuids << YAML.load(postpd.body)['uuid']
+        end
+      end
+      subject { last_response }
+      its(:status) { is_expected.to eq 201 }
+    end
+  end
+
+  describe 'DELETE /api/v2/packages' do
+    context 'deleting pds' do
+      before do
+        delete_response = delete '/packages/' + $pd_uuids[0]
+      end
+      subject { last_response }
+      its(:status) { is_expected.to eq 200 }
+    end
+  end
+
 end

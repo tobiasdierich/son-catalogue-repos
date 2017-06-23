@@ -1,3 +1,4 @@
+# coding: utf-8
 ##
 ## Copyright (c) 2015 SONATA-NFV
 ## ALL RIGHTS RESERVED.
@@ -285,7 +286,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Rebuild and evaluate the package in order to generate
-  #     the dependencies mapping record name-version-vendor based;
+  #     the dependencies mapping record name-vendor-version based;
   #     Supported sonata package descriptor files:
   #     https://github.com/sonata-nfv/son-schema/tree/master/package-descriptor
   #     also expected a directory 'service_descriptors' holding the nsds
@@ -351,16 +352,11 @@ class SonataCatalogue < Sinatra::Application
     name = desc[:name]
     version = desc[:version]
     vendor = desc[:vendor]
-    dependent_packages = []
-    begin
-      dependent_packages = Dependencies_mapping.where(
-        {desc_type => { '$elemMatch' => { name: name,
-                                          vendor: vendor,
-                                          version: version } } })
-      return dependent_packages
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
-    end
+    dependent_packages = Dependencies_mapping.where(
+      {desc_type => { '$elemMatch' => { name: name,
+                                        vendor: vendor,
+                                        version: version } } })
+    return dependent_packages
   end
 
   # Method returning boolean depending if there's some instance of a descriptor
@@ -369,27 +365,15 @@ class SonataCatalogue < Sinatra::Application
   # @return [Boolean] true/false
   def instantiated_descriptor?(desc_type, descriptor)
     if desc_type == :vnfd
-      descs = Vnfd.where({ 'vnfd.name' => descriptor['name'],
-                           'vnfd.vendor' => descriptor['vendor'],
-                           'vnfd.version' => descriptor['version'] })
+      desc = Vnfd.where({ 'vnfd.name' => descriptor['name'],
+                          'vnfd.vendor' => descriptor['vendor'],
+                          'vnfd.version' => descriptor['version'] }).first
+      instances = Vnfr.where({ 'descriptor_reference' => desc['_id'] }).count
     elsif desc_type == :nsd
-      descs = Nsd.where({ 'nsd.name' => descriptor['name'],
-                          'nsd.vendor' => descriptor['vendor'],
-                          'nsd.version' => descriptor['version'] })
-    end
-    if descs[0].nil?
-      logger.error 'Descriptor not found'
-      # Caveat ... if there's no chance to retrieve the descriptor _id
-      #     we return true to avoid blind deletion
-      return false
-    end
-    instances = 0
-    descs.each do |desc|
-      if desc_type == :vnfd
-        instances += Vnfr.where({ 'descriptor_reference' => desc['_id'] }).count
-      elsif desc_type = :nsd
-        instances += Vnfr.where({ 'descriptor_reference' => desc['_id'] }).count
-      end
+      desc = Nsd.where({ 'nsd.name' => descriptor['name'],
+                         'nsd.vendor' => descriptor['vendor'],
+                         'nsd.version' => descriptor['version'] }).first
+      instances = Nsr.where({ 'descriptor_reference' => desc['_id'] }).count
     end
     if instances > 0
       return true
