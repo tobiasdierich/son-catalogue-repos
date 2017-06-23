@@ -1,3 +1,4 @@
+# coding: utf-8
 ##
 ## Copyright (c) 2015 SONATA-NFV
 ## ALL RIGHTS RESERVED.
@@ -285,7 +286,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Rebuild and evaluate the package in order to generate
-  #     the dependencies mapping record name-version-vendor based;
+  #     the dependencies mapping record name-vendor-version based;
   #     Supported sonata package descriptor files:
   #     https://github.com/sonata-nfv/son-schema/tree/master/package-descriptor
   #     also expected a directory 'service_descriptors' holding the nsds
