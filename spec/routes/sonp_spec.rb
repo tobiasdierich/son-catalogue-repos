@@ -86,6 +86,10 @@ RSpec.describe CatalogueV2 do
     end
   end
 
+  # Posts two different sonata packages, first one contains as vnfds firewall-vnfd,
+  #    iperf-vnfd and tcpdump-vnfd; second one contains only tcpdump-vnfd
+  #    according to next test that tries to delete the first one, tcpdump-vnfd should
+  #    not be deleted according to intelligent delete feature
   describe 'POST /api/v2/son-packages' do
     context 'post packages simulating gatekeeper operation (posting all descriptors)' do
       before do
@@ -103,13 +107,11 @@ RSpec.describe CatalogueV2 do
                            vnfd,
                            { 'CONTENT_TYPE' => 'application/x-yaml' }
           end
-
           content[:nsds].each do |nsd|
             postnsd = post '/network-services',
                            nsd,
                            { 'CONTENT_TYPE' => 'application/x-yaml' }
           end
-
           postpd = post '/packages',
                          content[:manifest],
                          { 'CONTENT_TYPE' => 'application/x-yaml' }
@@ -121,14 +123,35 @@ RSpec.describe CatalogueV2 do
     end
   end
 
+  # Tries to delete first package posted in previous test resulting
+  #    in the deletion of
+  #    {"deleted":
+  #    {"vnfds":[{"vendor":"eu.sonata-nfv","version":"0.3","name":"firewall-vnf"},
+  #    {"vendor":"eu.sonata-nfv","version":"0.2","name":"iperf-vnf"}],
+  #    "nsds":[{"vendor":"eu.sonata-nfv.service-descriptor","version":"0.2.1","name":"sonata-demo"}]}}
+  # But preventing tcpdump-vnfd deletion because second package posted before has a dependency on it
   describe 'DELETE /api/v2/packages' do
     context 'deleting pds' do
       before do
         delete_response = delete '/packages/' + $pd_uuids[0]
+        puts delete_response.body
       end
       subject { last_response }
       its(:status) { is_expected.to eq 200 }
     end
   end
+
+  # Deletes the second package posted
+  describe 'DELETE /api/v2/packages' do
+    context 'deleting pds' do
+      before do
+        delete_response = delete '/packages/' + $pd_uuids[1]
+        puts delete_response.body
+      end
+      subject { last_response }
+      its(:status) { is_expected.to eq 200 }
+    end
+  end
+
 
 end

@@ -1129,13 +1129,13 @@ class CatalogueV2 < SonataCatalogue
       delete_pd(pks)
       if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
         logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        halt 200, 'OK: PD removed'
+        halt 200, JSON.generate(deleted: todelete)
       else
         logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        logger.error "Some descriptors where not found "
-        logger.error "Vnfds not found: " + not_found_vnfds.to_s
-        logger.error "Nsds not found: " + not_found_nsds.to_s
-        halt 200, 'OK: PD removed'
+        logger.info "Some descriptors where not found "
+        logger.info "Vnfds not found: " + not_found_vnfds.to_s
+        logger.info "Nsds not found: " + not_found_nsds.to_s
+        halt 200, JSON.generate(deleted: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
       end
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
@@ -1165,13 +1165,13 @@ class CatalogueV2 < SonataCatalogue
       delete_pd(pks)
       if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
         logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        halt 200, 'OK: PD removed'
+        halt 200, JSON.generate(deleted: todelete)
       else
         logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        logger.error "Some descriptors where not found "
-        logger.error "Vnfds not found: " + not_found_vnfds.to_s
-        logger.error "Nsds not found: " + not_found_nsds.to_s
-        halt 200, 'OK: PD removed'
+        logger.info "Some descriptors where not found "
+        logger.info "Vnfds not found: " + not_found_vnfds.to_s
+        logger.info "Nsds not found: " + not_found_nsds.to_s
+        halt 200, JSON.generate(deleted: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
       end
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
