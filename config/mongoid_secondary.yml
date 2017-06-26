@@ -1,0 +1,21 @@
+# This is a sample configuration file
+development:
+  sessions:
+    default:
+      database: son-repository
+      hosts:
+      - to_be_defined
+
+production:
+  sessions:
+    default:
+      database: son-epository
+      hosts:
+      - to_be_defined
+
+test:
+  sessions:
+    default:
+      database: son-repository
+      hosts:
+      - to_be_defined
