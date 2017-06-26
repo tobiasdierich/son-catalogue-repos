@@ -350,19 +350,18 @@ class SonataCatalogue < Sinatra::Application
   # @param [Hash] desc descriptor descriptor hash
   # @param [Hash] target_package target package to delete
   # @return [Dependencies_mapping] Documents
-  def check_dependencies(desc_type, desc, target_package)
-    name = desc[:name]
-    version = desc[:version]
-    vendor = desc[:vendor]
-    active_packages = Dependencies_mapping.where('status' => 'active')
-    dependent_packages = active_packages.where(
-      { desc_type => { '$elemMatch' => { name: name,
-                                         vendor: vendor,
-                                         version: version } } })
+  def check_dependencies(desc_type, desc, target_package=nil)
+    dependent_packages = Dependencies_mapping.where(
+      { desc_type => { '$elemMatch' => { name: desc[:name],
+                                         vendor: desc[:vendor],
+                                         version: desc[:version] } } })
     dependent_packages.each do |dp|
-      diffp_condition = (dp.pd['name'] != target_package['name']) or
-        (dp.pd['vendor'] != target_package['vendor']) or
-        (dp.pd['version'] != target_package['version'])
+      diffp_condition = true
+      if target_package != nil
+        diffp_condition = ( (dp.pd['name'] != target_package['name']) or
+                            (dp.pd['vendor'] != target_package['vendor']) or
+                            (dp.pd['version'] != target_package['version']) )
+      end
       if diffp_condition
         return true
       end
@@ -477,17 +476,16 @@ class SonataCatalogue < Sinatra::Application
     package_deps = Dependencies_mapping.where('pd.name' => descriptor['pd']['name'],
                                               'pd.vendor' => descriptor['pd']['vendor'],
                                               'pd.version' => descriptor['pd']['version'])
-    package_deps.each do |package_dep|
-      if package_dep.status.casecmp('ACTIVE') == 0
-        package_dep.update(status: 'inactive')
-      else
-        package_dep.destroy
-      end
-    end
     if descriptor['status'].casecmp('ACTIVE') == 0
       descriptor.update('status' => 'inactive')
+      package_deps.each do |package_dep|
+        package_dep.update(status: 'inactive')
+      end
     elsif descriptor['status'].casecmp('INACTIVE') == 0
       descriptor.destroy
+      package_deps.each do |package_dep|
+        package_dep.destroy
+      end
     end
   end
 
