@@ -31,6 +31,8 @@ class SonataCatalogue < Sinatra::Application
   require 'yaml'
   require 'digest/md5'
   require 'jwt'
+  require 'zip'
+  require 'pathname'
 
   # Read config settings from config file
   # @return [String, Integer] the address and port of the API
@@ -273,6 +275,125 @@ class SonataCatalogue < Sinatra::Application
       req.headers['Content-type'] = 'application/json'
       req.headers['Accept'] = 'application/json'
     end
+  end
+
+  # Check if it's a valid dependency mapping descriptor
+  # @param [Hash] desc The descriptor
+  # @return [Boolean] true if descriptor contains name-vendor-version info
+  def valid_dep_mapping_descriptor?(desc)
+    (desc['name'] && desc['vendor'] && desc['version'])
+  end
+
+  # Rebuild and evaluate the package in order to generate
+  #     the dependencies mapping record name-version-vendor based;
+  #     Supported sonata package descriptor files:
+  #     https://github.com/sonata-nfv/son-schema/tree/master/package-descriptor
+  #     also expected a directory 'service_descriptors' holding the nsds
+  #     and a 'function_descriptos' folder containing the vnfds
+  # @param [StringIO] sonpfile The sonata package file contents
+  # @param [String] sonp_id The sonata package file id
+  # @return [Hash] Document containing the dependencies mapping
+  def son_package_dep_mapping(sonpfile, sonp_id)
+    mapping = {pd: {}, nsds: [], vnfds: [], deps: []}
+    Zip::InputStream.open(sonpfile) do |io|
+      while (entry = io.get_next_entry)
+        dirname = Pathname(File.path(entry.name)).split.first.to_s
+        if dirname.casecmp('META-INF') == 0
+          if File.basename(entry.name).casecmp('MANIFEST.MF') == 0
+            desc, errors = parse_yaml(io.read)
+            if valid_dep_mapping_descriptor? desc
+              mapping[:pd] = {vendor: desc['vendor'],
+                              version: desc['version'],
+                              name: desc['name']}
+              if !desc['package_dependencies'].nil?
+                desc['package_dependencies'].each do |pdep|
+                  if valid_dep_mapping_descriptor? pdep
+                    mapping[:deps] << {vendor: pdep['vendor'],
+                                       version: pdep['version'],
+                                       name: pdep['name']}
+                  end
+                end
+              end
+            end
+          end
+        elsif dirname.casecmp('SERVICE_DESCRIPTORS') == 0
+          if !entry.name_is_directory?
+            desc, errors = parse_yaml(io.read)
+            if valid_dep_mapping_descriptor? desc
+              mapping[:nsds] << {vendor: desc['vendor'],
+                                 version: desc['version'],
+                                 name: desc['name']}
+            end
+          end
+        elsif dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
+          if !entry.name_is_directory?
+            desc, errors = parse_yaml(io.read)
+            if valid_dep_mapping_descriptor? desc
+              mapping[:vnfds] << {vendor: desc['vendor'],
+                                  version: desc['version'],
+                                  name: desc['name']}
+            end
+          end
+        end
+      end
+    end
+    mapping_id = SecureRandom.uuid
+    mapping['_id'] = mapping_id
+    mapping['son_package_uuid'] = sonp_id
+    mapping
+  end
+
+  # Method returning packages depending on a descriptor
+  # @param [Symbol] type descriptor type (:vnfds, :nsds, :deps)
+  # @param [Hash] desc descriptor
+  # @return [Dependencies_mapping] Documents
+  def check_dependencies(type, desc)
+    name = desc[:name]
+    version = desc[:version]
+    vendor = desc[:vendor]
+    dependent_packages = []
+    begin
+      dependent_packages = Dependencies_mapping.where(
+        {type => {'$elemMatch' => {name: name,
+                                   vendor: vendor,
+                                   version: version}}})
+      return dependent_packages
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
+    end
+  end
+
+  # Method returning Hash containing Vnfds and Nsds that can safely be deleted
+  #     with no dependencies on other packages
+  # @param [Pkgd] package package model instance
+  # @return [Hash] vnfds and nsds arrays
+  def intelligent_delete_nodeps(package)
+    vnfds = []
+    nsds = []
+    begin
+      pdep_mapping = Dependencies_mapping.find_by({'pd.name' => package.pd['name'],
+                                                   'pd.version' => package.pd['version'],
+                                                   'pd.vendor' => package.pd['vendor']})
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error 'Dependencies not found'
+      # If no document found, avoid to delete descriptors blindly
+      return {vnfds: [], nsds: []}
+    end
+    pdep_mapping.vnfds.each do |vnfd|
+      if check_dependencies(:vnfds, vnfd).length > 1
+        logger.info 'VNFD '+vnfd[:name]+' has more than one dependency'
+      else
+        vnfds << vnfd
+      end
+    end
+    pdep_mapping.nsds.each do |nsd|
+      if check_dependencies(:nsds, nsd).length > 1
+        logger.info 'NSD '+nsd[:name]+' has more than one dependency'
+      else
+        nsds << nsd
+      end
+    end
+    {vnfds: vnfds, nsds: nsds}
   end
 
   # Method which lists all available interfaces
