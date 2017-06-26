@@ -347,7 +347,8 @@ class SonataCatalogue < Sinatra::Application
 
   # Method returning packages depending on a descriptor
   # @param [Symbol] desc_type descriptor type (:vnfds, :nsds, :deps)
-  # @param [Hash] desc descriptor
+  # @param [Hash] desc descriptor descriptor hash
+  # @param [Hash] target_package target package to delete
   # @return [Dependencies_mapping] Documents
   def check_dependencies(desc_type, desc, target_package)
     name = desc[:name]
