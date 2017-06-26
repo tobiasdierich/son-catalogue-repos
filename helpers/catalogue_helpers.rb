@@ -394,27 +394,29 @@ class SonataCatalogue < Sinatra::Application
 
   # Method returning Boolean depending if there's one component instanced
   # @param [Pkgd] package package model instance
-  # @return [Boolean] true - there's component instanced
-  def instanced_components?(package)
+  # @return [Hash] instantiated vnfds and nsds arrays
+  def instanced_components(package)
+    vnfds = []
+    nsds = []
     begin
       pdep_mapping = Dependencies_mapping.find_by({ 'pd.name' => package.pd['name'],
                                                     'pd.version' => package.pd['version'],
                                                     'pd.vendor' => package.pd['vendor'] })
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error 'Dependencies not found: ' + e.message
-      return true
+      return nil
     end
     pdep_mapping.vnfds.each do |vnfd|
       if instanced_descriptor?(:vnfd, vnfd)
-        return true
+        vnfds << vnfd
       end
     end
     pdep_mapping.nsds.each do |nsd|
       if instanced_descriptor?(:nsd, nsd)
-        return true
+        nsds << nsd
       end
     end
-    return false
+    { vnfds: vnfds, nsds: nsds }
   end
 
   # Method returning Hash containing Vnfds and Nsds that can safely be deleted
