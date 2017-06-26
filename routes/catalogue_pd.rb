@@ -1122,6 +1122,9 @@ class CatalogueV2 < SonataCatalogue
       end
 
       # TODO: Implement Intelligent DELETE feature
+      if instanced_components?(pks)
+        halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.')
+      end
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
       delete_pd(pks)
@@ -1158,6 +1161,13 @@ class CatalogueV2 < SonataCatalogue
       end
 
       # TODO: Implement Intelligent DELETE feature
+      puts pks.pd['name']
+      puts pks.pd['vendor']
+      puts pks.pd['version']
+      puts instanced_components?(pks)
+      if instanced_components?(pks)
+        halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.')
+      end
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
       delete_pd(pks)
