@@ -79,18 +79,27 @@ ARGV.each do |filename|
 end
 
 # Try to delete first package sent
+STDIN.gets
 puts
 puts uuids.join("\n")
 puts
+
+deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1])
+puts deleteresp.code
+puts deleteresp.body
+puts STDIN.gets
+
 deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0])
 puts deleteresp.code
 puts deleteresp.body
+puts STDIN.gets
+
+deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0])
+puts deleteresp.code
+puts deleteresp.body
+puts STDIN.gets
+
 deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1])
 puts deleteresp.code
 puts deleteresp.body
-deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1])
-puts deleteresp.code
-puts deleteresp.body
-# deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0])
-# puts deleteresp.code
-# puts deleteresp.body
+puts STDIN.gets

@@ -1122,11 +1122,18 @@ class CatalogueV2 < SonataCatalogue
       end
 
       # TODO: Implement Intelligent DELETE feature
+      icomps = instanced_components(pks)
+      halt 500, JSON.generate(error: 'Can\'t search for instanced components') if icomps.nil?
+      if ( icomps[:vnfds].length > 0 ) or ( icomps[:nsds].length > 0 )
+        halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.',
+                                components: { vnfds: icomps[:vnfds],
+                                              nsds: icomps[:nsds] } )
+      end
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
+      delete_pd(pks)
       not_found_vnfds = delete_vnfds(todelete[:vnfds])
       not_found_nsds = delete_nsds(todelete[:nsds])
-      delete_pd(pks)
       if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
         logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
         halt 200, JSON.generate(deleted: todelete)
@@ -1158,11 +1165,18 @@ class CatalogueV2 < SonataCatalogue
       end
 
       # TODO: Implement Intelligent DELETE feature
+      icomps = instanced_components(pks)
+      halt 500, JSON.generate(error: 'Can\'t search for instanced components') if icomps.nil?
+      if ( icomps[:vnfds].length > 0 ) or ( icomps[:nsds].length > 0 )
+        halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.',
+                                components: { vnfds: icomps[:vnfds],
+                                              nsds: icomps[:nsds] } )
+      end
       todelete = intelligent_delete_nodeps(pks)
       logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
+      delete_pd(pks)
       not_found_vnfds = delete_vnfds(todelete[:vnfds])
       not_found_nsds = delete_nsds(todelete[:nsds])
-      delete_pd(pks)
       if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
         logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
         halt 200, JSON.generate(deleted: todelete)
