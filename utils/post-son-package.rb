@@ -79,6 +79,7 @@ ARGV.each do |filename|
 end
 
 # Try to delete first package sent
+STDIN.gets
 puts
 puts uuids.join("\n")
 puts
