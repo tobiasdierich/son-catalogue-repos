@@ -464,9 +464,7 @@ class SonataCatalogue < Sinatra::Application
       if descriptor.nil?
         logger.error 'VNFD Descriptor not found'
         not_found << vnfd_td
-      elsif descriptor['status'].casecmp('ACTIVE') == 0
-        descriptor.update('status' => 'inactive')
-      elsif descriptor['status'].casecmp('INACTIVE') == 0
+      else
         descriptor.destroy
       end
     end
@@ -485,9 +483,7 @@ class SonataCatalogue < Sinatra::Application
       if descriptor.nil?
         logger.error 'NSD Descriptor not found ' + nsd_td.to_s
         not_found << nsd_td
-      elsif descriptor['status'].casecmp('ACTIVE') == 0
-        descriptor.update('status' => 'inactive')
-      elsif descriptor['status'].casecmp('INACTIVE') == 0
+      else
         descriptor.destroy
       end
     end
@@ -502,13 +498,9 @@ class SonataCatalogue < Sinatra::Application
     package_deps = Dependencies_mapping.where('pd.name' => descriptor['pd']['name'],
                                               'pd.vendor' => descriptor['pd']['vendor'],
                                               'pd.version' => descriptor['pd']['version'])
-    if descriptor['status'].casecmp('ACTIVE') == 0
-      descriptor.update('status' => 'inactive')
-    elsif descriptor['status'].casecmp('INACTIVE') == 0
-      descriptor.destroy
-      package_deps.each do |package_dep|
-        package_dep.destroy
-      end
+    descriptor.destroy
+    package_deps.each do |package_dep|
+      package_dep.destroy
     end
   end
 
