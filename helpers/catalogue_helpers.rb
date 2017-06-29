@@ -1,4 +1,3 @@
-# coding: utf-8
 ##
 ## Copyright (c) 2015 SONATA-NFV
 ## ALL RIGHTS RESERVED.
@@ -518,9 +517,9 @@ class SonataCatalogue < Sinatra::Application
     end
     todelete = intelligent_delete_nodeps(pks)
     logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
-    delete_pd(pks)
     not_found_vnfds = delete_vnfds(todelete[:delete][:vnfds])
     not_found_nsds = delete_nsds(todelete[:delete][:nsds])
+    delete_pd(pks)
     if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
       logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
       halt 200, JSON.generate(result: todelete)
