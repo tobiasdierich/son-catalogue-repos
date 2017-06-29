@@ -135,8 +135,6 @@ RSpec.describe CatalogueV2 do
       before do
         delete_response = delete '/packages/' + $pd_uuids[0]
         puts delete_response.body
-        delete_response = delete '/packages/' + $pd_uuids[0]
-        puts delete_response.body
       end
       subject { last_response }
       its(:status) { is_expected.to eq 200 }
@@ -147,8 +145,6 @@ RSpec.describe CatalogueV2 do
   describe 'DELETE /api/v2/packages' do
     context 'deleting pds' do
       before do
-        delete_response = delete '/packages/' + $pd_uuids[1]
-        puts delete_response.body
         delete_response = delete '/packages/' + $pd_uuids[1]
         puts delete_response.body
       end
