@@ -1121,29 +1121,7 @@ class CatalogueV2 < SonataCatalogue
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
 
-      # TODO: Implement Intelligent DELETE feature
-      icomps = instanced_components(pks)
-      halt 500, JSON.generate(error: 'Can\'t search for instanced components') if icomps.nil?
-      if ( icomps[:vnfds].length > 0 ) or ( icomps[:nsds].length > 0 )
-        halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.',
-                                components: { vnfds: icomps[:vnfds],
-                                              nsds: icomps[:nsds] } )
-      end
-      todelete = intelligent_delete_nodeps(pks)
-      logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
-      delete_pd(pks)
-      not_found_vnfds = delete_vnfds(todelete[:vnfds])
-      not_found_nsds = delete_nsds(todelete[:nsds])
-      if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
-        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        halt 200, JSON.generate(deleted: todelete)
-      else
-        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        logger.info "Some descriptors where not found "
-        logger.info "Vnfds not found: " + not_found_vnfds.to_s
-        logger.info "Nsds not found: " + not_found_nsds.to_s
-        halt 200, JSON.generate(deleted: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
-      end
+      intelligent_delete(pks)
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
     json_error 400, 'No PD Vendor, Name, Version specified'
@@ -1164,29 +1142,7 @@ class CatalogueV2 < SonataCatalogue
         json_error 404, "The PD ID #{params[:id]} does not exist" unless pks
       end
 
-      # TODO: Implement Intelligent DELETE feature
-      icomps = instanced_components(pks)
-      halt 500, JSON.generate(error: 'Can\'t search for instanced components') if icomps.nil?
-      if ( icomps[:vnfds].length > 0 ) or ( icomps[:nsds].length > 0 )
-        halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.',
-                                components: { vnfds: icomps[:vnfds],
-                                              nsds: icomps[:nsds] } )
-      end
-      todelete = intelligent_delete_nodeps(pks)
-      logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
-      delete_pd(pks)
-      not_found_vnfds = delete_vnfds(todelete[:vnfds])
-      not_found_nsds = delete_nsds(todelete[:nsds])
-      if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
-        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        halt 200, JSON.generate(deleted: todelete)
-      else
-        logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-        logger.info "Some descriptors where not found "
-        logger.info "Vnfds not found: " + not_found_vnfds.to_s
-        logger.info "Nsds not found: " + not_found_nsds.to_s
-        halt 200, JSON.generate(deleted: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
-      end
+      intelligent_delete(pks)
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]} with 'No PD ID specified'"
     json_error 400, 'No PD ID specified'
