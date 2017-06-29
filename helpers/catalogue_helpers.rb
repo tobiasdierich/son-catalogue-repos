@@ -349,7 +349,7 @@ class SonataCatalogue < Sinatra::Application
   # @param [Hash] desc descriptor descriptor hash
   # @param [Hash] target_package target package to delete
   # @return [Dependencies_mapping] Documents
-  def check_dependencies(desc_type, desc, target_package=nil)
+  def check_dependencies(desc_type, desc, target_package = nil)
     dependent_packages = Dependencies_mapping.where(
       { desc_type => { '$elemMatch' => { name: desc[:name],
                                          vendor: desc[:vendor],
