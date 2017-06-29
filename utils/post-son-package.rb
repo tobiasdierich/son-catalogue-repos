@@ -84,12 +84,20 @@ puts
 puts uuids.join("\n")
 puts
 
-deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0])
-puts deleteresp.code
-puts deleteresp.body
-puts STDIN.gets
+begin
+  deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0]){|response, request, result| response }
+  puts deleteresp.code
+  puts deleteresp.body
+  puts STDIN.gets
+rescue Exception => e
+  puts e.message
+end
 
-deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1])
-puts deleteresp.code
-puts deleteresp.body
-puts STDIN.gets
+begin
+  deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1]){|response, request, result| response }
+  puts deleteresp.code
+  puts deleteresp.body
+  puts STDIN.gets
+rescue Exception => e
+  puts e.message
+end

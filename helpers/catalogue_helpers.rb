@@ -426,6 +426,8 @@ class SonataCatalogue < Sinatra::Application
   def intelligent_delete_nodeps(package)
     vnfds = []
     nsds = []
+    cant_delete_vnfds = []
+    cant_delete_nsds = []
     begin
       pdep_mapping = Dependencies_mapping.find_by({ 'pd.name' => package.pd['name'],
                                                     'pd.version' => package.pd['version'],
@@ -438,6 +440,7 @@ class SonataCatalogue < Sinatra::Application
     pdep_mapping.vnfds.each do |vnfd|
       if check_dependencies(:vnfds, vnfd, package.pd)
         logger.info 'VNFD ' + vnfd[:name] + ' has more than one dependency'
+        cant_delete_vnfds << vnfd
       else
         vnfds << vnfd
       end
@@ -445,11 +448,12 @@ class SonataCatalogue < Sinatra::Application
     pdep_mapping.nsds.each do |nsd|
       if check_dependencies(:nsds, nsd, package.pd)
         logger.info 'NSD ' + nsd[:name] + ' has more than one dependency'
+        cant_delete_nsds << nsd
       else
         nsds << nsd
       end
     end
-    { vnfds: vnfds, nsds: nsds }
+    { delete: { vnfds: vnfds, nsds: nsds }, cant_delete: { vnfds: cant_delete_vnfds, nsds: cant_delete_nsds } }
   end
 
   # Method deleting vnfds from name, vendor, version
@@ -501,6 +505,31 @@ class SonataCatalogue < Sinatra::Application
     descriptor.destroy
     package_deps.each do |package_dep|
       package_dep.destroy
+    end
+  end
+
+  def intelligent_delete(pks)
+    icomps = instanced_components(pks)
+    halt 500, JSON.generate(error: 'Can\'t search for instanced components') if icomps.nil?
+    if ( icomps[:vnfds].length > 0 ) or ( icomps[:nsds].length > 0 )
+      halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.',
+                              components: { vnfds: icomps[:vnfds],
+                                            nsds: icomps[:nsds] } )
+    end
+    todelete = intelligent_delete_nodeps(pks)
+    logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
+    delete_pd(pks)
+    not_found_vnfds = delete_vnfds(todelete[:delete][:vnfds])
+    not_found_nsds = delete_nsds(todelete[:delete][:nsds])
+    if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      halt 200, JSON.generate(result: todelete)
+    else
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      logger.info "Some descriptors where not found "
+      logger.info "Vnfds not found: " + not_found_vnfds.to_s
+      logger.info "Nsds not found: " + not_found_nsds.to_s
+      halt 404, JSON.generate(result: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
     end
   end
 
