@@ -345,9 +345,9 @@ class SonataCatalogue < Sinatra::Application
 
   # Method returning packages depending on a descriptor
   # @param [Symbol] desc_type descriptor type (:vnfds, :nsds, :deps)
-  # @param [Hash] desc descriptor descriptor hash
+  # @param [Hash] desc descriptor hash
   # @param [Hash] target_package target package to delete
-  # @return [Dependencies_mapping] Documents
+  # @return [Boolean] true if there is some other package depending on the descriptor
   def check_dependencies(desc_type, desc, target_package = nil)
     dependent_packages = Dependencies_mapping.where(
       { desc_type => { '$elemMatch' => { name: desc[:name],
@@ -367,7 +367,7 @@ class SonataCatalogue < Sinatra::Application
     return false
   end
 
-  # Method returning boolean depending if there's some instance of a descriptor
+  # Method returning boolean depending if there is some instance of a descriptor
   # @param [Symbol] desc_type descriptor type (:vnfd, :nsd)
   # @param [Hash] descriptor descriptor
   # @return [Boolean] true/false
@@ -391,7 +391,7 @@ class SonataCatalogue < Sinatra::Application
     return false
   end
 
-  # Method returning Boolean depending if there's one component instanced
+  # Method returning descritptor information depending if there's one component instanced
   # @param [Pkgd] package package model instance
   # @return [Hash] instantiated vnfds and nsds arrays
   def instanced_components(package)
@@ -421,7 +421,7 @@ class SonataCatalogue < Sinatra::Application
   # Method returning Hash containing Vnfds and Nsds that can safely be deleted
   #     with no dependencies on other packages
   # @param [Pkgd] package package model instance
-  # @return [Hash] vnfds and nsds arrays
+  # @return [Hash] delete and cant_delete vnfds and nsds
   def intelligent_delete_nodeps(package)
     vnfds = []
     nsds = []
@@ -475,7 +475,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Method deleting nsds from name, vendor, version
-  # @param [Array] vnfds vnfds array of hashes
+  # @param [Array] nsds nsds array of hashes
   # @return [Array] Not found array
   def delete_nsds(nsds)
     not_found = []
@@ -497,7 +497,7 @@ class SonataCatalogue < Sinatra::Application
   # @param [Hash] package model hash
   # @return [void]
   def delete_pd(descriptor)
-    # first remove dependencies_mapping
+    # first find dependencies_mapping
     package_deps = Dependencies_mapping.where('pd.name' => descriptor['pd']['name'],
                                               'pd.vendor' => descriptor['pd']['vendor'],
                                               'pd.version' => descriptor['pd']['version'])
@@ -507,6 +507,9 @@ class SonataCatalogue < Sinatra::Application
     end
   end
 
+  # Method deleting pd from name, vendor, version
+  # @param [Hash] pks Package model hash
+  # @return [void]
   def intelligent_delete(pks)
     icomps = instanced_components(pks)
     halt 500, JSON.generate(error: 'Can\'t search for instanced components') if icomps.nil?
