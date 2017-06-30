@@ -625,7 +625,6 @@ class SonataCatalogue < Sinatra::Application
   # @param [Hash] pks Package model hash
   # @return [void]
   def intelligent_enable_all(pks)
-    puts pks.class
     begin
       pattern = { 'pd.name' => pks.pd['name'],
                   'pd.version' => pks.pd['version'],
