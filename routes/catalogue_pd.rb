@@ -1102,6 +1102,47 @@ class CatalogueV2 < SonataCatalogue
     json_error 400, 'No PD ID specified'
   end
 
+  # @method status_package
+  # @overload put '/catalogues/packages/:id/status'
+  #	Update a Package status in JSON or YAML format
+  ## Catalogue - UPDATE
+  put '/packages/:id/status' do
+    # Return if content-type is invalid
+    halt 415 unless (request.content_type == 'application/x-yaml' or request.content_type == 'application/json')
+    case request.content_type
+    when 'application/x-yaml'
+      # Validate YAML format
+      # When updating a PD, the json object sent to API must contain just data inside
+      # of the pd, without the json field pd: before
+      status_info, errors = parse_yaml(request.body.read)
+      halt 400, errors.to_json if errors
+    else
+      # Compatibility support for JSON content-type
+      # Parses and validates JSON format
+      status_info, errors = parse_json(request.body.read)
+      halt 400, errors.to_json if errors
+    end
+    if status_info['status'].nil?
+      halt 400, JSON.generate(error: 'Status not specified')
+    end
+    unless status_info['status'].upcase.in?(['ACTIVE', 'INACTIVE'])
+      halt 400, JSON.generate(error: 'Status should be active/inactive')
+    end
+    begin
+      pks = Pkgd.find_by({ 'id' => params[:id] })
+    rescue Mongoid::Errors::DocumentNotFound => e
+      json_error 404, "The PD with id #{params[:id]} does not exist"
+    end
+    if status_info['status'].casecmp('INACTIVE') == 0
+      logger.info "Setting pd #{params[:id]} status to inactive"
+      intelligent_disable(pks)
+    else
+      logger.info "Setting pd #{params[:id]} status to active"
+      intelligent_enable_all(pks)
+    end
+    halt 200
+  end
+
   # @method delete_pd_package_group_name_version
   # @overload delete '/catalogues/packages/vendor/:package_group/name/:package_name/version/:package_version'
   #	Delete a PD by group, name and version

@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# coding: utf-8
 
 # Command line ruby script built
 #   to simulate the posting of a complete
@@ -84,20 +85,30 @@ puts
 puts uuids.join("\n")
 puts
 
-begin
-  deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0]){|response, request, result| response }
-  puts deleteresp.code
-  puts deleteresp.body
-  puts STDIN.gets
-rescue Exception => e
-  puts e.message
-end
+disableresp = RestClient.put('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0]+'/status',
+                             '{"status": "inactive"}', :content_type => 'application/json'){|response, request, result| response }
+puts disableresp.code
+puts disableresp.body
+STDIN.gets
 
-begin
-  deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1]){|response, request, result| response }
-  puts deleteresp.code
-  puts deleteresp.body
-  puts STDIN.gets
-rescue Exception => e
-  puts e.message
-end
+disableresp = RestClient.put('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0]+'/status',
+                             '{"status": "active"}', :content_type => 'application/json'){|response, request, result| response }
+puts disableresp.code
+puts disableresp.body
+STDIN.gets
+
+disableresp = RestClient.put('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1]+'/status',
+                             '{"status": "inactive"}', :content_type => 'application/json'){|response, request, result| response }
+puts disableresp.code
+puts disableresp.body
+STDIN.gets
+
+deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0]){|response, request, result| response }
+puts deleteresp.code
+puts deleteresp.body
+puts STDIN.gets
+
+deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[1]){|response, request, result| response }
+puts deleteresp.code
+puts deleteresp.body
+puts STDIN.gets
