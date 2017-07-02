@@ -347,8 +347,8 @@ class SonataCatalogue < Sinatra::Application
   # Method returning packages depending on a descriptor
   # @param [Symbol] desc_type descriptor type (:vnfds, :nsds, :deps)
   # @param [Hash] desc descriptor hash
-  # @param [Hash] target_package target package to delete
-  # @return [Boolean] true if there is some other package depending on the descriptor
+  # @param [Hash] target_package Target package to check
+  # @return [Boolean] true if there is some other package (different from target) depending on the descriptor
   def check_dependencies(desc_type, desc, target_package = nil, active_criteria = false)
     dependent_packages = Dependencies_mapping.where(
       { desc_type => { '$elemMatch' => { name: desc[:name],
@@ -373,8 +373,8 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Method returning boolean depending if there is some instance of a descriptor
-  # @param [Symbol] desc_type descriptor type (:vnfd, :nsd)
-  # @param [Hash] descriptor descriptor
+  # @param [Symbol] desc_type Descriptor type (:vnfd, :nsd)
+  # @param [Hash] descriptor Descriptor hash
   # @return [Boolean] true/false
   def instanced_descriptor?(desc_type, descriptor)
     if desc_type == :vnfd
@@ -397,7 +397,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Method returning descritptor information depending if there's one component instanced
-  # @param [Pkgd] package package model instance
+  # @param [Pkgd] package Package descriptor model
   # @return [Hash] instantiated vnfds and nsds arrays
   def instanced_components(package)
     vnfds = []
@@ -423,15 +423,16 @@ class SonataCatalogue < Sinatra::Application
     { vnfds: vnfds, nsds: nsds }
   end
 
-  # Method returning Hash containing Vnfds and Nsds that can safely be disabled
+  # Method returning Hash containing Vnfds and Nsds that can safely be disabled/deleted
   #     with no dependencies on other packages
-  # @param [Pkgd] package package model instance
-  # @return [Hash] disable and cant_disable vnfds and nsds
+  # @param [Pkgd] package Package descriptor model
+  # @return [Hash] disable/delete and cant_disable/cant_delete vnfds and nsds
   # Method returning Hash containing Vnfds and Nsds that can safely be deleted
   #     with no dependencies on other packages
   # @param [Symbol] nodeps_sym Optional parameter key for no dependent components
   # @param [Symbol] deps_sym Optional parameter key for dependent components
-  # @return [Hash] delete and cant_delete vnfds and nsds
+  # @param [Boolean] active_criteria Optional (default false) parameter in order to ignore inactive dependencies
+  # @return [Hash] delete/disable and cant_delete/cant_disable vnfds and nsds
   def intelligent_nodeps(package, nodeps_sym = :delete, deps_sym = :cant_delete, active_criteria = false)
     vnfds = []
     nsds = []
@@ -775,6 +776,11 @@ class SonataCatalogue < Sinatra::Application
         'uri' => '/catalogues/packages/{id}',
         'method' => 'DELETE',
         'purpose' => 'Delete a specific Package by its uuid'
+      },
+      {
+        'uri' => '/catalogues/packages/{id}/status',
+        'method' => 'PUT',
+        'purpose' => 'Updates the status of a Package {"status": "active"} / {"status": "inactive"} as valid json payloads'
       },
       {
         'uri' => '/catalogues/son-packages',
