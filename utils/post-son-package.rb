@@ -91,6 +91,12 @@ puts disableresp.code
 puts disableresp.body
 STDIN.gets
 
+disableresp = RestClient.put('http://localhost:4011/catalogues/api/v2/packages/'+uuids[2]+'/status',
+                             '{"status": "inactive"}', :content_type => 'application/json'){|response, request, result| response }
+puts disableresp.code
+puts disableresp.body
+STDIN.gets
+
 disableresp = RestClient.put('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0]+'/status',
                              '{"status": "active"}', :content_type => 'application/json'){|response, request, result| response }
 puts disableresp.code
@@ -104,6 +110,11 @@ puts disableresp.body
 STDIN.gets
 
 deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[0]){|response, request, result| response }
+puts deleteresp.code
+puts deleteresp.body
+puts STDIN.gets
+
+deleteresp = RestClient.delete('http://localhost:4011/catalogues/api/v2/packages/'+uuids[2]){|response, request, result| response }
 puts deleteresp.code
 puts deleteresp.body
 puts STDIN.gets
