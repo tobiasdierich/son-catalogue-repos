@@ -432,7 +432,7 @@ class SonataCatalogue < Sinatra::Application
   # @param [Symbol] nodeps_sym Optional parameter key for no dependent components
   # @param [Symbol] deps_sym Optional parameter key for dependent components
   # @return [Hash] delete and cant_delete vnfds and nsds
-  def intelligent_delete_nodeps(package, nodeps_sym = :delete, deps_sym = :cant_delete, active_criteria = false)
+  def intelligent_nodeps(package, nodeps_sym = :delete, deps_sym = :cant_delete, active_criteria = false)
     vnfds = []
     nsds = []
     cant_delete_vnfds = []
@@ -519,8 +519,9 @@ class SonataCatalogue < Sinatra::Application
     end
   end
 
-  # Method Disabling vnfds from name, vendor, version
+  # Method Set status of vnfds from name, vendor, version
   # @param [Array] vnfds array of hashes
+  # @param [String] status Desired status
   # @return [Array] Not found array
   def set_vnfds_status(vnfds, status)
     not_found = []
@@ -538,8 +539,9 @@ class SonataCatalogue < Sinatra::Application
     return not_found
   end
 
-  # Method Disabling nsds from name, vendor, version
+  # Method Set status of nsds from name, vendor, version
   # @param [Array] nsds nsds array of hashes
+  # @param [String] status Desired status
   # @return [Array] Not found array
   def set_nsds_status(nsds, status)
     not_found = []
@@ -557,8 +559,9 @@ class SonataCatalogue < Sinatra::Application
     return not_found
   end
 
-  # Method Disabling pd
+  # Method Set status of a pd
   # @param [Hash] package model hash
+  # @param [String] status Desired status
   # @return [void]
   def set_pd_status(descriptor, status)
     # first find dependencies_mapping
@@ -582,7 +585,7 @@ class SonataCatalogue < Sinatra::Application
                               components: { vnfds: icomps[:vnfds],
                                             nsds: icomps[:nsds] } )
     end
-    todelete = intelligent_delete_nodeps(pks)
+    todelete = intelligent_nodeps(pks)
     logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
     not_found_vnfds = delete_vnfds(todelete[:delete][:vnfds])
     not_found_nsds = delete_nsds(todelete[:delete][:nsds])
@@ -603,7 +606,7 @@ class SonataCatalogue < Sinatra::Application
   # @param [Hash] pks Package model hash
   # @return [void]
   def intelligent_disable(pks)
-    todisable = intelligent_delete_nodeps(pks, :disable, :cant_disable, true)
+    todisable = intelligent_nodeps(pks, :disable, :cant_disable, true)
     logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todisable.to_s
     not_found_vnfds = set_vnfds_status(todisable[:disable][:vnfds], 'inactive')
     not_found_nsds = set_nsds_status(todisable[:disable][:nsds], 'inactive')

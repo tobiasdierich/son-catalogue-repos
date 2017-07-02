@@ -1140,7 +1140,8 @@ class CatalogueV2 < SonataCatalogue
       logger.info "Setting pd #{params[:id]} status to active"
       intelligent_enable_all(pks)
     end
-    halt 200
+    logger.debug "Catalogue: leaving PUT /api/v2/packages/#{params[:id]}/status with 'No PD ID specified'"
+    json_error 400, 'No PD ID specified'
   end
 
   # @method delete_pd_package_group_name_version
@@ -1161,7 +1162,6 @@ class CatalogueV2 < SonataCatalogue
       rescue Mongoid::Errors::DocumentNotFound => e
         json_error 404, "The PD Vendor #{keyed_params[:vendor]}, Name #{keyed_params[:name]}, Version #{keyed_params[:version]} does not exist"
       end
-
       intelligent_delete(pks)
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string} with 'No PD Vendor, Name, Version specified'"
@@ -1182,7 +1182,6 @@ class CatalogueV2 < SonataCatalogue
         logger.error e
         json_error 404, "The PD ID #{params[:id]} does not exist" unless pks
       end
-
       intelligent_delete(pks)
     end
     logger.debug "Catalogue: leaving DELETE /api/v2/packages/#{params[:id]} with 'No PD ID specified'"

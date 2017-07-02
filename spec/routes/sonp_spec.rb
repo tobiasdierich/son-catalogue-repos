@@ -123,6 +123,54 @@ RSpec.describe CatalogueV2 do
     end
   end
 
+  # Tries to disable first package posted in previous test resulting
+  #    in the deletion of
+  #    {"disabled":
+  #    {"vnfds":[{"vendor":"eu.sonata-nfv","version":"0.3","name":"firewall-vnf"},
+  #    {"vendor":"eu.sonata-nfv","version":"0.2","name":"iperf-vnf"}],
+  #    "nsds":[{"vendor":"eu.sonata-nfv.service-descriptor","version":"0.2.1","name":"sonata-demo"}]}}
+  # But preventing tcpdump-vnfd disable because second package posted before has a dependency on it
+  describe 'PUT /api/v2/packages' do
+    context 'disabling pds' do
+      before do
+        disable_response = put '/packages/' + $pd_uuids[0] + '/status',
+                           '{ "status": "inactive" }',
+                           { 'CONTENT_TYPE' => 'application/json' }
+        puts disable_response.body
+      end
+      subject { last_response }
+      its(:status) { is_expected.to eq 200 }
+    end
+  end
+
+  # Tries to disable second package posted in previous test resulting
+  describe 'PUT /api/v2/packages' do
+    context 'disabling pds' do
+      before do
+        disable_response = put '/packages/' + $pd_uuids[1] + '/status',
+                           '{ "status": "inactive" }',
+                           { 'CONTENT_TYPE' => 'application/json' }
+        puts disable_response.body
+      end
+      subject { last_response }
+      its(:status) { is_expected.to eq 200 }
+    end
+  end
+
+  # Tries to enable second package posted in previous test resulting
+  describe 'PUT /api/v2/packages' do
+    context 'enabling pds' do
+      before do
+        enable_response = put '/packages/' + $pd_uuids[1] + '/status',
+                           '{ "status": "active" }',
+                           { 'CONTENT_TYPE' => 'application/json' }
+        puts enable_response.body
+      end
+      subject { last_response }
+      its(:status) { is_expected.to eq 200 }
+    end
+  end
+
   # Tries to delete first package posted in previous test resulting
   #    in the deletion of
   #    {"deleted":
