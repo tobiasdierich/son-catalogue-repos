@@ -348,6 +348,7 @@ class SonataCatalogue < Sinatra::Application
   # @param [Symbol] desc_type descriptor type (:vnfds, :nsds, :deps)
   # @param [Hash] desc descriptor hash
   # @param [Hash] target_package Target package to check
+  # @param [Boolean] active_criteria true: checks the status of the package avoiding returning deps on inactive ones
   # @return [Boolean] true if there is some other package (different from target) depending on the descriptor
   def check_dependencies(desc_type, desc, target_package = nil, active_criteria = false)
     dependent_packages = Dependencies_mapping.where(

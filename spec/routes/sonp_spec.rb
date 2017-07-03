@@ -134,10 +134,12 @@ RSpec.describe CatalogueV2 do
   describe 'PUT /api/v2/packages' do
     context 'disabling pds' do
       before do
+        puts 'Disabling sonata-demo.son'
         disable_response = put '/packages/' + $pd_uuids[0] + '/status',
                            '{ "status": "inactive" }',
                            { 'CONTENT_TYPE' => 'application/json' }
         puts disable_response.body
+        puts
         expect(disable_response.status).to eq(200)
         result = JSON.parse(disable_response.body)
         expect(result['result']['disable']['vnfds'].length).to eq(1)
@@ -156,10 +158,12 @@ RSpec.describe CatalogueV2 do
   describe 'PUT /api/v2/packages' do
     context 'disabling pds' do
       before do
+        puts 'Disabling sonata-demo-2.son'
         disable_response = put '/packages/' + $pd_uuids[1] + '/status',
                            '{ "status": "inactive" }',
                            { 'CONTENT_TYPE' => 'application/json' }
         puts disable_response.body
+        puts
         expect(disable_response.status).to eq(200)
         result = JSON.parse(disable_response.body)
         expect(result['result']['disable']['vnfds'].length).to eq(1)
@@ -180,10 +184,12 @@ RSpec.describe CatalogueV2 do
   describe 'PUT /api/v2/packages' do
     context 'enabling pds' do
       before do
+        puts 'Enabling sonata-demo-2.son'
         enable_response = put '/packages/' + $pd_uuids[1] + '/status',
                            '{ "status": "active" }',
                            { 'CONTENT_TYPE' => 'application/json' }
         puts enable_response.body
+        puts
       end
       subject { last_response }
       its(:status) { is_expected.to eq 200 }
@@ -200,8 +206,10 @@ RSpec.describe CatalogueV2 do
   describe 'DELETE /api/v2/packages' do
     context 'deleting pds' do
       before do
+        puts 'Deleting sonata-demo.son'
         delete_response = delete '/packages/' + $pd_uuids[0]
         puts delete_response.body
+        puts
         expect(delete_response.status).to eq(200)
         result = JSON.parse(delete_response.body)
         expect(result['result']['delete']['vnfds'].length).to eq(1)
@@ -218,8 +226,10 @@ RSpec.describe CatalogueV2 do
   describe 'DELETE /api/v2/packages' do
     context 'deleting pds' do
       before do
+        puts 'Deleting sonata-demo-2.son'
         delete_response = delete '/packages/' + $pd_uuids[1]
         puts delete_response.body
+        puts
         expect(delete_response.status).to eq(200)
         result = JSON.parse(delete_response.body)
         expect(result['result']['delete']['vnfds'].length).to eq(1)
@@ -238,8 +248,10 @@ RSpec.describe CatalogueV2 do
   describe 'DELETE /api/v2/packages' do
     context 'deleting pds' do
       before do
+        puts 'Deleting sonata-demo-3.son'
         delete_response = delete '/packages/' + $pd_uuids[2]
         puts delete_response.body
+        puts
         expect(delete_response.status).to eq(200)
         result = JSON.parse(delete_response.body)
         expect(result['result']['delete']['vnfds'].length).to eq(1)
