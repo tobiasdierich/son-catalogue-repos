@@ -29,6 +29,7 @@
 require 'rack/test'
 require 'rspec'
 require 'webmock/rspec'
+require 'zip'
 
 ENV['RACK_ENV'] ||= 'test'
 
@@ -41,4 +42,31 @@ RSpec.configure do |config|
   config.include Rack::Test::Methods
   config.mock_with :rspec
   config.include WebMock::API
+end
+
+def xtract_sonp(sonpfile)
+  manifest = nil
+  vnfds = []
+  nsds = []
+  Zip::InputStream.open(sonpfile) do |io|
+    while (entry = io.get_next_entry)
+      if entry.name.casecmp('META-INF/MANIFEST.MF') == 0
+        manifest = io.read
+      else
+        dirname = Pathname(File.path(entry.name)).split.first.to_s
+        if dirname.casecmp('SERVICE_DESCRIPTORS') == 0
+          if !entry.name_is_directory?
+            puts entry
+            nsds << io.read
+          end
+        elsif dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
+          if !entry.name_is_directory?
+            puts entry
+            vnfds << io.read
+          end
+        end
+      end
+    end
+  end
+  {manifest: manifest, vnfds: vnfds, nsds: nsds}
 end

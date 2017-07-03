@@ -285,7 +285,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Rebuild and evaluate the package in order to generate
-  #     the dependencies mapping record name-version-vendor based;
+  #     the dependencies mapping record name-vendor-version based;
   #     Supported sonata package descriptor files:
   #     https://github.com/sonata-nfv/son-schema/tree/master/package-descriptor
   #     also expected a directory 'service_descriptors' holding the nsds
@@ -294,7 +294,7 @@ class SonataCatalogue < Sinatra::Application
   # @param [String] sonp_id The sonata package file id
   # @return [Hash] Document containing the dependencies mapping
   def son_package_dep_mapping(sonpfile, sonp_id)
-    mapping = {pd: {}, nsds: [], vnfds: [], deps: []}
+    mapping = { pd: {}, nsds: [], vnfds: [], deps: [] }
     Zip::InputStream.open(sonpfile) do |io|
       while (entry = io.get_next_entry)
         dirname = Pathname(File.path(entry.name)).split.first.to_s
@@ -302,15 +302,15 @@ class SonataCatalogue < Sinatra::Application
           if File.basename(entry.name).casecmp('MANIFEST.MF') == 0
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:pd] = {vendor: desc['vendor'],
-                              version: desc['version'],
-                              name: desc['name']}
+              mapping[:pd] = { vendor: desc['vendor'],
+                               version: desc['version'],
+                               name: desc['name'] }
               if !desc['package_dependencies'].nil?
                 desc['package_dependencies'].each do |pdep|
                   if valid_dep_mapping_descriptor? pdep
-                    mapping[:deps] << {vendor: pdep['vendor'],
-                                       version: pdep['version'],
-                                       name: pdep['name']}
+                    mapping[:deps] << { vendor: pdep['vendor'],
+                                        version: pdep['version'],
+                                        name: pdep['name'] }
                   end
                 end
               end
@@ -320,18 +320,18 @@ class SonataCatalogue < Sinatra::Application
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:nsds] << {vendor: desc['vendor'],
-                                 version: desc['version'],
-                                 name: desc['name']}
+              mapping[:nsds] << { vendor: desc['vendor'],
+                                  version: desc['version'],
+                                  name: desc['name'] }
             end
           end
         elsif dirname.casecmp('FUNCTION_DESCRIPTORS') == 0
           if !entry.name_is_directory?
             desc, errors = parse_yaml(io.read)
             if valid_dep_mapping_descriptor? desc
-              mapping[:vnfds] << {vendor: desc['vendor'],
-                                  version: desc['version'],
-                                  name: desc['name']}
+              mapping[:vnfds] << { vendor: desc['vendor'],
+                                   version: desc['version'],
+                                   name: desc['name'] }
             end
           end
         end
@@ -340,60 +340,322 @@ class SonataCatalogue < Sinatra::Application
     mapping_id = SecureRandom.uuid
     mapping['_id'] = mapping_id
     mapping['son_package_uuid'] = sonp_id
+    mapping['status'] = 'active'
     mapping
   end
 
   # Method returning packages depending on a descriptor
-  # @param [Symbol] type descriptor type (:vnfds, :nsds, :deps)
-  # @param [Hash] desc descriptor
-  # @return [Dependencies_mapping] Documents
-  def check_dependencies(type, desc)
-    name = desc[:name]
-    version = desc[:version]
-    vendor = desc[:vendor]
-    dependent_packages = []
-    begin
-      dependent_packages = Dependencies_mapping.where(
-        {type => {'$elemMatch' => {name: name,
-                                   vendor: vendor,
-                                   version: version}}})
-      return dependent_packages
-    rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error "Descriptor #{name} #{version} #{vendor} dependent packages not found"
+  # @param [Symbol] desc_type descriptor type (:vnfds, :nsds, :deps)
+  # @param [Hash] desc descriptor hash
+  # @param [Hash] target_package Target package to check
+  # @param [Boolean] active_criteria true: checks the status of the package avoiding returning deps on inactive ones
+  # @return [Boolean] true if there is some other package (different from target) depending on the descriptor
+  def check_dependencies(desc_type, desc, target_package = nil, active_criteria = false)
+    dependent_packages = Dependencies_mapping.where(
+      { desc_type => { '$elemMatch' => { name: desc[:name],
+                                         vendor: desc[:vendor],
+                                         version: desc[:version] } } })
+    dependent_packages.each do |dp|
+      diffp_condition = true
+      if target_package != nil
+        diffp_condition = ( (dp.pd['name'] != target_package['name']) or
+                            (dp.pd['vendor'] != target_package['vendor']) or
+                            (dp.pd['version'] != target_package['version']) )
+      end
+      if diffp_condition
+        if active_criteria
+          return true if dp['status'].casecmp('ACTIVE') == 0
+        else
+          return true
+        end
+      end
     end
+    return false
   end
 
-  # Method returning Hash containing Vnfds and Nsds that can safely be deleted
-  #     with no dependencies on other packages
-  # @param [Pkgd] package package model instance
-  # @return [Hash] vnfds and nsds arrays
-  def intelligent_delete_nodeps(package)
+  # Method returning boolean depending if there is some instance of a descriptor
+  # @param [Symbol] desc_type Descriptor type (:vnfd, :nsd)
+  # @param [Hash] descriptor Descriptor hash
+  # @return [Boolean] true/false
+  def instanced_descriptor?(desc_type, descriptor)
+    if desc_type == :vnfd
+      desc = Vnfd.where({ 'vnfd.name' => descriptor['name'],
+                          'vnfd.vendor' => descriptor['vendor'],
+                          'vnfd.version' => descriptor['version'] }).first
+      return false if desc.nil?
+      instances = Vnfr.where({ 'descriptor_reference' => desc['_id'] }).count
+    elsif desc_type == :nsd
+      desc = Nsd.where({ 'nsd.name' => descriptor['name'],
+                         'nsd.vendor' => descriptor['vendor'],
+                         'nsd.version' => descriptor['version'] }).first
+      return false if desc.nil?
+      instances = Nsr.where({ 'descriptor_reference' => desc['_id'] }).count
+    end
+    if instances > 0
+      return true
+    end
+    return false
+  end
+
+  # Method returning descritptor information depending if there's one component instanced
+  # @param [Pkgd] package Package descriptor model
+  # @return [Hash] instantiated vnfds and nsds arrays
+  def instanced_components(package)
     vnfds = []
     nsds = []
     begin
-      pdep_mapping = Dependencies_mapping.find_by({'pd.name' => package.pd['name'],
-                                                   'pd.version' => package.pd['version'],
-                                                   'pd.vendor' => package.pd['vendor']})
+      pdep_mapping = Dependencies_mapping.find_by({ 'pd.name' => package.pd['name'],
+                                                    'pd.version' => package.pd['version'],
+                                                    'pd.vendor' => package.pd['vendor'] })
     rescue Mongoid::Errors::DocumentNotFound => e
-      logger.error 'Dependencies not found'
-      # If no document found, avoid to delete descriptors blindly
-      return {vnfds: [], nsds: []}
+      logger.error 'Dependencies not found: ' + e.message
+      return nil
     end
     pdep_mapping.vnfds.each do |vnfd|
-      if check_dependencies(:vnfds, vnfd).length > 1
-        logger.info 'VNFD '+vnfd[:name]+' has more than one dependency'
+      if instanced_descriptor?(:vnfd, vnfd)
+        vnfds << vnfd
+      end
+    end
+    pdep_mapping.nsds.each do |nsd|
+      if instanced_descriptor?(:nsd, nsd)
+        nsds << nsd
+      end
+    end
+    { vnfds: vnfds, nsds: nsds }
+  end
+
+  # Method returning Hash containing Vnfds and Nsds that can safely be disabled/deleted
+  #     with no dependencies on other packages
+  # @param [Pkgd] package Package descriptor model
+  # @return [Hash] disable/delete and cant_disable/cant_delete vnfds and nsds
+  # Method returning Hash containing Vnfds and Nsds that can safely be deleted
+  #     with no dependencies on other packages
+  # @param [Symbol] nodeps_sym Optional parameter key for no dependent components
+  # @param [Symbol] deps_sym Optional parameter key for dependent components
+  # @param [Boolean] active_criteria Optional (default false) parameter in order to ignore inactive dependencies
+  # @return [Hash] delete/disable and cant_delete/cant_disable vnfds and nsds
+  def intelligent_nodeps(package, nodeps_sym = :delete, deps_sym = :cant_delete, active_criteria = false)
+    vnfds = []
+    nsds = []
+    cant_delete_vnfds = []
+    cant_delete_nsds = []
+    begin
+      pattern = { 'pd.name' => package.pd['name'],
+                  'pd.version' => package.pd['version'],
+                  'pd.vendor' => package.pd['vendor'] }
+      pdep_mapping = Dependencies_mapping.find_by(pattern)
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error 'Dependencies not found: ' + e.message
+      # If no document found, avoid to delete descriptors blindly
+      return { nodeps_sym => { vnfds: [], nsds: [] } }
+    end
+    pdep_mapping.vnfds.each do |vnfd|
+      if check_dependencies(:vnfds, vnfd, package.pd, active_criteria)
+        logger.info 'VNFD ' + vnfd[:name] + ' has more than one dependency'
+        cant_delete_vnfds << vnfd
       else
         vnfds << vnfd
       end
     end
     pdep_mapping.nsds.each do |nsd|
-      if check_dependencies(:nsds, nsd).length > 1
-        logger.info 'NSD '+nsd[:name]+' has more than one dependency'
+      if check_dependencies(:nsds, nsd, package.pd, active_criteria)
+        logger.info 'NSD ' + nsd[:name] + ' has more than one dependency'
+        cant_delete_nsds << nsd
       else
         nsds << nsd
       end
     end
-    {vnfds: vnfds, nsds: nsds}
+    { nodeps_sym => { vnfds: vnfds, nsds: nsds },
+      deps_sym => { vnfds: cant_delete_vnfds, nsds: cant_delete_nsds } }
+  end
+
+  # Method deleting vnfds from name, vendor, version
+  # @param [Array] vnfds array of hashes
+  # @return [Array] Not found array
+  def delete_vnfds(vnfds)
+    not_found = []
+    vnfds.each do |vnfd_td|
+      descriptor = Vnfd.where({ 'vnfd.name' => vnfd_td['name'],
+                                'vnfd.vendor' => vnfd_td['vendor'],
+                                'vnfd.version' => vnfd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'VNFD Descriptor not found'
+        not_found << vnfd_td
+      else
+        descriptor.destroy
+      end
+    end
+    return not_found
+  end
+
+  # Method deleting nsds from name, vendor, version
+  # @param [Array] nsds nsds array of hashes
+  # @return [Array] Not found array
+  def delete_nsds(nsds)
+    not_found = []
+    nsds.each do |nsd_td|
+      descriptor = Nsd.where({ 'nsd.name' => nsd_td['name'],
+                               'nsd.vendor' => nsd_td['vendor'],
+                               'nsd.version' => nsd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'NSD Descriptor not found ' + nsd_td.to_s
+        not_found << nsd_td
+      else
+        descriptor.destroy
+      end
+    end
+    return not_found
+  end
+
+  # Method deleting pd and also dependencies mapping
+  # @param [Hash] package model hash
+  # @return [void]
+  def delete_pd(descriptor)
+    # first find dependencies_mapping
+    package_deps = Dependencies_mapping.where('pd.name' => descriptor['pd']['name'],
+                                              'pd.vendor' => descriptor['pd']['vendor'],
+                                              'pd.version' => descriptor['pd']['version'])
+    descriptor.destroy
+    package_deps.each do |package_dep|
+      package_dep.destroy
+    end
+  end
+
+  # Method Set status of vnfds from name, vendor, version
+  # @param [Array] vnfds array of hashes
+  # @param [String] status Desired status
+  # @return [Array] Not found array
+  def set_vnfds_status(vnfds, status)
+    not_found = []
+    vnfds.each do |vnfd_td|
+      descriptor = Vnfd.where({ 'vnfd.name' => vnfd_td['name'],
+                                'vnfd.vendor' => vnfd_td['vendor'],
+                                'vnfd.version' => vnfd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'VNFD Descriptor not found'
+        not_found << vnfd_td
+      else
+        descriptor.update('status' => status)
+      end
+    end
+    return not_found
+  end
+
+  # Method Set status of nsds from name, vendor, version
+  # @param [Array] nsds nsds array of hashes
+  # @param [String] status Desired status
+  # @return [Array] Not found array
+  def set_nsds_status(nsds, status)
+    not_found = []
+    nsds.each do |nsd_td|
+      descriptor = Nsd.where({ 'nsd.name' => nsd_td['name'],
+                               'nsd.vendor' => nsd_td['vendor'],
+                               'nsd.version' => nsd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'NSD Descriptor not found ' + nsd_td.to_s
+        not_found << nsd_td
+      else
+        descriptor.update('status' => status)
+      end
+    end
+    return not_found
+  end
+
+  # Method Set status of a pd
+  # @param [Hash] package model hash
+  # @param [String] status Desired status
+  # @return [void]
+  def set_pd_status(descriptor, status)
+    # first find dependencies_mapping
+    package_deps = Dependencies_mapping.where('pd.name' => descriptor['pd']['name'],
+                                              'pd.vendor' => descriptor['pd']['vendor'],
+                                              'pd.version' => descriptor['pd']['version'])
+    descriptor.update('status' => status)
+    package_deps.each do |package_dep|
+      package_dep.update('status' => status)
+    end
+  end
+
+  # Method deleting pd from name, vendor, version
+  # @param [Hash] pks Package model hash
+  # @return [void]
+  def intelligent_delete(pks)
+    icomps = instanced_components(pks)
+    halt 500, JSON.generate(error: 'Can\'t search for instanced components') if icomps.nil?
+    if ( icomps[:vnfds].length > 0 ) or ( icomps[:nsds].length > 0 )
+      halt 409, JSON.generate(error: 'Instanced elements cannot be deleted.',
+                              components: { vnfds: icomps[:vnfds],
+                                            nsds: icomps[:nsds] } )
+    end
+    todelete = intelligent_nodeps(pks)
+    logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
+    not_found_vnfds = delete_vnfds(todelete[:delete][:vnfds])
+    not_found_nsds = delete_nsds(todelete[:delete][:nsds])
+    delete_pd(pks)
+    if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      halt 200, JSON.generate(result: todelete)
+    else
+      logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      logger.info "Some descriptors where not found "
+      logger.info "Vnfds not found: " + not_found_vnfds.to_s
+      logger.info "Nsds not found: " + not_found_nsds.to_s
+      halt 404, JSON.generate(result: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
+    end
+  end
+
+  # Method deleting pd from name, vendor, version
+  # @param [Hash] pks Package model hash
+  # @return [void]
+  def intelligent_disable(pks)
+    todisable = intelligent_nodeps(pks, :disable, :cant_disable, true)
+    logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todisable.to_s
+    not_found_vnfds = set_vnfds_status(todisable[:disable][:vnfds], 'inactive')
+    not_found_nsds = set_nsds_status(todisable[:disable][:nsds], 'inactive')
+    set_pd_status(pks, 'inactive')
+    if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      halt 200, JSON.generate(result: todisable)
+    else
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      logger.info "Some descriptors where not found "
+      logger.info "Vnfds not found: " + not_found_vnfds.to_s
+      logger.info "Nsds not found: " + not_found_nsds.to_s
+      halt 404, JSON.generate(result: todisable,
+                              not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
+    end
+  end
+
+  # Method deleting pd from name, vendor, version
+  # @param [Hash] pks Package model hash
+  # @return [void]
+  def intelligent_enable_all(pks)
+    begin
+      pattern = { 'pd.name' => pks.pd['name'],
+                  'pd.version' => pks.pd['version'],
+                  'pd.vendor' => pks.pd['vendor'] }
+      pdep_mapping = Dependencies_mapping.find_by(pattern)
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error 'Dependencies not found: ' + e.message
+      # If no document found, avoid to delete descriptors blindly
+      return { nodeps_sym => { vnfds: [], nsds: [] } }
+    end
+    not_found_vnfds = set_vnfds_status(pdep_mapping.vnfds, 'active')
+    not_found_nsds = set_nsds_status(pdep_mapping.nsds, 'active')
+    set_pd_status(pks, 'active')
+    if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      halt 200, JSON.generate(result: { enable: { vnfds: pdep_mapping.vnfds,
+                                                nsds: pdep_mapping.nsds } })
+    else
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      logger.info "Some descriptors where not found "
+      logger.info "Vnfds not found: " + not_found_vnfds.to_s
+      logger.info "Nsds not found: " + not_found_nsds.to_s
+      halt 404, JSON.generate(result: { enable: { vnfds: pdep_mapping.vnfds,
+                                                nsds: pdep_mapping.nsds } },
+                              not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
+    end
   end
 
   # Method which lists all available interfaces
@@ -515,6 +777,11 @@ class SonataCatalogue < Sinatra::Application
         'uri' => '/catalogues/packages/{id}',
         'method' => 'DELETE',
         'purpose' => 'Delete a specific Package by its uuid'
+      },
+      {
+        'uri' => '/catalogues/packages/{id}/status',
+        'method' => 'PUT',
+        'purpose' => 'Updates the status of a Package {"status": "active"} / {"status": "inactive"} as valid json payloads'
       },
       {
         'uri' => '/catalogues/son-packages',
