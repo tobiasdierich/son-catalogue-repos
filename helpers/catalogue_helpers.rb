@@ -340,15 +340,17 @@ class SonataCatalogue < Sinatra::Application
     mapping_id = SecureRandom.uuid
     mapping['_id'] = mapping_id
     mapping['son_package_uuid'] = sonp_id
+    mapping['status'] = 'active'
     mapping
   end
 
   # Method returning packages depending on a descriptor
   # @param [Symbol] desc_type descriptor type (:vnfds, :nsds, :deps)
   # @param [Hash] desc descriptor hash
-  # @param [Hash] target_package target package to delete
-  # @return [Boolean] true if there is some other package depending on the descriptor
-  def check_dependencies(desc_type, desc, target_package = nil)
+  # @param [Hash] target_package Target package to check
+  # @param [Boolean] active_criteria true: checks the status of the package avoiding returning deps on inactive ones
+  # @return [Boolean] true if there is some other package (different from target) depending on the descriptor
+  def check_dependencies(desc_type, desc, target_package = nil, active_criteria = false)
     dependent_packages = Dependencies_mapping.where(
       { desc_type => { '$elemMatch' => { name: desc[:name],
                                          vendor: desc[:vendor],
@@ -361,15 +363,19 @@ class SonataCatalogue < Sinatra::Application
                             (dp.pd['version'] != target_package['version']) )
       end
       if diffp_condition
-        return true
+        if active_criteria
+          return true if dp['status'].casecmp('ACTIVE') == 0
+        else
+          return true
+        end
       end
     end
     return false
   end
 
   # Method returning boolean depending if there is some instance of a descriptor
-  # @param [Symbol] desc_type descriptor type (:vnfd, :nsd)
-  # @param [Hash] descriptor descriptor
+  # @param [Symbol] desc_type Descriptor type (:vnfd, :nsd)
+  # @param [Hash] descriptor Descriptor hash
   # @return [Boolean] true/false
   def instanced_descriptor?(desc_type, descriptor)
     if desc_type == :vnfd
@@ -392,7 +398,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Method returning descritptor information depending if there's one component instanced
-  # @param [Pkgd] package package model instance
+  # @param [Pkgd] package Package descriptor model
   # @return [Hash] instantiated vnfds and nsds arrays
   def instanced_components(package)
     vnfds = []
@@ -418,26 +424,33 @@ class SonataCatalogue < Sinatra::Application
     { vnfds: vnfds, nsds: nsds }
   end
 
+  # Method returning Hash containing Vnfds and Nsds that can safely be disabled/deleted
+  #     with no dependencies on other packages
+  # @param [Pkgd] package Package descriptor model
+  # @return [Hash] disable/delete and cant_disable/cant_delete vnfds and nsds
   # Method returning Hash containing Vnfds and Nsds that can safely be deleted
   #     with no dependencies on other packages
-  # @param [Pkgd] package package model instance
-  # @return [Hash] delete and cant_delete vnfds and nsds
-  def intelligent_delete_nodeps(package)
+  # @param [Symbol] nodeps_sym Optional parameter key for no dependent components
+  # @param [Symbol] deps_sym Optional parameter key for dependent components
+  # @param [Boolean] active_criteria Optional (default false) parameter in order to ignore inactive dependencies
+  # @return [Hash] delete/disable and cant_delete/cant_disable vnfds and nsds
+  def intelligent_nodeps(package, nodeps_sym = :delete, deps_sym = :cant_delete, active_criteria = false)
     vnfds = []
     nsds = []
     cant_delete_vnfds = []
     cant_delete_nsds = []
     begin
-      pdep_mapping = Dependencies_mapping.find_by({ 'pd.name' => package.pd['name'],
-                                                    'pd.version' => package.pd['version'],
-                                                    'pd.vendor' => package.pd['vendor'] })
+      pattern = { 'pd.name' => package.pd['name'],
+                  'pd.version' => package.pd['version'],
+                  'pd.vendor' => package.pd['vendor'] }
+      pdep_mapping = Dependencies_mapping.find_by(pattern)
     rescue Mongoid::Errors::DocumentNotFound => e
       logger.error 'Dependencies not found: ' + e.message
       # If no document found, avoid to delete descriptors blindly
-      return { vnfds: [], nsds: [] }
+      return { nodeps_sym => { vnfds: [], nsds: [] } }
     end
     pdep_mapping.vnfds.each do |vnfd|
-      if check_dependencies(:vnfds, vnfd, package.pd)
+      if check_dependencies(:vnfds, vnfd, package.pd, active_criteria)
         logger.info 'VNFD ' + vnfd[:name] + ' has more than one dependency'
         cant_delete_vnfds << vnfd
       else
@@ -445,14 +458,15 @@ class SonataCatalogue < Sinatra::Application
       end
     end
     pdep_mapping.nsds.each do |nsd|
-      if check_dependencies(:nsds, nsd, package.pd)
+      if check_dependencies(:nsds, nsd, package.pd, active_criteria)
         logger.info 'NSD ' + nsd[:name] + ' has more than one dependency'
         cant_delete_nsds << nsd
       else
         nsds << nsd
       end
     end
-    { delete: { vnfds: vnfds, nsds: nsds }, cant_delete: { vnfds: cant_delete_vnfds, nsds: cant_delete_nsds } }
+    { nodeps_sym => { vnfds: vnfds, nsds: nsds },
+      deps_sym => { vnfds: cant_delete_vnfds, nsds: cant_delete_nsds } }
   end
 
   # Method deleting vnfds from name, vendor, version
@@ -493,7 +507,7 @@ class SonataCatalogue < Sinatra::Application
     return not_found
   end
 
-  # Method deleting pd from name, vendor, version
+  # Method deleting pd and also dependencies mapping
   # @param [Hash] package model hash
   # @return [void]
   def delete_pd(descriptor)
@@ -504,6 +518,61 @@ class SonataCatalogue < Sinatra::Application
     descriptor.destroy
     package_deps.each do |package_dep|
       package_dep.destroy
+    end
+  end
+
+  # Method Set status of vnfds from name, vendor, version
+  # @param [Array] vnfds array of hashes
+  # @param [String] status Desired status
+  # @return [Array] Not found array
+  def set_vnfds_status(vnfds, status)
+    not_found = []
+    vnfds.each do |vnfd_td|
+      descriptor = Vnfd.where({ 'vnfd.name' => vnfd_td['name'],
+                                'vnfd.vendor' => vnfd_td['vendor'],
+                                'vnfd.version' => vnfd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'VNFD Descriptor not found'
+        not_found << vnfd_td
+      else
+        descriptor.update('status' => status)
+      end
+    end
+    return not_found
+  end
+
+  # Method Set status of nsds from name, vendor, version
+  # @param [Array] nsds nsds array of hashes
+  # @param [String] status Desired status
+  # @return [Array] Not found array
+  def set_nsds_status(nsds, status)
+    not_found = []
+    nsds.each do |nsd_td|
+      descriptor = Nsd.where({ 'nsd.name' => nsd_td['name'],
+                               'nsd.vendor' => nsd_td['vendor'],
+                               'nsd.version' => nsd_td['version'] }).first
+      if descriptor.nil?
+        logger.error 'NSD Descriptor not found ' + nsd_td.to_s
+        not_found << nsd_td
+      else
+        descriptor.update('status' => status)
+      end
+    end
+    return not_found
+  end
+
+  # Method Set status of a pd
+  # @param [Hash] package model hash
+  # @param [String] status Desired status
+  # @return [void]
+  def set_pd_status(descriptor, status)
+    # first find dependencies_mapping
+    package_deps = Dependencies_mapping.where('pd.name' => descriptor['pd']['name'],
+                                              'pd.vendor' => descriptor['pd']['vendor'],
+                                              'pd.version' => descriptor['pd']['version'])
+    descriptor.update('status' => status)
+    package_deps.each do |package_dep|
+      package_dep.update('status' => status)
     end
   end
 
@@ -518,7 +587,7 @@ class SonataCatalogue < Sinatra::Application
                               components: { vnfds: icomps[:vnfds],
                                             nsds: icomps[:nsds] } )
     end
-    todelete = intelligent_delete_nodeps(pks)
+    todelete = intelligent_nodeps(pks)
     logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todelete.to_s
     not_found_vnfds = delete_vnfds(todelete[:delete][:vnfds])
     not_found_nsds = delete_nsds(todelete[:delete][:nsds])
@@ -532,6 +601,60 @@ class SonataCatalogue < Sinatra::Application
       logger.info "Vnfds not found: " + not_found_vnfds.to_s
       logger.info "Nsds not found: " + not_found_nsds.to_s
       halt 404, JSON.generate(result: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
+    end
+  end
+
+  # Method deleting pd from name, vendor, version
+  # @param [Hash] pks Package model hash
+  # @return [void]
+  def intelligent_disable(pks)
+    todisable = intelligent_nodeps(pks, :disable, :cant_disable, true)
+    logger.info 'COMPONENTS WITHOUT DEPENDENCIES: ' + todisable.to_s
+    not_found_vnfds = set_vnfds_status(todisable[:disable][:vnfds], 'inactive')
+    not_found_nsds = set_nsds_status(todisable[:disable][:nsds], 'inactive')
+    set_pd_status(pks, 'inactive')
+    if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      halt 200, JSON.generate(result: todisable)
+    else
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      logger.info "Some descriptors where not found "
+      logger.info "Vnfds not found: " + not_found_vnfds.to_s
+      logger.info "Nsds not found: " + not_found_nsds.to_s
+      halt 404, JSON.generate(result: todisable,
+                              not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
+    end
+  end
+
+  # Method deleting pd from name, vendor, version
+  # @param [Hash] pks Package model hash
+  # @return [void]
+  def intelligent_enable_all(pks)
+    begin
+      pattern = { 'pd.name' => pks.pd['name'],
+                  'pd.version' => pks.pd['version'],
+                  'pd.vendor' => pks.pd['vendor'] }
+      pdep_mapping = Dependencies_mapping.find_by(pattern)
+    rescue Mongoid::Errors::DocumentNotFound => e
+      logger.error 'Dependencies not found: ' + e.message
+      # If no document found, avoid to delete descriptors blindly
+      return { nodeps_sym => { vnfds: [], nsds: [] } }
+    end
+    not_found_vnfds = set_vnfds_status(pdep_mapping.vnfds, 'active')
+    not_found_nsds = set_nsds_status(pdep_mapping.nsds, 'active')
+    set_pd_status(pks, 'active')
+    if ( not_found_vnfds.length == 0 ) and ( not_found_nsds.length == 0 )
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      halt 200, JSON.generate(result: { enable: { vnfds: pdep_mapping.vnfds,
+                                                nsds: pdep_mapping.nsds } })
+    else
+      logger.debug "Catalogue: leaving DISABLE /api/v2/packages?#{query_string}\" with PD #{pks}"
+      logger.info "Some descriptors where not found "
+      logger.info "Vnfds not found: " + not_found_vnfds.to_s
+      logger.info "Nsds not found: " + not_found_nsds.to_s
+      halt 404, JSON.generate(result: { enable: { vnfds: pdep_mapping.vnfds,
+                                                nsds: pdep_mapping.nsds } },
+                              not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
     end
   end
 
@@ -654,6 +777,11 @@ class SonataCatalogue < Sinatra::Application
         'uri' => '/catalogues/packages/{id}',
         'method' => 'DELETE',
         'purpose' => 'Delete a specific Package by its uuid'
+      },
+      {
+        'uri' => '/catalogues/packages/{id}/status',
+        'method' => 'PUT',
+        'purpose' => 'Updates the status of a Package {"status": "active"} / {"status": "inactive"} as valid json payloads'
       },
       {
         'uri' => '/catalogues/son-packages',
