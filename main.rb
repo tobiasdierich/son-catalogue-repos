@@ -114,6 +114,7 @@ end
 # Configurations for Functions Repository
 class SonataVnfRepository < Sinatra::Application
   register Sinatra::ConfigFile
+  # TODO: Enable option to load extra config files for mongo
   # Load configurations
   config_file 'config/config.yml'
   Mongoid.load!('config/mongoid.yml')
