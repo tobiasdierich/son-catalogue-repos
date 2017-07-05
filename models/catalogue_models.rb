@@ -163,5 +163,6 @@ class Dependencies_mapping ## Temporary name
   field :nsds, type: Array
   field :vnfds, type: Array
   field :deps, type: Array
-  validates :son_package_uuid, :pd, :nsds, :vnfds, :presence => true
+  field :status, type: String
+  validates :son_package_uuid, :pd, :nsds, :vnfds, :status, :presence => true
 end

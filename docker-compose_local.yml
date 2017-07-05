@@ -1,5 +1,5 @@
 vnf-instances:
-  image: fjvicens/repository
+  image: sonatanfv/son-catalogue-repos:dev
   links:
    - mongo
   ports:
@@ -7,7 +7,7 @@ vnf-instances:
   restart: always
 
 vnf-instances_doc:
-  image: fjvicens/repository
+  image: sonatanfv/son-catalogue-repos:dev
   ports:
     - "8808:8808"
   command: [rake,yard]
