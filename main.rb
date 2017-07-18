@@ -60,33 +60,63 @@ configure do
   set :pub_key_path, conf['public_key_path']
   set :reg_path, conf['registration_path']
   set :login_path, conf['login_path']
-  set :authz_path, conf['authorization_path']
+  # set :authz_path, conf['authorization_path']
   set :access_token, nil
 
-  # turn keycloak realm pub key into an actual openssl compat pub key.
-  # keycloak_key = get_public_key(settings.auth_address, settings.auth_port, settings.api_ver, settings.pub_key_path)
-  # keycloak_key, errors = parse_json(keycloak_key)
-  # puts keycloak_key['public-key']
-  # @s = "-----BEGIN PUBLIC KEY-----\n"
-  # @s += keycloak_key['public-key'].scan(/.{1,64}/).join("\n")
-  # @s += "\n-----END PUBLIC KEY-----\n"
-  # @key = OpenSSL::PKey::RSA.new @s
-  # set :keycloak_pub_key, @key
-  # puts "Keycloak public key: ", settings.keycloak_pub_key
+  # log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+  # STDOUT.reopen(log_file)
+  # STDOUT.sync = true
 
-  # register_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.reg_path)
-  # access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
-  # if access_token
-  #   set :access_token, access_token
-  # end
+  # turn keycloak realm pub key into an actual openssl compat pub key.
+  code, keycloak_key = get_public_key(settings.auth_address,
+                                      settings.auth_port,
+                                      settings.api_ver,
+                                      settings.pub_key_path)
+  # puts "PUBLIC_KEY_CODE=#{code}"
+  # puts "PUBLIC_KEY_MSG=#{keycloak_key}"
+  if code.to_i == 200
+    keycloak_key, errors = parse_json(keycloak_key)
+    puts "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
+    @s = "-----BEGIN PUBLIC KEY-----\n"
+    @s += keycloak_key['items']['public-key'].scan(/.{1,64}/).join("\n")
+    @s += "\n-----END PUBLIC KEY-----\n"
+    @key = OpenSSL::PKey::RSA.new @s
+    set :keycloak_pub_key, @key
+    # puts "Keycloak public key: ", settings.keycloak_pub_key
+  else
+    set :keycloak_pub_key, nil
+  end
+
+  unless settings.keycloak_pub_key.nil?
+    response = register_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.reg_path)
+    if response
+      access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
+      puts "ACCESS_TOKEN=#{access_token}"
+      set :access_token, access_token unless access_token.nil?
+    end
+  end
+  # STDOUT.sync = false
 end
 
 before do
   logger.level = Logger::DEBUG
-  # SECURITY CHECKS ARE TEMPORARY DISABLED!
-  # status = decode_token(settings.keycloak_pub_key, settings.access_token)
-  # login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path) unless status
 
+  # log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+  # STDOUT.reopen(log_file)
+  # STDOUT.sync = true
+
+  # SECURITY CHECKS ARE TEMPORARY DISABLED!
+  unless settings.keycloak_pub_key.nil? || settings.access_token.nil?
+    # puts "DECODE_ACCESS_TOKEN", settings.access_token
+    # puts "PUB_KEY", settings.keycloak_pub_key.to_pem
+    status = decode_token(settings.access_token, settings.keycloak_pub_key)
+    # puts "TOKEN_STATUS", status
+    unless status
+    access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
+    set :access_token, access_token unless access_token.nil?
+    end
+  end
+  # STDOUT.sync = false
   # Get authorization token
   #if request.env["HTTP_AUTHORIZATION"] != nil
     #puts "AUTH HEADER", request.env["HTTP_AUTHORIZATION"]
