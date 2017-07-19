@@ -86,8 +86,8 @@ def get_public_key(address, port, api_ver, path)
     response = http.request(request)
     return response.code, nil unless response.code.to_i == 200
     return response.code, response.body
-  rescue
-    return '503', nil
+  rescue => e
+    return '503', e.to_s
   end
 
   # unless response.code.to_i == 200  # raise 'Error: Public key not available'
