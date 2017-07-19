@@ -67,13 +67,20 @@ configure do
   STDOUT.reopen(log_file)
   STDOUT.sync = true
 
-  # turn keycloak realm pub key into an actual openssl compat pub key.
-  code, keycloak_key = get_public_key(settings.auth_address,
-                                      settings.auth_port,
-                                      settings.api_ver,
-                                      settings.pub_key_path)
-  puts "PUBLIC_KEY_CODE=#{code}"
-  puts "PUBLIC_KEY_MSG=#{keycloak_key}"
+  retries = 0
+  code = 503
+  while code.to_i != 200 || retries < 20 do
+    # turn keycloak realm pub key into an actual openssl compat pub key.
+    code, keycloak_key = get_public_key(settings.auth_address,
+                                        settings.auth_port,
+                                        settings.api_ver,
+                                        settings.pub_key_path)
+    puts "PUBLIC_KEY_CODE=#{code}"
+    puts "PUBLIC_KEY_MSG=#{keycloak_key}"
+    retries += 1
+    sleep(2)
+  end
+
   if code.to_i == 200
     keycloak_key, errors = parse_json(keycloak_key)
     puts "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
