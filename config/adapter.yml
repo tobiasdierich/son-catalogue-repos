@@ -1,7 +1,7 @@
 ---
 # Configuration settings to enable communication to the GK's User Management module
 # Connecto to GK API
-address: son-gtkapi # sp.int3.sonata-nfv.eu # <set_UM_Adapter_address_here>
+address: sp.int3.sonata-nfv.eu # <set_UM_Adapter_address_here> # son-gtkapi
 port: 32001 # <set_UM_Adapter_port_here>
 api_ver: /api/v2
 
