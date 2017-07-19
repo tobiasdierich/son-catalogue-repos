@@ -64,16 +64,16 @@ configure do
   set :access_token, nil
 
   # log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
-  # STDOUT.reopen(log_file)
-  # STDOUT.sync = true
+  STDOUT.reopen(log_file)
+  STDOUT.sync = true
 
   # turn keycloak realm pub key into an actual openssl compat pub key.
   code, keycloak_key = get_public_key(settings.auth_address,
                                       settings.auth_port,
                                       settings.api_ver,
                                       settings.pub_key_path)
-  # puts "PUBLIC_KEY_CODE=#{code}"
-  # puts "PUBLIC_KEY_MSG=#{keycloak_key}"
+  puts "PUBLIC_KEY_CODE=#{code}"
+  puts "PUBLIC_KEY_MSG=#{keycloak_key}"
   if code.to_i == 200
     keycloak_key, errors = parse_json(keycloak_key)
     puts "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
@@ -89,13 +89,14 @@ configure do
 
   unless settings.keycloak_pub_key.nil?
     response = register_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.reg_path)
+    puts "REG_RESPONSE=#{response}"
     if response
       access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
       puts "ACCESS_TOKEN=#{access_token}"
       set :access_token, access_token unless access_token.nil?
     end
   end
-  # STDOUT.sync = false
+  STDOUT.sync = false
 end
 
 before do
@@ -156,6 +157,10 @@ class SonataCatalogue < Sinatra::Application
   # Load configurations
   config_file 'config/config.yml'
   Mongoid.load!('config/mongoid.yml')
+
+  before {
+    env['rack.logger'] = Logger.new "#{settings.root}/log/#{settings.environment}.log"
+  }
   # use Rack::CommonLogger,
   # LogStashLogger.new(host: settings.logstash_host, port: settings.logstash_port)
 end
