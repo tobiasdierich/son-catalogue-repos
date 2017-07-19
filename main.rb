@@ -51,6 +51,8 @@ configure do
   log_file.sync = true
   use Rack::CommonLogger, log_file
 
+  logger = Logger.new(log_file)
+  logger.level = Logger::DEBUG
   # SECURITY FUNCTIONS CAN BE TEMPORARY DISABLED!
   # Configuration for Authentication and Authorization layer
   conf = YAML::load_file("#{settings.root}/config/adapter.yml")
@@ -64,26 +66,31 @@ configure do
   set :access_token, nil
 
   # log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
-  STDOUT.reopen(log_file)
-  STDOUT.sync = true
-
+  #STDOUT.reopen(log_file)
+  #STDOUT.sync = true
   retries = 0
   code = 503
-  while code.to_i != 200 || retries < 20 do
+  while retries <= 5 do
     # turn keycloak realm pub key into an actual openssl compat pub key.
+    # puts "RETRY=#{retries}"
+    logger.debug "RETRY=#{retries}"
     code, keycloak_key = get_public_key(settings.auth_address,
                                         settings.auth_port,
                                         settings.api_ver,
                                         settings.pub_key_path)
-    puts "PUBLIC_KEY_CODE=#{code}"
-    puts "PUBLIC_KEY_MSG=#{keycloak_key}"
+    # puts "PUBLIC_KEY_CODE=#{code}"
+    logger.debug "PUBLIC_KEY_CODE=#{code}"
+    # puts "PUBLIC_KEY_MSG=#{keycloak_key}"
+    logger.debug "PUBLIC_KEY_MSG=#{keycloak_key}"
+    break if code.to_i == 200
     retries += 1
-    sleep(2)
+    sleep(6)
   end
 
   if code.to_i == 200
     keycloak_key, errors = parse_json(keycloak_key)
-    puts "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
+    # puts "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
+    logger.debug "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
     @s = "-----BEGIN PUBLIC KEY-----\n"
     @s += keycloak_key['items']['public-key'].scan(/.{1,64}/).join("\n")
     @s += "\n-----END PUBLIC KEY-----\n"
@@ -96,14 +103,16 @@ configure do
 
   unless settings.keycloak_pub_key.nil?
     response = register_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.reg_path)
-    puts "REG_RESPONSE=#{response}"
+    # puts "REG_RESPONSE=#{response}"
+    logger.debug "REG_RESPONSE=#{response}"
     if response
       access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
-      puts "ACCESS_TOKEN=#{access_token}"
+      # puts "ACCESS_TOKEN=#{access_token}"
+      logger.debug "ACCESS_TOKEN=#{access_token}"
       set :access_token, access_token unless access_token.nil?
     end
   end
-  STDOUT.sync = false
+  #STDOUT.sync = false
 end
 
 before do
