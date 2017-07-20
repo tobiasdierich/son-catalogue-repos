@@ -119,18 +119,21 @@ end
 before do
   logger.level = Logger::DEBUG
 
-  # log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+  log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
   # STDOUT.reopen(log_file)
   # STDOUT.sync = true
 
-  # SECURITY CHECKS ARE TEMPORARY DISABLED!
+  # SECURITY CHECKS
   unless settings.keycloak_pub_key.nil? || settings.access_token.nil?
+    settings.logger.debug "PUB_KEY_CHECK=#{settings.keycloak_pub_key}"
+    settings.logger.debug "TOKEN_CHECK=#{settings.access_token}"
     # puts "DECODE_ACCESS_TOKEN", settings.access_token
     # puts "PUB_KEY", settings.keycloak_pub_key.to_pem
     status = decode_token(settings.access_token, settings.keycloak_pub_key)
     # puts "TOKEN_STATUS", status
     settings.logger.debug "TOKEN_STATUS=#{status}"
-    if status
+    # STDOUT.sync = false
+    unless status
     access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
     settings.access_token = access_token unless access_token.nil?
     end
