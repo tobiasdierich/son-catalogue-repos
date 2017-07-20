@@ -53,7 +53,8 @@ configure do
 
   logger = Logger.new(log_file)
   logger.level = Logger::DEBUG
-  # SECURITY FUNCTIONS CAN BE TEMPORARY DISABLED!
+  set :logger, logger
+
   # Configuration for Authentication and Authorization layer
   conf = YAML::load_file("#{settings.root}/config/adapter.yml")
   set :auth_address, conf['address']
@@ -66,8 +67,8 @@ configure do
   set :access_token, nil
 
   # log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
-  #STDOUT.reopen(log_file)
-  #STDOUT.sync = true
+  # STDOUT.reopen(log_file)
+  # STDOUT.sync = true
   retries = 0
   code = 503
   while retries <= 5 do
@@ -112,7 +113,7 @@ configure do
       set :access_token, access_token unless access_token.nil?
     end
   end
-  #STDOUT.sync = false
+  # STDOUT.sync = false
 end
 
 before do
@@ -128,11 +129,14 @@ before do
     # puts "PUB_KEY", settings.keycloak_pub_key.to_pem
     status = decode_token(settings.access_token, settings.keycloak_pub_key)
     # puts "TOKEN_STATUS", status
-    unless status
+    settings.logger.debug "TOKEN_STATUS=#{status}"
+    if status
     access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
-    set :access_token, access_token unless access_token.nil?
+    settings.access_token = access_token unless access_token.nil?
     end
   end
+
+  # ALTERNATIVE SECURITY FUNCTIONS CAN BE TEMPORARY DISABLED!
   # STDOUT.sync = false
   # Get authorization token
   #if request.env["HTTP_AUTHORIZATION"] != nil
@@ -161,7 +165,7 @@ end
 # Configurations for Functions Repository
 class SonataVnfRepository < Sinatra::Application
   register Sinatra::ConfigFile
-  # TODO: Enable option to load extra config files for mongo
+  # TODO: Enable option to load extra config files for mongoDB
   # Load configurations
   config_file 'config/config.yml'
   Mongoid.load!('config/mongoid.yml')
@@ -177,6 +181,4 @@ class SonataCatalogue < Sinatra::Application
   before {
     env['rack.logger'] = Logger.new "#{settings.root}/log/#{settings.environment}.log"
   }
-  # use Rack::CommonLogger,
-  # LogStashLogger.new(host: settings.logstash_host, port: settings.logstash_port)
 end
