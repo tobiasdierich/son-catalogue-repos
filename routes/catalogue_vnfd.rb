@@ -599,8 +599,6 @@ class CatalogueV2 < SonataCatalogue
       vnfs = Vnfd.where((keyed_params)).sort({ 'vnfd.version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: VNFDs=#{vnfs}"
       # vnfs = vnfs.sort({"version" => -1})
-      # puts 'vnfs: ', vnfs.to_json
-      # puts 'vnfs_size: ', vnfs.size.to_i
 
       if vnfs && vnfs.size.to_i > 0
         logger.info "Catalogue: leaving GET /api/v2/vnfs?#{query_string} with #{vnfs}"
@@ -609,12 +607,10 @@ class CatalogueV2 < SonataCatalogue
         checked_list = []
 
         vnfs_name_vendor = Pair.new(vnfs.first.vnfd['name'], vnfs.first.vnfd['vendor'])
-        # p 'vnfs_name_vendor:', [vnfs_name_vendor.one, vnfs_name_vendor.two]
         checked_list.push(vnfs_name_vendor)
         vnfs_list.push(vnfs.first)
 
         vnfs.each do |vnfd|
-          # p 'Comparison: ', [vnfd.name, vnfd.vendor].to_s + [vnfs_name_vendor.one, vnfs_name_vendor.two].to_s
           if (vnfd.vnfd['name'] != vnfs_name_vendor.one) || (vnfd.vnfd['vendor'] != vnfs_name_vendor.two)
             vnfs_name_vendor = Pair.new(vnfd.vnfd['name'], vnfd.vnfd['vendor'])
           end
@@ -622,7 +618,6 @@ class CatalogueV2 < SonataCatalogue
               pair.two == vnfs_name_vendor.two }
           checked_list.push(vnfs_name_vendor)
         end
-        # puts 'vnfs_list:', vnfs_list.each {|vnf| p vnf.name, vnf.vendor}
       else
         logger.info "Catalogue: leaving GET /api/v2/vnfs?#{query_string} with 'No VNFDs were found'"
         vnfs_list = []
@@ -711,8 +706,6 @@ class CatalogueV2 < SonataCatalogue
 
         # Validate JSON format
         new_vnf, errors = parse_json(new_vnf_json)
-        # puts 'vnf: ', new_vnf.to_json
-        # puts 'new_vnf id', new_vnf['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -732,7 +725,8 @@ class CatalogueV2 < SonataCatalogue
 
     # Check if VNFD already exists in the catalogue by name, vendor and version
     begin
-      vnf = Vnfd.find_by({ 'vnfd.name' => new_vnf['name'], 'vnfd.vendor' => new_vnf['vendor'], 'vnfd.version' => new_vnf['version'] })
+      vnf = Vnfd.find_by({ 'vnfd.name' => new_vnf['name'], 'vnfd.vendor' => new_vnf['vendor'],
+                           'vnfd.version' => new_vnf['version'] })
       json_return 200, 'Duplicated VNF Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -758,7 +752,6 @@ class CatalogueV2 < SonataCatalogue
       # Generate the UUID for the descriptor
       new_vnfd['_id'] = SecureRandom.uuid
       new_vnfd['status'] = 'active'
-      # Signature will be supported
       new_vnfd['signature'] = nil
       new_vnfd['md5'] = checksum new_vnf.to_s
       new_vnfd['username'] = username
@@ -848,7 +841,8 @@ class CatalogueV2 < SonataCatalogue
     end
     # Check if VNF already exists in the catalogue by Name, Vendor and Version
     begin
-      vnf = Vnfd.find_by({ 'vnfd.name' => new_vnf['name'], 'vnfd.vendor' => new_vnf['vendor'], 'vnfd.version' => new_vnf['version'] })
+      vnf = Vnfd.find_by({ 'vnfd.name' => new_vnf['name'], 'vnfd.vendor' => new_vnf['vendor'],
+                           'vnfd.version' => new_vnf['version'] })
       json_return 200, 'Duplicated VNF Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -923,7 +917,6 @@ class CatalogueV2 < SonataCatalogue
         if valid_status.include? keyed_params[:status]
           # Update to new status
           begin
-            #vnf.update_attributes(:status => params[:new_status])
             vnf.update_attributes(status: keyed_params[:status])
           rescue Moped::Errors::OperationFailure => e
             json_error 400, 'ERROR: Operation failed'
@@ -948,8 +941,6 @@ class CatalogueV2 < SonataCatalogue
 
             # Validate JSON format
             new_vnf, errors = parse_json(new_vnf_json)
-            # puts 'vnf: ', new_ns.to_json
-            # puts 'new_vnf id', new_vnf['_id'].to_json
             halt 400, errors.to_json if errors
 
           else
@@ -976,7 +967,8 @@ class CatalogueV2 < SonataCatalogue
 
         # Check if VNF already exists in the catalogue by name, vendor and version
         begin
-          vnf = Vnfd.find_by({ 'vnfd.name' => new_vnf['name'], 'vnfd.vendor' => new_vnf['vendor'], 'vnfd.version' => new_vnf['version'] })
+          vnf = Vnfd.find_by({ 'vnfd.name' => new_vnf['name'], 'vnfd.vendor' => new_vnf['vendor'],
+                               'vnfd.version' => new_vnf['version'] })
           json_return 200, 'Duplicated VNF Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
           # Continue

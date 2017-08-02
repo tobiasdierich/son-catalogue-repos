@@ -74,7 +74,8 @@ RSpec.describe CatalogueV1 do
     end
   end
 
-  let(:package_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/pd-example-with-errors.json','application/json', true)}
+  let(:package_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/pd-example-with-errors.json',
+                                                             'application/json', true)}
   describe 'POST \'/packages-bad\'' do
     context 'with incorrect parameters' do
       it 'Submit an invalid pd' do
@@ -203,7 +204,8 @@ RSpec.describe CatalogueV2 do
     end
   end
 
-  let(:package_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/pd-example-with-errors.json','application/json', true)}
+  let(:package_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/pd-example-with-errors.json',
+                                                             'application/json', true)}
   describe 'POST \'/api/v2/packages-bad\'' do
     context 'with incorrect parameters' do
       it 'Submit an invalid pd' do

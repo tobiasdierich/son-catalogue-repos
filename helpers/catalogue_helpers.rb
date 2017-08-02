@@ -62,7 +62,6 @@ class SonataCatalogue < Sinatra::Application
       logger.error "JSON parsing: #{e}"
       return message, e.to_s + "\n"
     end
-
     return parsed_message, nil
   end
 
@@ -74,13 +73,11 @@ class SonataCatalogue < Sinatra::Application
     # Check YAML message format
     begin
       parsed_message = YAML.load(message) # parse YAML message
-        #puts 'PARSED_MESSAGE: ', parsed_message.to_yaml
     rescue YAML::ParserError => e
       # If YAML not valid, return with errors
       logger.error "YAML parsing: #{e}"
       return message, e.to_s + "\n"
     end
-
     return parsed_message, nil
   end
 
@@ -89,19 +86,11 @@ class SonataCatalogue < Sinatra::Application
   # @return [Hash, nil] if the input message is a valid YAML
   # @return [Hash, String] if the input message is an invalid YAML
   def yaml_to_json(input_yml)
-    #puts input_yml.to_s
-    puts 'Parsing from YAML to JSON'
-
     begin
-      #output_json = JSON.dump(YAML::load(input_yml))
-      #puts 'input: ', input_yml.to_json
       output_json = JSON.dump(input_yml)
-        #output_json = JSON.dump(input_yml.to_json)
     rescue
       logger.error 'Error parsing from YAML to JSON'
     end
-
-    #puts 'Parsing DONE', output_json
     output_json
   end
 
@@ -112,13 +101,11 @@ class SonataCatalogue < Sinatra::Application
   def json_to_yaml(input_json)
     require 'json'
     require 'yaml'
-
     begin
       output_yml = YAML.dump(JSON.parse(input_json))
     rescue
       logger.error 'Error parsing from JSON to YAML'
     end
-
     output_yml
   end
 
@@ -136,16 +123,13 @@ class SonataCatalogue < Sinatra::Application
     # Next link
     next_offset = offset + 1
     next_nss = Ns.paginate(page: next_offset, limit: limit)
-
     address, port = read_config
-
     begin
       link << '<' + address.to_s + ':' + port.to_s + '/catalogues/network-services?offset=' + next_offset.to_s +
           '&limit=' + limit.to_s + '>; rel="next"' unless next_nss.empty?
     rescue
       logger.error 'Error Establishing a Database Connection'
     end
-
     unless offset == 1
       # Previous link
       previous_offset = offset - 1
@@ -173,7 +157,6 @@ class SonataCatalogue < Sinatra::Application
 
     link << '<' + address.to_s + ':' + port.to_s + '/catalogues/vnfs?offset=' + next_offset.to_s + '&limit=' +
         limit.to_s + '>; rel="next"' unless next_vnfs.empty?
-
     unless offset == 1
       # Previous link
       previous_offset = offset - 1
@@ -194,7 +177,6 @@ class SonataCatalogue < Sinatra::Application
     next_offset = offset + 1
     next_nss = Ns.paginate(page: next_offset, limit: limit)
     address, port = read_config
-
     begin
       link << '<' + address.to_s + ':' + port.to_s + '/catalogues/network-services/name/' + name.to_s +
           '?offset=' + next_offset.to_s + '&limit=' + limit.to_s + '>; rel="next"' unless next_nss.empty?
@@ -243,7 +225,6 @@ class SonataCatalogue < Sinatra::Application
 
   class Pair
     attr_accessor :one, :two
-
     def initialize(one, two)
       @one = one
       @two = two
@@ -508,7 +489,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Method deleting pd and also dependencies mapping
-  # @param [Hash] package model hash
+  # @param [Hash] descriptor model hash
   # @return [void]
   def delete_pd(descriptor)
     # first find dependencies_mapping
@@ -562,7 +543,7 @@ class SonataCatalogue < Sinatra::Application
   end
 
   # Method Set status of a pd
-  # @param [Hash] package model hash
+  # @param [Hash] descriptor model hash
   # @param [String] status Desired status
   # @return [void]
   def set_pd_status(descriptor, status)
@@ -597,7 +578,7 @@ class SonataCatalogue < Sinatra::Application
       halt 200, JSON.generate(result: todelete)
     else
       logger.debug "Catalogue: leaving DELETE /api/v2/packages?#{query_string}\" with PD #{pks}"
-      logger.info "Some descriptors where not found "
+      logger.info "Some descriptors where not found"
       logger.info "Vnfds not found: " + not_found_vnfds.to_s
       logger.info "Nsds not found: " + not_found_nsds.to_s
       halt 404, JSON.generate(result: todelete, not_found: { vnfds: not_found_vnfds, nsds: not_found_nsds })
@@ -781,7 +762,7 @@ class SonataCatalogue < Sinatra::Application
       {
         'uri' => '/catalogues/packages/{id}/status',
         'method' => 'PUT',
-        'purpose' => 'Updates the status of a Package {"status": "active"} / {"status": "inactive"} as valid json payloads'
+        'purpose' => 'Updates the status of a Package {"status": "active" / "inactive"} as valid json payloads'
       },
       {
         'uri' => '/catalogues/son-packages',

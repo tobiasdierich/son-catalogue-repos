@@ -34,7 +34,8 @@ task default: ['ci:all']
 
 desc 'Start the service'
 task :start do
-  puts 'SON CATALOGUE-REPOSITORY STARTING...'
+  puts 'SON-CATALOGUE-REPOSITORIES STARTING...'
+  puts 'Version 3.0'
   conf = File.expand_path('config.ru', File.dirname(__FILE__))
   exec("puma #{conf} -b tcp://0.0.0.0:4011")
 end

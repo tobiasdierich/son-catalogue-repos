@@ -72,16 +72,13 @@ configure do
   retries = 0
   code = 503
   while retries <= 5 do
-    # turn keycloak realm pub key into an actual openssl compat pub key.
-    # puts "RETRY=#{retries}"
+    # turn keycloak realm pub key into an actual openssl compat pub key
     logger.debug "RETRY=#{retries}"
     code, keycloak_key = get_public_key(settings.auth_address,
                                         settings.auth_port,
                                         settings.api_ver,
                                         settings.pub_key_path)
-    # puts "PUBLIC_KEY_CODE=#{code}"
     logger.debug "PUBLIC_KEY_CODE=#{code}"
-    # puts "PUBLIC_KEY_MSG=#{keycloak_key}"
     logger.debug "PUBLIC_KEY_MSG=#{keycloak_key}"
     break if code.to_i == 200
     retries += 1
@@ -90,25 +87,21 @@ configure do
 
   if code.to_i == 200
     keycloak_key, errors = parse_json(keycloak_key)
-    # puts "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
     logger.debug "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
     @s = "-----BEGIN PUBLIC KEY-----\n"
     @s += keycloak_key['items']['public-key'].scan(/.{1,64}/).join("\n")
     @s += "\n-----END PUBLIC KEY-----\n"
     @key = OpenSSL::PKey::RSA.new @s
     set :keycloak_pub_key, @key
-    # puts "Keycloak public key: ", settings.keycloak_pub_key
   else
     set :keycloak_pub_key, nil
   end
 
   unless settings.keycloak_pub_key.nil?
     response = register_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.reg_path)
-    # puts "REG_RESPONSE=#{response}"
     logger.debug "REG_RESPONSE=#{response}"
     if response
       access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
-      # puts "ACCESS_TOKEN=#{access_token}"
       logger.debug "ACCESS_TOKEN=#{access_token}"
       set :access_token, access_token unless access_token.nil?
     end
@@ -125,12 +118,8 @@ before do
 
   # SECURITY CHECKS
   unless settings.keycloak_pub_key.nil? || settings.access_token.nil?
-    # settings.logger.debug "PUB_KEY_CHECK=#{settings.keycloak_pub_key}"
     settings.logger.debug "TOKEN_TO_CHECK=#{settings.access_token}"
-    # puts "DECODE_ACCESS_TOKEN", settings.access_token
-    # puts "PUB_KEY", settings.keycloak_pub_key.to_pem
     status = decode_token(settings.access_token, settings.keycloak_pub_key)
-    # puts "TOKEN_STATUS", status
     settings.logger.debug "TOKEN_STATUS=#{status}"
     unless status
     access_token = login_service(settings.auth_address, settings.auth_port, settings.api_ver, settings.login_path)
@@ -140,21 +129,20 @@ before do
   STDOUT.sync = false
 
   # ALTERNATIVE SECURITY FUNCTIONS CAN BE TEMPORARY DISABLED!
-  # STDOUT.sync = false
   # Get authorization token
-  #if request.env["HTTP_AUTHORIZATION"] != nil
-    #puts "AUTH HEADER", request.env["HTTP_AUTHORIZATION"]
-    #provided_token = request.env["HTTP_AUTHORIZATION"].split(' ').last
-    #unless provided_token
-      #error = {"ERROR" => "Access token is not provided"}
-      #halt 400, error.to_json
-    #else
-      #puts "CHECK provided_token IN GATEKEEPER??"
-    #end
-  #else
-    #error = {"ERROR" => "Unauthorized"}
-    #halt 401, error.to_json
-  #end
+  # if request.env["HTTP_AUTHORIZATION"] != nil
+    # puts "AUTH HEADER", request.env["HTTP_AUTHORIZATION"]
+    # provided_token = request.env["HTTP_AUTHORIZATION"].split(' ').last
+    # unless provided_token
+      # error = {"ERROR" => "Access token is not provided"}
+      # halt 400, error.to_json
+    # else
+      # puts "CHECK provided_token IN GATEKEEPER??"
+    # end
+  # else
+    # error = {"ERROR" => "Unauthorized"}
+    # halt 401, error.to_json
+  # end
 end
 
 # Configurations for Services Repository
@@ -168,7 +156,7 @@ end
 # Configurations for Functions Repository
 class SonataVnfRepository < Sinatra::Application
   register Sinatra::ConfigFile
-  # TODO: Enable option to load extra config files for mongoDB
+  # TODO: Enable option to load extra config files for MongoDB
   # Load configurations
   config_file 'config/config.yml'
   Mongoid.load!('config/mongoid.yml')

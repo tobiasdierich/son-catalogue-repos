@@ -40,7 +40,8 @@ RSpec.describe SonataVnfRepository do
 
   describe 'GET \'/\'' do
     before do
-      stub_request(:get, 'localhost:5000').to_return(status: 200, body: '---\n- uri: \"/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery\n- uri: \"/records/nsr/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery nsr\n- uri: \"/records/vnfr/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery vnfr\n- uri: \"/catalogues/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery catalogues\n')
+      stub_request(:get, 'localhost:5000').to_return(status: 200,
+                                                     body: '---\n- uri: \"/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery\n- uri: \"/records/nsr/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery nsr\n- uri: \"/records/vnfr/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery vnfr\n- uri: \"/catalogues/\"\n  method: GET\n  purpose: REST API Structure and Capability Discovery catalogues\n')
       get '/'
     end
     subject { last_response }
@@ -69,7 +70,8 @@ RSpec.describe SonataVnfRepository do
     end
   end
 
-  let(:vnf_instance_bad_record) {Rack::Test::UploadedFile.new('./spec/fixtures/vnfr-example-with-errors.json','application/json', true)}
+  let(:vnf_instance_bad_record) {Rack::Test::UploadedFile.new('./spec/fixtures/vnfr-example-with-errors.json',
+                                                              'application/json', true)}
   describe 'POST \'/vnf-instances-bad\'' do
     context 'with incorrect parameters' do
       it 'Submit an invalid vnfr' do

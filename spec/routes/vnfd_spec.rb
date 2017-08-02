@@ -73,7 +73,8 @@ RSpec.describe CatalogueV1 do
     end
   end
 
-  let(:vnf_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/vnfd-example-with-errors.json','application/json', true)}
+  let(:vnf_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/vnfd-example-with-errors.json',
+                                                         'application/json', true)}
   describe 'POST \'/vnfs-bad\'' do
     context 'with incorrect parameters' do
       it 'Submit an invalid vnfd' do
@@ -190,7 +191,8 @@ RSpec.describe CatalogueV2 do
     end
   end
 
-  let(:vnf_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/vnfd-example-with-errors.json','application/json', true)}
+  let(:vnf_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/vnfd-example-with-errors.json',
+                                                         'application/json', true)}
   describe 'POST \'/api/v2/vnfs-bad\'' do
     context 'with incorrect parameters' do
       it 'Submit an invalid vnfd' do
