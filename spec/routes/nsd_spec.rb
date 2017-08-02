@@ -74,7 +74,8 @@ RSpec.describe CatalogueV1 do
     end
   end
 
-  let(:ns_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/nsd-example-with-errors.json','application/json', true)}
+  let(:ns_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/nsd-example-with-errors.json',
+                                                        'application/json', true)}
   describe 'POST \'/network-services-bad\'' do
     context 'with incorrect parameters' do
       it 'Submit an invalid nsd' do
@@ -191,7 +192,8 @@ RSpec.describe CatalogueV2 do
     end
   end
 
-  let(:ns_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/nsd-example-with-errors.json','application/json', true)}
+  let(:ns_bad_descriptor) {Rack::Test::UploadedFile.new('./spec/fixtures/nsd-example-with-errors.json',
+                                                        'application/json', true)}
   describe 'POST \'/api/v2/network-services-bad\'' do
     context 'with incorrect parameters' do
       it 'Submit an invalid nsd' do

@@ -621,7 +621,6 @@ class CatalogueV2 < SonataCatalogue
       nss = Nsd.where((keyed_params)).sort({ 'nsd.version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: NSDs=#{nss}"
       # nss = nss.sort({"version" => -1})
-      # puts 'nss: ', nss.to_json
 
       if nss && nss.size.to_i > 0
         logger.info "Catalogue: leaving GET /api/v2/network-services?#{query_string} with #{nss}"
@@ -631,27 +630,20 @@ class CatalogueV2 < SonataCatalogue
 
         # nss_name_vendor = Pair.new(nss.first.name, nss.first.vendor)
         nss_name_vendor = Pair.new(nss.first.nsd['name'], nss.first.nsd['vendor'])
-        # p 'nss_name_vendor:', [nss_name_vendor.one, nss_name_vendor.two]
         checked_list.push(nss_name_vendor)
         nss_list.push(nss.first)
 
         nss.each do |nsd|
-          # p nsd.nsd['name'], nsd.nsd['vendor']
-          # p 'Comparison: ', [nsd.name, nsd.vendor].to_s + [nss_name_vendor.one, nss_name_vendor.two].to_s
           # if (nsd.name != nss_name_vendor.one) || (nsd.vendor != nss_name_vendor.two)
           if (nsd.nsd['name'] != nss_name_vendor.one) || (nsd.nsd['vendor'] != nss_name_vendor.two)
             # nss_name_vendor = Pair.new(nsd.name, nsd.vendor)
             nss_name_vendor = Pair.new(nsd.nsd['name'], nsd.nsd['vendor'])
-            # p 'nss_name_vendor(x):', [nss_name_vendor.one, nss_name_vendor.two]
             # checked_list.each do |pair|
-            # p [pair.one, nss_name_vendor.one], [pair.two, nss_name_vendor.two]
-            # p pair.one == nss_name_vendor.one && pair.two == nss_name_vendor.two
           end
           nss_list.push(nsd) unless checked_list.any? { |pair| pair.one == nss_name_vendor.one &&
               pair.two == nss_name_vendor.two }
           checked_list.push(nss_name_vendor)
         end
-        # puts 'nss_list:', nss_list.each {|ns| p ns.name, ns.vendor}
       else
         logger.info "Catalogue: leaving GET /api/v2/network-services?#{query_string} with 'No NSDs were found'"
         nss_list = []
@@ -758,7 +750,8 @@ class CatalogueV2 < SonataCatalogue
 
     # Check if NS already exists in the catalogue by name, vendor and version
     begin
-      ns = Nsd.find_by({ 'nsd.name' => new_ns['name'], 'nsd.vendor' => new_ns['vendor'], 'nsd.version' => new_ns['version'] })
+      ns = Nsd.find_by({ 'nsd.name' => new_ns['name'], 'nsd.vendor' => new_ns['vendor'],
+                         'nsd.version' => new_ns['version'] })
       json_return 200, 'Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -836,8 +829,6 @@ class CatalogueV2 < SonataCatalogue
 
         # Validate JSON format
         new_ns, errors = parse_json(new_ns_json)
-        # puts 'ns: ', new_ns.to_json
-        # puts 'new_ns id', new_ns['_id'].to_json
         halt 400, errors.to_json if errors
 
       else
@@ -876,7 +867,8 @@ class CatalogueV2 < SonataCatalogue
     end
     # Check if NS already exists in the catalogue by Name, Vendor and Version
     begin
-      ns = Nsd.find_by({ 'nsd.name' => new_ns['name'], 'nsd.vendor' => new_ns['vendor'], 'nsd.version' => new_ns['version'] })
+      ns = Nsd.find_by({ 'nsd.name' => new_ns['name'], 'nsd.vendor' => new_ns['vendor'],
+                         'nsd.version' => new_ns['version'] })
       json_return 200, 'Duplicated NS Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -947,7 +939,6 @@ class CatalogueV2 < SonataCatalogue
         end
 
         # Validate new status
-        # p 'Validating new status(keyed_params): ', keyed_params[:status]
         valid_status = %w(active inactive delete)
         if valid_status.include? keyed_params[:status]
           # Update to new status
@@ -959,7 +950,6 @@ class CatalogueV2 < SonataCatalogue
         else
           json_error 400, "Invalid new status #{keyed_params[:status]}"
         end
-
         halt 200, "Status updated to {#{query_string}}"
 
       else
@@ -1003,7 +993,8 @@ class CatalogueV2 < SonataCatalogue
 
         # Check if NS already exists in the catalogue by name, vendor and version
         begin
-          ns = Nsd.find_by({ 'nsd.name' => new_ns['name'], 'nsd.vendor' => new_ns['vendor'], 'nsd.version' => new_ns['version'] })
+          ns = Nsd.find_by({ 'nsd.name' => new_ns['name'], 'nsd.vendor' => new_ns['vendor'],
+                             'nsd.version' => new_ns['version'] })
           json_return 200, 'Duplicated NS Name, Vendor and Version'
         rescue Mongoid::Errors::DocumentNotFound => e
           # Continue

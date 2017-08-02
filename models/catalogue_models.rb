@@ -80,7 +80,6 @@ class Vnf
   field :vendor, type: String
   field :name, type: String
   field :version, type: String
-  # field :vnf_manager, type: String # <- Not applicable yet
   validates :vendor, :name, :version, presence: true
 end
 
@@ -151,7 +150,7 @@ class FileContainer
 end
 
 # Sonata class for Catalogue Element Dependencies
-class Dependencies_mapping ## Temporary name
+class Dependencies_mapping
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Pagination

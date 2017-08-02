@@ -66,8 +66,7 @@ end
 # @see SonCatalogue
 class SonataCatalogue < Sinatra::Application
   before do
-    # Gatekeeper authn. code will go here for future implementation
-    # --> Gatekeeper authn. disabled
+    # Gatekeeper auth class
 
     if settings.environment == 'development'
       p 'Development settings'

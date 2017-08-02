@@ -64,9 +64,7 @@ class CatalogueV1 < SonataCatalogue
     # puts 'keyed_params(1)', keyed_params
 
     # Do the query
-
     file_list = FileContainer.where(keyed_params)
-
     logger.info "Catalogue: leaving GET /son-packages?#{query_string} with #{file_list}"
 
     # Paginate results
@@ -251,7 +249,6 @@ class CatalogueV2 < SonataCatalogue
         headers = { 'Accept' => 'application/json', 'Content-Type' => 'application/json' }
     end
     headers[:params] = params unless params.empty?
-
     # Get rid of :offset and :limit
     [:offset, :limit].each { |k| keyed_params.delete(k) }
 
@@ -266,7 +263,6 @@ class CatalogueV2 < SonataCatalogue
     }
 
     # Do the query
-    # file_list = FileContainer.where(keyed_params)
     file_list = FileContainer.where(new_params)
     # Set total count for results
     headers 'Record-Count' => file_list.count.to_s
@@ -295,14 +291,12 @@ class CatalogueV2 < SonataCatalogue
   get '/son-packages/:id/?' do
     # Dir.chdir(File.dirname(__FILE__))
     logger.debug "Catalogue: entered GET /api/v2/son-packages/#{params[:id]}"
-    # puts 'ID: ', params[:id]
 
     # Check headers
     case request.content_type
       when 'application/zip'
         begin
           sonp = FileContainer.find_by({ '_id' => params[:id] })
-          # p 'FileContainer FOUND'
           p 'Filename: ', sonp['grid_fs_name']
           p 'grid_fs_id: ', sonp['grid_fs_id']
         rescue Mongoid::Errors::DocumentNotFound => e
@@ -344,7 +338,6 @@ class CatalogueV2 < SonataCatalogue
     # Return if content-type is invalid
     halt 415 unless request.content_type == 'application/zip'
 
-    # puts "headers", request.env["HTTP_CONTENT_DISPOSITION"]
     att = request.env['HTTP_CONTENT_DISPOSITION']
     # sonp_vendor = request.env['HTTP_VENDOR']
     # sonp_name = request.env['HTTP_NAME']
@@ -370,9 +363,7 @@ class CatalogueV2 < SonataCatalogue
     halt 400, errors.to_json if errors
 
     ### Implemented here the MD5 checksum for the file
-    # p "TEST", file.string
     # file_hash = checksum file.string
-    # p "FILE HASH is: ", file_hash
 
     # Check duplicates
     # -> vendor, name, version
@@ -398,12 +389,8 @@ class CatalogueV2 < SonataCatalogue
                             filename: filename,
                             content_type: 'application/zip',
                             # _id: SecureRandom.uuid,
-    # :file_hash   => file_hash,
-    # :chunk_size   => 100 * 1024,
-    # :metadata     => {'description' => "SONATA zip package"}
     )
 
-    #puts "GRID_FILE ID", (grid_file.id)
     if keyed_params.key?(:username)
       username = keyed_params[:username]
     else
@@ -426,15 +413,8 @@ class CatalogueV2 < SonataCatalogue
     logger.debug "Catalogue: leaving POST /api/v2/son-packages/ with #{grid_file.id}"
     response = {"uuid" => sonp_id}
 
-    # TODO: BEFORE SENDING BACK RESPONSE, A DEPENDENCIES MAPPING DOCUMENT MUST BE BUILT AND SAVED IN THE CATALOGUE
-    #
-    # TODO: CALL METHOD OR IMPLEMENT LOGICS HERE
     # Requirements:
     # sonp_id, pd_name.trio, nsds_name.trio, vnfds_name.trio
-    #
-    #
-
-    # halt 201, grid_file.id.to_json
     begin
       Dependencies_mapping.create!(son_package_dep_mapping(file, sonp_id))
     rescue => e
@@ -457,9 +437,8 @@ class CatalogueV2 < SonataCatalogue
 
       # Transform 'string' params Hash into keys
       keyed_params = keyed_hash(params)
-      # puts 'keyed_params', keyed_params
       if [:vendor, :name, :version].all? {|s| keyed_params.key? s }
-        #if keyed_params.key?(:vendor, :name, :version)
+        # if keyed_params.key?(:vendor, :name, :version)
         # Do update of Son-Package meta-data
         logger.info "Catalogue: entered PUT /son-packages/#{query_string}"
 
@@ -484,8 +463,10 @@ class CatalogueV2 < SonataCatalogue
 
         # Add new son-package attribute fields
         begin
-          sonp.update_attributes(vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version])
-          son_dep_mapping.update('pd' => {vendor: keyed_params[:vendor], name: keyed_params[:name], version: keyed_params[:version]})
+          sonp.update_attributes(vendor: keyed_params[:vendor], name: keyed_params[:name],
+                                 version: keyed_params[:version])
+          son_dep_mapping.update('pd' => {vendor: keyed_params[:vendor], name: keyed_params[:name],
+                                          version: keyed_params[:version]})
         rescue Moped::Errors::OperationFailure => e
           json_error 400, 'ERROR: Operation failed'
         end

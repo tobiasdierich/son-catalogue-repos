@@ -648,7 +648,6 @@ class CatalogueV2 < SonataCatalogue
       pks = Pkgd.where((keyed_params)).sort({ 'pd.version' => -1 }) #.limit(1).first()
       logger.info "Catalogue: PDs=#{pks}"
       # pks = pks.sort({"version" => -1})
-      # puts 'pks: ', pks.to_json
 
       if pks && pks.size.to_i > 0
         logger.info "Catalogue: leaving GET /api/v2/packages?#{query_string} with #{pks}"
@@ -657,12 +656,10 @@ class CatalogueV2 < SonataCatalogue
         checked_list = []
 
         pks_name_vendor = Pair.new(pks.first.pd['name'], pks.first.pd['vendor'])
-        # p 'pks_name_vendor:', [pks_name_vendor.one, pks_name_vendor.two]
         checked_list.push(pks_name_vendor)
         pks_list.push(pks.first)
 
         pks.each do |pd|
-          # p 'Comparison: ', [pd.name, pd.vendor].to_s + [pks_name_vendor.one, pks_name_vendor.two].to_s
           if (pd.pd['name'] != pks_name_vendor.one) || (pd.pd['vendor'] != pks_name_vendor.two)
             pks_name_vendor = Pair.new(pd.pd['name'], pd.pd['vendor'])
           end
@@ -671,12 +668,10 @@ class CatalogueV2 < SonataCatalogue
           checked_list.push(pks_name_vendor)
         end
 
-        # puts 'pks_list:', pks_list.each {|p| p p.name, p.vendor}
       else
         logger.info "Catalogue: leaving GET /api/v2/packages?#{query_string} with 'No PDs were found'"
         pks_list = []
       end
-      # pks = pks_list.paginate(:page => params[:offset], :per_page =>params[:limit])
       pks = apply_limit_and_offset(pks_list, offset=params[:offset], limit=params[:limit])
 
     else
@@ -779,7 +774,8 @@ class CatalogueV2 < SonataCatalogue
 
     # Check if PD already exists in the catalogue by name, vendor and version
     begin
-      pks = Pkgd.find_by({ 'pd.name' => new_pks['name'], 'pd.vendor' => new_pks['vendor'], 'pd.version' => new_pks['version'] })
+      pks = Pkgd.find_by({ 'pd.name' => new_pks['name'], 'pd.vendor' => new_pks['vendor'],
+                           'pd.version' => new_pks['version'] })
       json_return 200, 'Duplicated Package Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
@@ -805,7 +801,6 @@ class CatalogueV2 < SonataCatalogue
       # Generate the UUID for the descriptor
       new_pd['_id'] = SecureRandom.uuid
       new_pd['status'] = 'active'
-      # Signature will be supported
       new_pd['signature'] = nil
       new_pd['md5'] = checksum new_pks.to_s
       new_pd['username'] = username
@@ -895,7 +890,8 @@ class CatalogueV2 < SonataCatalogue
     end
     # Check if PD already exists in the catalogue by Name, Vendor and Version
     begin
-      pks = Pkgd.find_by({ 'pd.name' => new_pks['name'], 'pd.vendor' => new_pks['vendor'], 'pd.version' => new_pks['version'] })
+      pks = Pkgd.find_by({ 'pd.name' => new_pks['name'], 'pd.vendor' => new_pks['vendor'],
+                           'pd.version' => new_pks['version'] })
       json_return 200, 'Duplicated PD Name, Vendor and Version'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
