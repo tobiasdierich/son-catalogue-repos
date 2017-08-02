@@ -55,7 +55,6 @@ class SonataVnfRepository < Sinatra::Application
   # @param [JSON] message some JSON message
   # @return [Hash, nil] if the parsed message is a valid JSON
   # @return [Hash, String] if the parsed message is an invalid JSON
-
   def validate_json(message,schema)
     begin
            JSON::Validator.validate!(schema,message)
@@ -65,6 +64,7 @@ class SonataVnfRepository < Sinatra::Application
     end
     nil
   end
+
   # Checks if a YAML message is valid
   #
   # @param [YAML] message some YAML message
@@ -74,37 +74,26 @@ class SonataVnfRepository < Sinatra::Application
     # Check YAML message format
     begin
       parsed_message = YAML.load(message) # parse YAML message
-      #puts 'PARSED_MESSAGE: ', parsed_message.to_yaml
     rescue YAML::ParserError => e
       # If YAML not valid, return with errors
       logger.error "YAML parsing: #{e.to_s}"
       return message, e.to_s + "\n"
     end
-
     return parsed_message, nil
   end
 
-  
-  
   # Translates a message from YAML to JSON
   #
   # @param [YAML] input_yml some YAML message
   # @return [Hash, nil] if the input message is a valid YAML
   # @return [Hash, String] if the input message is an invalid YAML
   def yaml_to_json(input_yml)
-    #puts input_yml.to_s
     puts 'Parsing from YAML to JSON'
-
     begin
-      #output_json = JSON.dump(YAML::load(input_yml))
-      #puts 'input: ', input_yml.to_json
       output_json = JSON.dump(input_yml)
-      #output_json = JSON.dump(input_yml.to_json)
     rescue
       logger.error 'Error parsing from YAML to JSON'
       end
-
-    puts 'Parsing DONE', output_json
   output_json
   end
 
@@ -122,7 +111,6 @@ class SonataVnfRepository < Sinatra::Application
     rescue
       logger.error 'Error parsing from JSON to YAML'
       end
-
     output_yml
   end
 
@@ -201,5 +189,4 @@ class SonataVnfRepository < Sinatra::Application
         }
     ]
   end
-
 end

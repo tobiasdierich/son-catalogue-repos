@@ -94,13 +94,11 @@ def get_public_key(address, port, api_ver, path)
   # Writes the Keycloak public key to a config file
   # File.open('config/public_key', 'w') do |f|
   #   f.puts response.body
-  #   puts "Keycloak PUBLIC_KEY saved"  #, response.body.to_s
   # end
   # return response.code, response.body
 end
 
 def register_service(address, port, api_ver, path)
-  #TODO: Check failures
   # READ REGISTRATION FROM CONFIG_FORM
   catalogue_reg = JSON.parse(File.read('config/catalogue_registration.json'))
   # repos_reg = JSON.parse(File.read('config/repos_registration.json'))
@@ -114,8 +112,6 @@ def register_service(address, port, api_ver, path)
 
   request.body = catalogue_reg.to_json
   response = http.request(request)
-  # puts "REG_CODE", response.code
-  # puts "REG_BODY", response.body
   case response.code.to_i
     when 201
       puts 'SON-CATALOGUE Service client: Registered'
@@ -124,7 +120,6 @@ def register_service(address, port, api_ver, path)
       puts 'SON-CATALOGUE Service client: Already registered'
       return true
     else
-      # raise 'Error: registration failure'
       puts 'Error: registration failure'
       return false
   end
@@ -140,12 +135,10 @@ def login_service(address, port, api_ver, path)
   credentials =  Base64.strict_encode64("#{adapter_yml['catalogue_client']}:#{adapter_yml['catalogue_secret']}")
   # credentials = {'clientId' => adapter_yml['catalogue_client'], 'secret' => adapter_yml['catalogue_secret']}
   request['authorization'] = "Basic #{credentials}"
-  #request["content-type"] = 'application/json'
+  # request["content-type"] = 'application/json'
   # request.body = credentials.to_json
   # request.basic_auth(adapter_yml[repos_client], adapter_yml[repos_secret])
   response = http.request(request)
-  # p "LOGIN_RESPONSE", response.body
-  # p "LOGIN_CODE", response.code
 
   if response.code.to_i == 200
     parsed_res, errors = parse_json(response.body)
@@ -159,42 +152,20 @@ def login_service(address, port, api_ver, path)
     #   f.puts parsed_res['access_token']
     # end
     puts 'SON-CATALOGUE Service client: Logged-in'
-    # puts "ACCESS_TOKEN=#{parsed_res['access_token']}"
     parsed_res['access_token']
   else
-    # raise 'Error: login failure'
     puts 'SON-CATALOGUE Service client: Login failed'
     nil
   end
 end
 
-#def authorized?(address, port, api_ver, path, token)
-# TODO: CHECK IF A PROVIDED TOKEN IS VALID
-#end
-
-def check_token(address, port, keycloak_pub_key, access_token)
-  # puts "CHECKING ACCESS TOKEN"
-  # => READ TOKEN, READ PUBLIC KEY
-  # catalogue_token = (File.read('config/catalogue_token.json'))
-  # catalogue_token = JSON.parse(File.read('config/catalogue_token.json'))
-  # => Check if token.expired?
-  # status = decode_token(access_token, keycloak_pub_key)
-  # case code
-  #  when true
-  #    puts "Catalogue Access Token: OK"
-  #    return
-  #  else
-  #    #=> Then GET new token
-  #    puts "Catalogue Access Token: REFRESHING..."
-  #    login_service(address, port)
-  #end
-end
+# def authorized?(address, port, api_ver, path, token)
+#   CHECK IF A PROVIDED TOKEN IS VALID
+# end
 
 def decode_token(token, pub_key)
   begin
     decoded_payload, decoded_header = JWT.decode token, pub_key, true, { :algorithm => 'RS256' }
-    # puts "DECODED_HEADER: ", decoded_header
-    # puts "DECODED_PAYLOAD: ", decoded_payload
     return true
   rescue JWT::DecodeError
     puts 'Decode token: DecodeError'

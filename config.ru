@@ -30,8 +30,6 @@ require ::File.join(root, 'main')
 
 map('/records/nsr') { run SonataNsRepository.new }
 map('/records/vnfr') { run SonataVnfRepository.new }
-# map('/catalogues') {run SonataCatalogue.new}
-# map('/catalogues/api/v1') {run CatalogueV1.new}
 map('/catalogues') {run CatalogueV2.new}
 map('/catalogues/api/v1') {run CatalogueV1.new}
 map('/catalogues/api/v2') { run CatalogueV2.new }

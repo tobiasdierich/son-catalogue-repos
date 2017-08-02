@@ -31,17 +31,12 @@ class SonataVnfRepository < Sinatra::Application
   @@vnfr_schema=JSON.parse(JSON.dump(YAML.load(open('https://raw.githubusercontent.com/sonata-nfv/son-schema/master/function-record/vnfr-schema.yml'){|f| f.read})))
 
   before do
-
     # Gatekeepr authn. code will go here for future implementation
     # --> Gatekeeper authn. disabled
-    #if request.path_info == '/gk_credentials'
-    #	return
-    #end
 
     if settings.environment == 'development'
       return
     end
-
     #authorized?
   end
 
@@ -100,15 +95,12 @@ class SonataVnfRepository < Sinatra::Application
     end
 
     begin
-
       # Get paginated list
       vnfs = Vnfr.paginate(page: params[:offset], limit: params[:limit])
       logger.debug(vnfs)
       # Build HTTP Link Header
       headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
-
       vnfs_json = vnfs.to_json
-
       if content_type == 'application/json'
         return 200, vnfs_json
       elsif content_type == 'application/x-yaml'
@@ -127,7 +119,6 @@ class SonataVnfRepository < Sinatra::Application
   # Return JSON or YAML
   #   - JSON (default)
   #   - YAML including output parameter (e.g /vnf-instances?output=YAML)
-
   get '/vnf-instances/:id' do
     begin
       @vnfInstance = Vnfr.find(params[:id])
@@ -140,7 +131,6 @@ class SonataVnfRepository < Sinatra::Application
     else
       content_type = 'application/json'
     end
-
     vnfs_json = @vnfInstance.to_json
     if content_type == 'application/json'
       return 200, vnfs_json
@@ -169,7 +159,6 @@ class SonataVnfRepository < Sinatra::Application
       instance, errors = parse_json(vnf_json)
       return 400, errors.to_json if errors
     end
-
     puts 'vnf: ', Vnfr.to_json
     errors = validate_json(vnf_json,@@vnfr_schema)
     return 422, errors.to_json if errors
@@ -189,16 +178,13 @@ class SonataVnfRepository < Sinatra::Application
     end
 
     puts 'New VNF has been added'
-
     vnf_json = instance.to_json
-
     if request.content_type == 'application/json'
       return 200, vnf_json
     elsif request.content_type == 'application/x-yaml'
       vnf_yml = json_to_yaml(vnf_json)
       return 200, vnf_yml
     end
-
   end
 
   # @method put_vnfrs
@@ -207,7 +193,6 @@ class SonataVnfRepository < Sinatra::Application
   # @param [JSON/YAML]
   # Put a vnfr
   # Return JSON or YAML depending on content_type
-
   put '/vnf-instances/:id' do
 
     if request.content_type ==  'application/json'
@@ -236,18 +221,16 @@ class SonataVnfRepository < Sinatra::Application
     # Update to new version
     puts 'Updating...'
     begin
-      #Delete old record
+      # Delete old record
       Vnfr.where( {'id' => params[:id] }).delete
-      #Create a record
+      # Create a record
       new_vnfr = Vnfr.create!(instance)
     rescue Moped::Errors::OperationFailure => e
       return 409, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
     end
 
     puts 'New VNF has been updated'
-
     vnf_json = instance.to_json
-
     if request.content_type == 'application/json'
       return 200, vnf_json
     elsif request.content_type == 'application/x-yaml'
@@ -270,6 +253,4 @@ class SonataVnfRepository < Sinatra::Application
     vnf.destroy
     return 200, 'OK: vnfr removed'
   end
-
-
 end

@@ -33,7 +33,7 @@ def get_method_v2
 
   url = URI("http://0.0.0.0:4011/catalogues/api/v2/son-packages/6dc04296-ea9b-4113-bf4b-8e9d2d42c9b3")
 
-  #http = Net::HTTP.new(url.host, url.port)
+  # http = Net::HTTP.new(url.host, url.port)
   puts 'Creating request.'
   puts url.request_uri
   request = Net::HTTP::Get.new(url.request_uri)
