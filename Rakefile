@@ -65,17 +65,9 @@ namespace :init do
   require 'fileutils'
   desc 'Fill Catalogues with default sonata-demo package contents'
   task :load_samples, :server do |_, args|
-    server = ''
-    case args[:server]
-      when 'development'
-        server = 'sp.int'
-      when 'integration'
-        server = 'sp.int3'
-      else
-        puts 'Invalid argument'
-        halt
-    end
 
+    server = 'son-catalogue-repos:4011'
+ 
     firewall_sample = 'samples/sonata-demo/function-descriptor/firewall-vnfd.yml'
     iperf_sample = 'samples/sonata-demo/function-descriptor/iperf-vnfd.yml'
     tcpdump_sample = 'samples/sonata-demo/function-descriptor/tcpdump-vnfd.yml'
@@ -85,13 +77,13 @@ namespace :init do
     vtc_sample = 'samples/sonata-demo-1/function-descriptor/vtc-vnfd.yml'
     nsd1_sample = 'samples/sonata-demo-1/service-descriptor/sonata-demo.yml'
 
-    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ nsd1_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/network-services"
-    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ vtc_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
-    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ firewall_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
-    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ iperf_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
-    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ tcpdump_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/vnfs"
-    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ nsd_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/network-services"
-    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ pd_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/catalogues/packages"
-	  sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ vnfr_random_sample } --connect-timeout 30 http://#{ server }.sonata-nfv.eu:4002/records/vnfr/vnf-instances"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ nsd1_sample } --connect-timeout 30 http://#{ server }/catalogues/api/v2/network-services"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ vtc_sample } --connect-timeout 30 http://#{ server }/catalogues/api/v2/vnfs"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ firewall_sample } --connect-timeout 30 http://#{ server }/catalogues/api/v2/vnfs"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ iperf_sample } --connect-timeout 30 http://#{ server }/catalogues/api/v2/vnfs"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ tcpdump_sample } --connect-timeout 30 http://#{ server }/catalogues/api/v2/vnfs"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ nsd_sample } --connect-timeout 30 http://#{ server }/catalogues/api/v2/network-services"
+    sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ pd_sample } --connect-timeout 30 http://#{ server }/catalogues/api/v2/packages"
+	  sh "curl -X POST -H \"Content-Type: application/x-yaml\" --data-binary @#{ vnfr_random_sample } --connect-timeout 30 http://#{ server }/records/vnfr/vnf-instances"
   end
 end
