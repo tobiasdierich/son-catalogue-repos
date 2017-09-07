@@ -80,6 +80,8 @@ configure do
                                         settings.pub_key_path)
     logger.debug "PUBLIC_KEY_CODE=#{code}"
     logger.debug "PUBLIC_KEY_MSG=#{keycloak_key}"
+    p "PUBLIC_KEY_MSG=#{keycloak_key}"
+    p "CODE=#{code}"
     break if code.to_i == 200
     retries += 1
     sleep(6)
@@ -91,6 +93,7 @@ configure do
     @s = "-----BEGIN PUBLIC KEY-----\n"
     @s += keycloak_key['items']['public-key'].scan(/.{1,64}/).join("\n")
     @s += "\n-----END PUBLIC KEY-----\n"
+    p "Current GK Public Key = #{@s}"
     @key = OpenSSL::PKey::RSA.new @s
     set :keycloak_pub_key, @key
   else
