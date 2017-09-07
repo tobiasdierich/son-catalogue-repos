@@ -71,7 +71,7 @@ configure do
   # STDOUT.sync = true
   retries = 0
   code = 503
-  while retries <= 5 do
+  while retries <= 6 do
     # turn keycloak realm pub key into an actual openssl compat pub key
     logger.debug "RETRY=#{retries}"
     code, keycloak_key = get_public_key(settings.auth_address,
@@ -82,14 +82,18 @@ configure do
     logger.debug "PUBLIC_KEY_MSG=#{keycloak_key}"
     p "PUBLIC_KEY_MSG=#{keycloak_key}"
     p "CODE=#{code}"
-    break if code.to_i == 200
+    if code.to_i == 200
+      keycloak_key, errors = parse_json(keycloak_key)
+      logger.debug "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
+      break unless keycloak_key['items']['public-key'].empty?
+    end
     retries += 1
     sleep(6)
   end
 
   if code.to_i == 200
-    keycloak_key, errors = parse_json(keycloak_key)
-    logger.debug "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
+    # keycloak_key, errors = parse_json(keycloak_key)
+    # logger.debug "PUBLIC_KEY=#{keycloak_key['items']['public-key']}"
     @s = "-----BEGIN PUBLIC KEY-----\n"
     @s += keycloak_key['items']['public-key'].scan(/.{1,64}/).join("\n")
     @s += "\n-----END PUBLIC KEY-----\n"
