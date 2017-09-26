@@ -1,21 +1,20 @@
-# This is a sample configuration file
 development:
   sessions:
     default:
-      database: son-repository
+      database: son-catalogue-repository
       hosts:
-      - to_be_defined
+      - mongo:27017
 
 production:
   sessions:
     default:
-      database: son-epository
+      database: son-catalogue-repository
       hosts:
-      - to_be_defined
+      - mongo:27017
 
 test:
   sessions:
     default:
-      database: son-repository
+      database: son-catalogue-repository
       hosts:
-      - to_be_defined
+      - mongo:27017
