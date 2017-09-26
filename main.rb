@@ -158,16 +158,41 @@ class SonataNsRepository < Sinatra::Application
   register Sinatra::ConfigFile
   # Load configurations
   config_file 'config/config.yml'
-  Mongoid.load!('config/mongoid.yml')
+  # TODO: Enable option to load extra config files for MongoDB
+  begin
+    mongoid_file = YAML.load_file('config/mongoid_secondary.yml')
+    p "mongoid_file contents=", mongoid_file
+    if mongoid_file[ENV['RACK_ENV'].to_s]['sessions']['default']['hosts'][0].nil?
+      raise 'Secondary database not configured'
+    else
+      p "loading mongoid_secondary"
+      Mongoid.load!('config/mongoid_secondary.yml')
+    end
+  rescue
+    p "loading mongoid"
+    Mongoid.load!('config/mongoid.yml')
+  end
 end
 
 # Configurations for Functions Repository
 class SonataVnfRepository < Sinatra::Application
   register Sinatra::ConfigFile
-  # TODO: Enable option to load extra config files for MongoDB
   # Load configurations
   config_file 'config/config.yml'
-  Mongoid.load!('config/mongoid.yml')
+  # TODO: Enable option to load extra config files for MongoDB
+  begin
+    mongoid_file = YAML.load_file('config/mongoid_secondary.yml')
+    p "mongoid_file contents=", mongoid_file
+    if mongoid_file[ENV['RACK_ENV'].to_s]['sessions']['default']['hosts'][0].nil?
+      raise 'Secondary database not configured'
+    else
+      p "loading mongoid_secondary"
+      Mongoid.load!('config/mongoid_secondary.yml')
+    end
+  rescue
+    p "loading mongoid"
+    Mongoid.load!('config/mongoid.yml')
+  end
 end
 
 # Configurations for Catalogues
