@@ -153,24 +153,50 @@ before do
   # end
 end
 
+# set MongoDB mongoid configuration file and variables
+# ENV['main_db'] ||= 'son-catalogue-repository'
+# ENV['main_db_host'] ||= 'localhost:27017'
+# ENV['second_db'] ||= 'son-catalogue-repository'
+# ENV['second_db_host'] ||= 'localhost:27017'
+
+# write variables to mongoid config file unless empty?
+unless ENV['main_db'].nil?
+  config = YAML.load_file('config/mongoid.yml')
+  config[ENV['RACK_ENV'].to_s]['sessions']['default']['database'] = ENV['main_db']
+  config[ENV['RACK_ENV'].to_s]['sessions']['default']['hosts'][0] = ENV['main_db_host']
+  File.open('config/mongoid.yml','w') do |conf|
+    conf.write config.to_yaml
+  end
+end
+
+unless ENV['second_db'].nil?
+  config = YAML.load_file('config/mongoid.yml')
+  config['production_secondary']['sessions']['default']['database'] = ENV['second_db']
+  config['production_secondary']['sessions']['default']['hosts'][0] = ENV['second_db_host']
+  File.open('config/mongoid.yml','w') do |conf|
+    conf.write config.to_yaml
+  end
+end
+
 # Configurations for Services Repository
 class SonataNsRepository < Sinatra::Application
   register Sinatra::ConfigFile
   # Load configurations
   config_file 'config/config.yml'
   # TODO: Enable option to load extra config files for MongoDB
-  begin
-    mongoid_file = YAML.load_file('config/mongoid_secondary.yml')
-    p "mongoid_file contents=", mongoid_file
-    if mongoid_file[ENV['RACK_ENV'].to_s]['sessions']['default']['hosts'][0].nil?
-      raise 'Secondary database not configured'
-    else
-      p "loading mongoid_secondary"
-      Mongoid.load!('config/mongoid_secondary.yml')
-    end
-  rescue
-    p "loading mongoid"
+  # mongoid_file = YAML.load_file('config/mongoid_secondary.yml')
+  # p "mongoid_file contents=", mongoid_file
+  # if mongoid_file[ENV['RACK_ENV'].to_s]['sessions']['default']['hosts'][0].nil?
+  #   raise 'Secondary database not configured'
+  # else
+  #   p "loading mongoid_secondary"
+  #   Mongoid.load!('config/mongoid_secondary.yml')
+  # end
+  # p "loading mongoid"
+  if ENV['second_db'].nil?
     Mongoid.load!('config/mongoid.yml')
+  else
+    Mongoid.load!('config/mongoid.yml', :production_secondary)
   end
 end
 
@@ -180,18 +206,10 @@ class SonataVnfRepository < Sinatra::Application
   # Load configurations
   config_file 'config/config.yml'
   # TODO: Enable option to load extra config files for MongoDB
-  begin
-    mongoid_file = YAML.load_file('config/mongoid_secondary.yml')
-    p "mongoid_file contents=", mongoid_file
-    if mongoid_file[ENV['RACK_ENV'].to_s]['sessions']['default']['hosts'][0].nil?
-      raise 'Secondary database not configured'
-    else
-      p "loading mongoid_secondary"
-      Mongoid.load!('config/mongoid_secondary.yml')
-    end
-  rescue
-    p "loading mongoid"
+  if ENV['second_db'].nil?
     Mongoid.load!('config/mongoid.yml')
+  else
+    Mongoid.load!('config/mongoid.yml', :production_secondary)
   end
 end
 
