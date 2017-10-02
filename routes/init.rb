@@ -28,6 +28,7 @@
 require_relative 'sonata'
 require_relative 'vnf'
 require_relative 'ns'
+require_relative 'catalogue_csd'
 require_relative 'catalogue_nsd'
 require_relative 'catalogue_vnfd'
 require_relative 'catalogue_pd'

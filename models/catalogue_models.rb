@@ -98,6 +98,35 @@ class Vnfd
   validates :vnfd, presence: true
 end
 
+# Sonata class for Catalogue Cloud Services
+class Cls
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
+  store_in collection: 'csd'
+
+  field :vendor, type: String
+  field :name, type: String
+  field :version, type: String
+  validates :vendor, :name, :version, presence: true
+end
+
+# New API v2 item structure for meta-data and descriptor data
+class Clsd
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
+  store_in collection: 'csd'
+
+  field :csd, type: Hash
+  field :status, type: String
+  field :signature, type: String
+  field :username, type: String
+  validates :csd, presence: true
+end
+
 # Sonata class for Catalogue Packages
 class Package
   include Mongoid::Document
