@@ -25,10 +25,10 @@
 ## acknowledge the contributions of their colleagues of the SONATA
 ## partner consortium (www.sonata-nfv.eu).
 
-# @see VNFRepository
-class SonataVnfRepository < Sinatra::Application
-  
-  @@vnfr_schema=JSON.parse(JSON.dump(YAML.load(open('https://raw.githubusercontent.com/tobiasdierich/son-schema/master/function-record/vnfr-schema.yml'){|f| f.read})))
+# @see CSRepository
+class SonataCsRepository < Sinatra::Application
+
+  @@csr_schema=JSON.parse(JSON.dump(YAML.load(open('https://raw.githubusercontent.com/tobiasdierich/son-schema/master/cloud-service-record/csr-schema.yml'){|f| f.read})))
   # https and openssl libs (require 'net/https' require 'openssl') enable access to external https links behind a proxy
 
   before do
@@ -46,15 +46,15 @@ class SonataVnfRepository < Sinatra::Application
   # Get all available interfaces
   # -> Get all interfaces
   get '/' do
-      headers 'Content-Type' => 'text/plain; charset=utf8'
+    headers 'Content-Type' => 'text/plain; charset=utf8'
     halt 200, interfaces_list.to_yaml
   end
 
   # @method get_log
-  # @overload get '/vnf-instances/log'
+  # @overload get '/cs-instances/log'
   #	Returns contents of log file
   # Management method to get log file of repository remotely
-  get '/vnf-instances/log' do
+  get '/cs-instances/log' do
     filename = 'log/development.log'
 
     # For testing purposes only
@@ -69,13 +69,13 @@ class SonataVnfRepository < Sinatra::Application
     return 200, txt.read.to_s
   end
 
-  # @method get_vnfs
-  # @overload get '/vnf-instances'
-  #	Returns a list of VNFRs
-  # List all VNFRs in JSON or YAML
+  # @method get_cs
+  # @overload get '/cs-instances'
+  #	Returns a list of CSRs
+  # List all CSRs in JSON or YAML
   #   - JSON (default)
-  #   - YAML including output parameter (e.g /vnf-instances?output=YAML)
-  get '/vnf-instances' do
+  #   - YAML including output parameter (e.g /cs-instances?output=YAML)
+  get '/cs-instances' do
     params[:offset] ||= 1
     params[:limit] ||= 10
 
@@ -84,8 +84,8 @@ class SonataVnfRepository < Sinatra::Application
     params[:limit] = 2 if params[:limit].to_i < 1
 
     # Get paginated list
-    vnfs = Vnfr.paginate(page: params[:offset], limit: params[:limit])
-    logger.debug(vnfs)
+    cls = Clsr.paginate(page: params[:offset], limit: params[:limit])
+    logger.debug(cls)
     # Build HTTP Link Header
     headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
 
@@ -97,16 +97,16 @@ class SonataVnfRepository < Sinatra::Application
 
     begin
       # Get paginated list
-      vnfs = Vnfr.paginate(page: params[:offset], limit: params[:limit])
-      logger.debug(vnfs)
+      cls = Clsr.paginate(page: params[:offset], limit: params[:limit])
+      logger.debug(cls)
       # Build HTTP Link Header
       headers['Link'] = build_http_link(params[:offset].to_i, params[:limit])
-      vnfs_json = vnfs.to_json
+      cls_json = cls.to_json
       if content_type == 'application/json'
-        return 200, vnfs_json
+        return 200, cls_json
       elsif content_type == 'application/x-yaml'
-        vnfs_yml = json_to_yaml(vnfs_json)
-        return 200, vnfs_yml
+        cls_yml = json_to_yaml(cls_json)
+        return 200, cls_yml
       end
     rescue
       logger.error 'Error Establishing a Database Connection'
@@ -114,15 +114,15 @@ class SonataVnfRepository < Sinatra::Application
     end
   end
 
-  # @method get_vnf-instances
-  # @overload get "/vnf-instances"
-  # Gets vnf-instances with an id
+  # @method get_csinstances
+  # @overload get "/cs-instances"
+  # Gets cs-instances with an id
   # Return JSON or YAML
   #   - JSON (default)
-  #   - YAML including output parameter (e.g /vnf-instances?output=YAML)
-  get '/vnf-instances/:id' do
+  #   - YAML including output parameter (e.g /cs-instances?output=YAML)
+  get '/cs-instances/:id' do
     begin
-      @vnfInstance = Vnfr.find(params[:id])
+      @clsInstance = Clsr.find(params[:id])
     rescue Mongoid::Errors::DocumentNotFound => e
       halt (404)
     end
@@ -132,126 +132,126 @@ class SonataVnfRepository < Sinatra::Application
     else
       content_type = 'application/json'
     end
-    vnfs_json = @vnfInstance.to_json
+    cls_json = @clsInstance.to_json
     if content_type == 'application/json'
-      return 200, vnfs_json
+      return 200, cls_json
     elsif content_type == 'application/x-yaml'
-      vnfs_yml = json_to_yaml(vnfs_json)
-      return 200, vnfs_yml
+      cls_yml = json_to_yaml(cls_json)
+      return 200, cls_yml
     end
   end
 
-  # @method post_vnfrs
-  # @overload post '/vnf-instances'
-  # Post a VNF in YAML format
+  # @method post_csrs
+  # @overload post '/cs-instances'
+  # Post a CS in YAML format
   # @param [YAML/JSON]
-  # Post a vnfr
+  # Post a csr
   # Return JSON or YAML depending on content_type
-  post '/vnf-instances' do
+  post '/cs-instances' do
 
     if request.content_type ==  'application/json'
       instance, errors = parse_json(request.body.read)
       return 400, errors.to_json if errors
-      vnf_json = instance
+      cls_json = instance
     elsif request.content_type == 'application/x-yaml'
       instance, errors = parse_yaml(request.body.read)
       return 400, errors.to_json if errors
-      vnf_json = yaml_to_json(instance)
-      instance, errors = parse_json(vnf_json)
+      cls_json = yaml_to_json(instance)
+      instance, errors = parse_json(cls_json)
       return 400, errors.to_json if errors
     end
-    puts 'vnf: ', Vnfr.to_json
-    errors = validate_json(vnf_json,@@vnfr_schema)
+    puts 'cs: ', Clsr.to_json
+    errors = validate_json(cls_json,@@csr_schema)
     return 422, errors.to_json if errors
 
     begin
-      instance = Vnfr.find( instance['id'] )
-      return 409, 'ERROR: Duplicated VNF ID'
+      instance = Clsr.find( instance['id'] )
+      return 409, 'ERROR: Duplicated CS ID'
     rescue Mongoid::Errors::DocumentNotFound => e
       # Continue
     end
 
     # Save to DB
     begin
-      instance = Vnfr.create!(instance)
+      instance = Clsr.create!(instance)
     rescue Moped::Errors::OperationFailure => e
-      return 409, 'ERROR: Duplicated VNF ID' if e.message.include? 'E11000'
+      return 409, 'ERROR: Duplicated CS ID' if e.message.include? 'E11000'
     end
 
-    puts 'New VNF has been added'
-    vnf_json = instance.to_json
+    puts 'New CS has been added'
+    cls_json = instance.to_json
     if request.content_type == 'application/json'
-      return 200, vnf_json
+      return 200, cls_json
     elsif request.content_type == 'application/x-yaml'
-      vnf_yml = json_to_yaml(vnf_json)
-      return 200, vnf_yml
+      cls_yml = json_to_yaml(cls_json)
+      return 200, cls_yml
     end
   end
 
-  # @method put_vnfrs
-  # @overload put '/vnf-instances'
-  # Put a VNF in YAML format
+  # @method put_csrs
+  # @overload put '/cs-instances'
+  # Put a CS in YAML format
   # @param [JSON/YAML]
-  # Put a vnfr
+  # Put a csr
   # Return JSON or YAML depending on content_type
-  put '/vnf-instances/:id' do
+  put '/cs-instances/:id' do
 
     if request.content_type ==  'application/json'
       instance, errors = parse_json(request.body.read)
       return 400, errors.to_json if errors
-      vnf_json = instance
+      cls_json = instance
     elsif request.content_type == 'application/x-yaml'
       instance, errors = parse_yaml(request.body.read)
       return 400, errors.to_json if errors
-      vnf_json = yaml_to_json(instance)
-      instance, errors = parse_json(vnf_json)
+      cls_json = yaml_to_json(instance)
+      instance, errors = parse_json(cls_json)
       return 400, errors.to_json if errors
     end
 
     begin
-      vnfr = Vnfr.find( instance['id'] )
-      puts 'VNF is found'
+      csr = Clse.find( instance['id'] )
+      puts 'CS is found'
     rescue Mongoid::Errors::DocumentNotFound => e
-      return 404, 'This VNFR does not exists'
+      return 404, 'This CSR does not exists'
     end
 
-    puts 'validating entry: ', vnf_json
-    errors = validate_json(vnf_json,@@vnfr_schema)
+    puts 'validating entry: ', cls_json
+    errors = validate_json(cls_json,@@csr_schema)
     return 422, errors.to_json if errors
 
     # Update to new version
     puts 'Updating...'
     begin
       # Delete old record
-      Vnfr.where( {'id' => params[:id] }).delete
+      Clsr.where( {'id' => params[:id] }).delete
       # Create a record
-      new_vnfr = Vnfr.create!(instance)
+      new_csr = Clsr.create!(instance)
     rescue Moped::Errors::OperationFailure => e
-      return 409, 'ERROR: Duplicated NS ID' if e.message.include? 'E11000'
+      return 409, 'ERROR: Duplicated CS ID' if e.message.include? 'E11000'
     end
 
-    puts 'New VNF has been updated'
-    vnf_json = instance.to_json
+    puts 'New CS has been updated'
+    cls_json = instance.to_json
     if request.content_type == 'application/json'
-      return 200, vnf_json
+      return 200, cls_json
     elsif request.content_type == 'application/x-yaml'
-      vnf_yml = json_to_yaml(vnf_json)
-      return 200, vnf_yml
+      cls_yml = json_to_yaml(cls_json)
+      return 200, cls_yml
     end
   end
 
-  # @method delete_vnfr_external_vnf_id
-  # @overload delete '/vnf-instances/:id'
-  #	Delete a vnf by its ID
-  #	@param [Integer] external_vnf_id vnf external ID
-  # Delete a vnf
-  delete '/vnf-instances/:id' do
+  # @method delete_csr_external_cs_id
+  # @overload delete '/cs-instances/:id'
+  #	Delete a cs by its ID
+  #	@param [Integer] external_cs_id cs external ID
+  # Delete a cs
+  delete '/cs-instances/:id' do
     begin
-      vnf = Vnfr.find_by( {'id' =>  params[:id]})
+      cs = Clsr.find_by( {'id' =>  params[:id]})
     rescue Mongoid::Errors::DocumentNotFound => e
       return 404,'ERROR: Operation failed'
     end
-    vnf.destroy
-    return 200, 'OK: vnfr removed'
+    cs.destroy
+    return 200, 'OK: csr removed'
   end
 end

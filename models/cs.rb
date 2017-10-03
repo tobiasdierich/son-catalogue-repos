@@ -25,13 +25,11 @@
 ## acknowledge the contributions of their colleagues of the SONATA
 ## partner consortium (www.sonata-nfv.eu).
 
-root = ::File.dirname(__FILE__)
-require ::File.join(root, 'main')
+class Clsr
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
 
-map('/records/csr') { run SonataCsRepository.new }
-map('/records/nsr') { run SonataNsRepository.new }
-map('/records/vnfr') { run SonataVnfRepository.new }
-map('/catalogues') {run CatalogueV2.new}
-map('/catalogues/api/v1') {run CatalogueV1.new}
-map('/catalogues/api/v2') { run CatalogueV2.new }
-map('/') { run Sonata.new }
+  store_in collection: 'csr'
+end

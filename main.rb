@@ -26,7 +26,7 @@
 ## partner consortium (www.sonata-nfv.eu).
 
 # Set environment
-ENV['RACK_ENV'] ||= 'production'
+ENV['RACK_ENV'] ||= 'development'
 
 require 'sinatra'
 require 'sinatra/config_file'
