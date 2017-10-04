@@ -153,10 +153,6 @@ before do
   # end
 end
 
-log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
-STDOUT.reopen(log_file)
-STDOUT.sync = true
-
 # set MongoDB mongoid configuration file from variables
 # write variables to mongoid config file unless empty?
 unless ENV['MAIN_DB'].nil?
@@ -178,8 +174,6 @@ unless ENV['SECOND_DB'].nil?
     conf.write config.to_yaml
   end
 end
-
-STDOUT.sync = false
 
 # Configurations for Services Repository
 class SonataNsRepository < Sinatra::Application
