@@ -10,8 +10,8 @@ RUN bundle install
 COPY . /app
 RUN rake yard
 ENV PORT 4002
-ENV MAIN_DB son-catalogue-repository
-ENV MAIN_DB_HOST localhost:27017
+#ENV MAIN_DB son-catalogue-repository
+#ENV MAIN_DB_HOST localhost:27017
 #ENV SECOND_DB son-catalogue-repository
 #ENV SECOND_DB_HOST mongo:27017
 EXPOSE 4002
