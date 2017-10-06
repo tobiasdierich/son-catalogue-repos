@@ -225,6 +225,35 @@ An example of usage:
 rake init:load_samples[integration]
 ```
 
+### Multiple MongoDB database support (Hierarchical Service Providers case)
+
+Different MongoDBs can now be configured to the `son-catalogue-repos` component in order to support specific needs in the SONATA HSP Pilot (formerly known as SP2SP or SP-to-SP)
+
+In a default setup, Catalogue and Repositories API share a common MongoDB, however the it is possible to configure a secondary MongoDB in order to separate the database behind the API component.
+
+Specifically, in the HSP Pilot, we find two different SPs: SP1 and SP2. Each SP keeps its own `son-catalogue-repos` component, however each component is configured in a different way. In order to set the databases, the next environment variables are available:
+
+```
+-e MAIN_DB
+-e MAIN_DB_HOST
+-e SECOND_DB
+-e SECOND_DB_HOST
+```
+
+Thus, each SP deploys its `son-catalogue-repos` with the next settings:
+
+* SP1:
+
+```
+docker run --name sp1-son-catalogue-repos -d -p 4002:4011-e MAIN_DB=SP1_CATALOGUE_DB -e MAIN_DB_HOST=SP1_CATALOGUE_DB_ADDRESS -e SECOND_DB=SP1_REPOSITORY_DB -e SECOND_DB_HOST=SP1_REPOSITORY_DB
+```
+
+* SP2:
+
+```
+docker run --name sp2-son-catalogue-repos -d -p 4002:4011 -e MAIN_DB=SP1_CATALOGUE_DB -e MAIN_DB_HOST=SP1_CATALOGUE_DB_ADDRESS -e SECOND_DB=SP2_REPOSITORY_DB -e SECOND_DB_HOST=SP2_REPOSITORY_DB
+```
+
 ### API Documentation
 
 The API documentation is expected to be generated with Swagger soon. Further information can be found on SONATA's wikipages link for SONATA Catalogues:
