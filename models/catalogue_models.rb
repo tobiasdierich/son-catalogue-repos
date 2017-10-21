@@ -69,6 +69,37 @@ class Nsd
   validates :nsd, presence: true
 end
 
+# Sonata class for Catalogue Services
+class Cos
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  # include Mongoid::Versioning
+  include Mongoid::Attributes::Dynamic
+  store_in collection: 'cosd'
+
+  field :vendor, type: String
+  field :name, type: String
+  field :version, type: String
+  field :status, type: String
+  validates :vendor, :name, :version, presence: true
+end
+
+# New API v2 item structure for meta-data and descriptor data
+class Cosd
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::Pagination
+  include Mongoid::Attributes::Dynamic
+  store_in collection: 'cosd'
+
+  field :cosd, type: Hash
+  field :status, type: String
+  field :signature, type: String
+  field :username, type: String
+  validates :cosd, presence: true
+end
+
 # Sonata class for Catalogue Functions
 class Vnf
   include Mongoid::Document

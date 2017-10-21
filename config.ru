@@ -28,6 +28,7 @@
 root = ::File.dirname(__FILE__)
 require ::File.join(root, 'main')
 
+map('/records/cosr') { run SonataCosRepository.new }
 map('/records/csr') { run SonataCsRepository.new }
 map('/records/nsr') { run SonataNsRepository.new }
 map('/records/vnfr') { run SonataVnfRepository.new }

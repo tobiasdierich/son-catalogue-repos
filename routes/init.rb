@@ -26,9 +26,11 @@
 ## partner consortium (www.sonata-nfv.eu).
 
 require_relative 'sonata'
+require_relative 'cos'
 require_relative 'cs'
 require_relative 'vnf'
 require_relative 'ns'
+require_relative 'catalogue_cosd'
 require_relative 'catalogue_csd'
 require_relative 'catalogue_nsd'
 require_relative 'catalogue_vnfd'
