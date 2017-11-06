@@ -81,9 +81,16 @@ class SonataCatalogue < Sinatra::Application
   # @method get_root
   # @overload get '/catalogues/'
   # Get all available interfaces
-  # -> Get all interfacess
+  # -> Get all interfaces
   get '/' do
     headers 'Content-Type' => 'text/plain; charset=utf8'
     halt 200, interfaces_list.to_yaml
+  end
+
+  delete '/clean' do
+    mongoid = YAML.load_file('config/mongoid.yml')
+    mongoid[ENV['RACK_ENV'].to_s]['sessions'].each do |session|
+      ::Mongoid::Sessions.with_name(session[0].to_sym).drop
+    end
   end
 end
