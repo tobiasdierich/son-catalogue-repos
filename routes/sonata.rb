@@ -92,5 +92,6 @@ class SonataCatalogue < Sinatra::Application
     mongoid[ENV['RACK_ENV'].to_s]['sessions'].each do |session|
       ::Mongoid::Sessions.with_name(session[0].to_sym).drop
     end
+    halt 200
   end
 end
