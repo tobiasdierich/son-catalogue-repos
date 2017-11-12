@@ -209,7 +209,7 @@ class SonataCsRepository < Sinatra::Application
     end
 
     begin
-      csr = Clsr.find( instance['id'] )
+      csr = Clsr.find(params[:id])
       puts 'CS is found'
     rescue Mongoid::Errors::DocumentNotFound => e
       return 404, 'This CSR does not exists'
