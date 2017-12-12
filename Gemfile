@@ -46,7 +46,7 @@ group :development, :test do
   gem 'rspec-mocks', '~> 3.5.0'
   gem 'rack-test', '~> 0.6', require: 'rack/test'
   gem 'rspec-its', '~> 1.2.0'
-  gem 'rubocop', '~> 0.41.2'
+  gem 'rubocop', '~> 0.48.1'
   gem 'rubocop-checkstyle_formatter', '~> 0.2.0', require: false
   gem 'license_finder', '~> 2.1.2'
 end
