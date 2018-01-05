@@ -14,13 +14,13 @@ son-catalogue-repos-doc:
   command: [yard, server, -B, 0.0.0.0]
   restart: always
 
-mongodata-catalogues:  
+mongodata-catalogues:
   image: mongo:3.0.4
   volumes:
     - /data/db
   command: --break-mongo
 
-mongo-catalogues:  
+mongo-catalogues:
   image: mongo:3.0.4
   volumes_from:
     - mongodata-catalogues

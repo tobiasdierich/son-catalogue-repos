@@ -36,6 +36,14 @@ desc 'Start the service'
 task :start do
   puts 'SON-CATALOGUE-REPOSITORIES STARTING...'
   puts 'Version 3.0'
+
+  # puts ENV['MAIN_DB'].to_s, ENV['MAIN_DB_HOST'].to_s, ENV['SECOND_DB'].to_s, ENV['SECOND_DB_HOST'].to_s
+
+  puts "VAR `MAIN_DB`=#{ENV['MAIN_DB'].inspect}"
+  puts "VAR `MAIN_DB_HOST`=#{ENV['MAIN_DB_HOST'].inspect}"
+  puts "VAR `SECOND_DB`=#{ENV['SECOND_DB'].inspect}"
+  puts "VAR `SECOND_DB_HOST`=#{ENV['SECOND_DB_HOST'].inspect}"
+
   conf = File.expand_path('config.ru', File.dirname(__FILE__))
   exec("puma #{conf} -b tcp://0.0.0.0:4011")
 end
